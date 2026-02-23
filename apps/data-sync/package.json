@@ -1,0 +1,29 @@
+{
+  "name": "data-sync",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "sync": "tsx src/cli.ts sync",
+    "sync:base": "tsx src/cli.ts sync:base",
+    "sync:countries": "tsx src/cli.ts sync:countries",
+    "sync:leagues": "tsx src/cli.ts sync:leagues",
+    "sync:venues": "tsx src/cli.ts sync:venues",
+    "sync:seasons": "tsx src/cli.ts sync:seasons",
+    "sync:structure": "tsx src/cli.ts sync:structure"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "db": "workspace:*",
+    "sportmonks-client": "workspace:*",
+    "pino": "^9.5.0",
+    "pino-pretty": "^11.3.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.0"
+  }
+}
