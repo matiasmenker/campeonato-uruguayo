@@ -1,0 +1,409 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Country {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  name         String
+  officialName String
+  code         String
+  imageUrl     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  leagues League[]
+  cities  City[]
+  venues  Venue[]
+}
+
+model City {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  countryId    Int
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  country Country @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  venues  Venue[]
+
+  @@index([countryId])
+}
+
+model League {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  countryId    Int?
+  name         String
+  shortCode    String?
+  imagePath    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  country Country? @relation(fields: [countryId], references: [id], onDelete: SetNull)
+  seasons Season[]
+
+  @@index([countryId])
+}
+
+model Season {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  leagueId     Int
+  name         String
+  startingAt   DateTime
+  endingAt     DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  league           League            @relation(fields: [leagueId], references: [id], onDelete: Restrict)
+  stages           Stage[]
+  fixtures         Fixture[]
+  squadMemberships SquadMembership[]
+  standings        Standing[]
+
+  @@index([leagueId])
+}
+
+model Stage {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  seasonId     Int
+  name         String
+  type         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  season    Season     @relation(fields: [seasonId], references: [id], onDelete: Restrict)
+  rounds    Round[]
+  groups    Group[]
+  fixtures  Fixture[]
+  standings Standing[]
+
+  @@index([seasonId])
+}
+
+model Round {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  stageId      Int
+  name         String
+  slug         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  stage    Stage     @relation(fields: [stageId], references: [id], onDelete: Restrict)
+  fixtures Fixture[]
+
+  @@index([stageId])
+}
+
+model Group {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  stageId      Int
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  stage    Stage     @relation(fields: [stageId], references: [id], onDelete: Restrict)
+  fixtures Fixture[]
+
+  @@index([stageId])
+}
+
+model Venue {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  countryId    Int?
+  cityId       Int?
+  name         String
+  city         String?
+  capacity     Int?
+  imagePath    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  country  Country? @relation(fields: [countryId], references: [id], onDelete: SetNull)
+  cityRecord City?  @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  fixtures Fixture[]
+}
+
+model Referee {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  name         String
+  imagePath    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  fixtures Fixture[]
+}
+
+model Team {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  name         String
+  shortCode    String?
+  imagePath    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  squadMemberships SquadMembership[]
+  homeFixtures     Fixture[]         @relation("HomeTeam")
+  awayFixtures     Fixture[]         @relation("AwayTeam")
+  standings        Standing[]
+  transfersFrom    Transfer[]        @relation("TransferFrom")
+  transfersTo      Transfer[]        @relation("TransferTo")
+}
+
+model Player {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  name         String
+  displayName  String?
+  imagePath    String?
+  positionId   Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  squadMemberships        SquadMembership[]
+  transfers               Transfer[]
+  playerMarketValues      PlayerMarketValue[]
+  injuries                Injury[]
+  suspensions             Suspension[]
+  events                  Event[]
+  lineups                 Lineup[]
+  fixturePlayerStatistics FixturePlayerStatistic[]
+}
+
+model Coach {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  teamId       Int?
+  name         String
+  imagePath    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SquadMembership {
+  id          Int       @id @default(autoincrement())
+  playerId    Int
+  teamId      Int
+  seasonId    Int
+  from        DateTime
+  to          DateTime?
+  shirtNumber Int?
+  isLoan      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Restrict)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Restrict)
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Restrict)
+
+  @@unique([playerId, teamId, seasonId, from])
+  @@index([seasonId, teamId])
+  @@index([seasonId, playerId])
+}
+
+model Transfer {
+  id           Int       @id @default(autoincrement())
+  sportmonksId Int       @unique
+  playerId     Int
+  fromTeamId   Int?
+  toTeamId     Int?
+  type         String?
+  date         DateTime?
+  amount       String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Restrict)
+  fromTeam Team?  @relation("TransferFrom", fields: [fromTeamId], references: [id], onDelete: SetNull)
+  toTeam   Team?  @relation("TransferTo", fields: [toTeamId], references: [id], onDelete: SetNull)
+}
+
+model PlayerMarketValue {
+  id           Int       @id @default(autoincrement())
+  sportmonksId Int       @unique
+  playerId     Int
+  value        Decimal   @db.Decimal(18, 2)
+  currency     String?
+  date         DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Restrict)
+
+  @@index([playerId])
+}
+
+model Injury {
+  id             Int       @id @default(autoincrement())
+  sportmonksId   Int       @unique
+  playerId       Int
+  type           String?
+  reason         String?
+  startDate      DateTime?
+  expectedReturn DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Restrict)
+
+  @@index([playerId])
+}
+
+model Suspension {
+  id           Int       @id @default(autoincrement())
+  sportmonksId Int       @unique
+  playerId     Int
+  reason       String?
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Restrict)
+
+  @@index([playerId])
+}
+
+model Fixture {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  seasonId     Int
+  stageId      Int?
+  roundId      Int?
+  groupId      Int?
+  venueId      Int?
+  refereeId    Int?
+  homeTeamId   Int?
+  awayTeamId   Int?
+  name         String?
+  kickoffAt    DateTime
+  stateId      Int?
+  resultInfo   String?
+  homeScore    Int?
+  awayScore    Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  season   Season   @relation(fields: [seasonId], references: [id], onDelete: Restrict)
+  stage    Stage?   @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  round    Round?   @relation(fields: [roundId], references: [id], onDelete: SetNull)
+  group    Group?   @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  venue    Venue?   @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  referee  Referee? @relation(fields: [refereeId], references: [id], onDelete: SetNull)
+  homeTeam Team?    @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: SetNull)
+  awayTeam Team?    @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: SetNull)
+
+  events      Event[]
+  lineups     Lineup[]
+  playerStats FixturePlayerStatistic[]
+  teamStats   FixtureTeamStatistic[]
+
+  @@index([seasonId, kickoffAt])
+}
+
+model Event {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int      @unique
+  fixtureId    Int
+  playerId     Int?
+  typeId       Int?
+  sortOrder    Int?
+  minute       Int?
+  extraMinute  Int?
+  result       String?
+  info         String?
+  addition     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Restrict)
+  player  Player? @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  @@index([fixtureId, sortOrder])
+  @@index([fixtureId, minute])
+}
+
+model Lineup {
+  id                Int      @id @default(autoincrement())
+  fixtureId         Int
+  playerId          Int
+  position          String?
+  formationPosition Int?
+  jerseyNumber      Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Restrict)
+  player  Player  @relation(fields: [playerId], references: [id], onDelete: Restrict)
+
+  @@unique([fixtureId, playerId])
+  @@index([fixtureId])
+}
+
+model FixturePlayerStatistic {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int?     @unique
+  fixtureId    Int
+  playerId     Int
+  typeId       Int?
+  value        Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Restrict)
+  player  Player  @relation(fields: [playerId], references: [id], onDelete: Restrict)
+
+  @@index([fixtureId])
+}
+
+model FixtureTeamStatistic {
+  id           Int      @id @default(autoincrement())
+  sportmonksId Int?     @unique
+  fixtureId    Int
+  typeId       Int?
+  value        Json?
+  location     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Restrict)
+
+  @@index([fixtureId])
+}
+
+model Standing {
+  id           Int      @id @default(autoincrement())
+  seasonId     Int
+  stageId      Int?
+  teamId       Int
+  position     Int
+  points       Int
+  played       Int
+  won          Int
+  draw         Int
+  lost         Int
+  goalsFor     Int
+  goalsAgainst Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Restrict)
+  stage  Stage? @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Restrict)
+
+  @@unique([seasonId, stageId, teamId])
+  @@index([seasonId])
+}
