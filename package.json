@@ -1,0 +1,31 @@
+{
+  "name": "campeonato-uruguayo",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter db generate",
+    "db:migrate": "pnpm --filter db migrate",
+    "db:migrate:dev": "pnpm --filter db migrate:dev",
+    "db:push": "pnpm --filter db push",
+    "db:studio": "pnpm --filter db studio",
+    "sync": "pnpm --filter data-sync sync",
+    "sync:base": "pnpm --filter data-sync sync:base",
+    "sync:countries": "pnpm --filter data-sync sync:countries",
+    "sync:leagues": "pnpm --filter data-sync sync:leagues",
+    "sync:venues": "pnpm --filter data-sync sync:venues",
+    "sync:seasons": "pnpm --filter data-sync sync:seasons",
+    "sync:structure": "pnpm --filter data-sync sync:structure",
+    "dev": "turbo dev"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "turbo": "^2.3.0",
+    "typescript": "^5.6.0"
+  },
+  "packageManager": "pnpm@9.14.2",
+  "engines": {
+    "node": ">=20"
+  }
+}
