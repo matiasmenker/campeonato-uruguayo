@@ -1,89 +1,89 @@
 import type { PrismaClient } from "db";
-import type { SportMonksClient } from "../sportmonks.js";
-import type { Logger } from "../logger.js";
 import type { SeasonRaw } from "sportmonks-client";
+import type { Logger } from "../logger.js";
+import type { SportMonksClient } from "../sportmonks.js";
 
-export interface SyncSeasonsDeps {
+export interface SyncDependencies {
   client: SportMonksClient;
   db: PrismaClient;
   log: Logger;
-  /** If set, only sync seasons for this league (sportmonks id). Otherwise sync from /seasons. */
-  leagueId?: number;
-  /** If set, only sync last N seasons per league. */
-  lastN?: number;
 }
 
-export async function syncSeasons({
-  client,
-  db,
-  log,
-  leagueId,
-  lastN = 4,
-}: SyncSeasonsDeps): Promise<void> {
-  const ctx = log.child({ block: "seasons" });
-  ctx.info("📅 Syncing seasons...");
+const mapSeason = (seasonDto: SeasonRaw, leagueId: number) => {
+  return {
+    sportmonksId: seasonDto.id,
+    leagueId,
+    name: seasonDto.name,
+    startingAt: new Date(seasonDto.starting_at),
+    endingAt: new Date(seasonDto.ending_at),
+  };
+};
 
-  let items: SeasonRaw[];
+const syncSeasons = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+  log.info("🚀 Syncing Seasons...");
 
-  if (leagueId) {
-    const leagueData = await client.get<{
-      seasons?: { data: SeasonRaw[] } | SeasonRaw[];
-    }>(`/leagues/${leagueId}`, { include: "seasons" });
-    const seasons = leagueData?.seasons;
-    const arr = Array.isArray(seasons)
-      ? seasons
-      : (seasons as { data: SeasonRaw[] } | undefined)?.data ?? [];
-    const sorted = [...arr].sort(
-      (a, b) => new Date(b.ending_at).getTime() - new Date(a.ending_at).getTime()
-    );
-    items = lastN > 0 ? sorted.slice(0, lastN) : sorted;
-    ctx.info(`  📥 Got ${items.length} seasons for league ${leagueId}`);
-  } else {
-    items = await client.getAllPages<SeasonRaw>("/seasons", {
-      filters: "populate",
-      perPage: 50,
-      onPage: (data, page) => {
-        ctx.info(`  📥 Downloaded page ${page}: ${data.length} seasons`);
+  const uruguayLeague = await db.league.findFirst({
+    where: {
+      country: {
+        code: "UY",
       },
-    });
+    },
+    select: {
+      id: true,
+      sportmonksId: true,
+    },
+  });
+
+  if (!uruguayLeague) {
+    log.warn("⚠️  Season sync skipped: Uruguay league not found. Run sync:leagues first.");
+    return;
   }
 
-  const leagueCache = new Map<number, number>();
-  let skipped = 0;
+  const leagueResponse = await client.get<{
+    seasons?: { data: SeasonRaw[] } | SeasonRaw[];
+  }>(`/leagues/${uruguayLeague.sportmonksId}`, { include: "seasons" });
 
-  for (let i = 0; i < items.length; i++) {
-    const s = items[i];
-    const leagueSportmonksId = s.league_id ?? 0;
-    if (!leagueCache.has(leagueSportmonksId)) {
-      const league = await db.league.findFirst({
-        where: { sportmonksId: leagueSportmonksId },
-      });
-      if (league) leagueCache.set(leagueSportmonksId, league.id);
-    }
-    const leagueId = leagueCache.get(leagueSportmonksId);
-    if (!leagueId) {
-      skipped += 1;
-      continue;
-    }
+  const seasonsArray = leagueResponse?.seasons;
+  const seasons = Array.isArray(seasonsArray) ? seasonsArray : (seasonsArray?.data ?? []);
+  log.info(`📥 Seasons fetched from API: ${seasons.length}`);
 
-    const data = {
-      leagueId,
-      name: s.name,
-      startingAt: new Date(s.starting_at),
-      endingAt: new Date(s.ending_at),
-    };
+  const seasonsToPersist = seasons
+    .filter((season) => {
+      if (!season.name || !season.starting_at || !season.ending_at) {
+        log.warn(`⚠️  Season skipped: ${season.id}`);
+        return false;
+      }
+      return true;
+    })
+    .sort((a, b) => new Date(b.ending_at).getTime() - new Date(a.ending_at).getTime())
+    .slice(0, 5);
+
+  for (let i = 0; i < seasonsToPersist.length; i++) {
+    const seasonDto = seasonsToPersist[i];
+    const season = mapSeason(seasonDto, uruguayLeague.id);
+
     await db.season.upsert({
-      where: { sportmonksId: s.id },
-      create: { sportmonksId: s.id, ...data },
-      update: data,
+      where: { sportmonksId: season.sportmonksId },
+      create: season,
+      update: season,
     });
-    if ((i + 1) % 25 === 0) {
-      ctx.info(`  💾 Progress: ${i + 1}/${items.length} seasons`);
+
+    const processed = i + 1;
+    if (processed % 25 === 0 || processed === seasonsToPersist.length) {
+      log.info(`💾 Progress: ${processed}/${seasonsToPersist.length} seasons`);
     }
   }
 
-  if (skipped > 0) {
-    ctx.warn(`  ⚠️ Skipped ${skipped} seasons (league not found)`);
-  }
-  ctx.info(`✅ Seasons: ${items.length - skipped} synced`);
-}
+  const skippedSeasons = seasons.length - seasonsToPersist.length;
+  const totalRows = await db.season.count();
+  log.info(
+    [
+      "✅ Seasons saved to database",
+      `   🟢 Saved (inserted/updated): ${seasonsToPersist.length}`,
+      `   🟡 Skipped: ${skippedSeasons}`,
+      `   📦 Total rows in Season table: ${totalRows}`,
+    ].join("\n")
+  );
+};
+
+export { syncSeasons };
