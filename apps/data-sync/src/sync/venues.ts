@@ -1,98 +1,104 @@
 import type { PrismaClient } from "db";
-import type { SportMonksClient } from "../sportmonks.js";
+import type { VenueDto } from "sportmonks-client";
 import type { Logger } from "../logger.js";
-import type { VenueRaw } from "sportmonks-client";
+import type { SportMonksClient } from "../sportmonks.js";
 
-export interface SyncVenuesDeps {
+export interface SyncDependencies {
   client: SportMonksClient;
   db: PrismaClient;
   log: Logger;
 }
 
-/**
- * Sync venues. Cities are derived from venue data.
- * Countries and cities must be synced first (via syncCountries and city upserts here).
- */
-export async function syncVenues({ client, db, log }: SyncVenuesDeps): Promise<void> {
-  const ctx = log.child({ block: "venues" });
-  ctx.info("🏟️ Syncing venues and cities...");
+const mapVenue = (venueDto: VenueDto, countryId: number, cityId: number | null) => {
+  return {
+    sportmonksId: venueDto.id,
+    name: venueDto.name,
+    city: venueDto.city_name ?? null,
+    capacity: venueDto.capacity ?? null,
+    imagePath: venueDto.image_path ?? null,
+    countryId,
+    cityId,
+  };
+};
 
-  const items = await client.getAllPages<VenueRaw>("/venues", {
-    include: "country,city",
-    filters: "populate",
-    perPage: 50,
-    onPage: (data, page) => {
-      ctx.info(`  📥 Downloaded page ${page}: ${data.length} venues`);
-    },
-  });
+const syncVenues = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+  log.info("🚀 Syncing Venues...");
 
-  const countryCache = new Map<number, number>();
-  const cityCache = new Map<number, number>();
+  const venuesResponse = await client.getAllPages<VenueDto>("/venues", { perPage: 100 });
 
-  for (let i = 0; i < items.length; i++) {
-    const v = items[i];
-    const countrySportmonksId = v.country_id ?? v.country?.id ?? null;
-    let countryId: number | null = null;
-    if (countrySportmonksId) {
-      if (!countryCache.has(countrySportmonksId)) {
-        const country = await db.country.findUnique({
-          where: { sportmonksId: countrySportmonksId },
-        });
-        if (country) countryCache.set(countrySportmonksId, country.id);
-      }
-      countryId = countryCache.get(countrySportmonksId) ?? null;
+  log.info(`📥 Venues fetched from API: ${venuesResponse.length}`);
+
+  let savedVenues = 0;
+  let skippedVenues = 0;
+
+  for (let i = 0; i < venuesResponse.length; i++) {
+    const venueDto = venuesResponse[i];
+
+    if (!venueDto.name) {
+      log.warn(`⚠️  Venue skipped: ${venueDto.city_name}`);
+      skippedVenues += 1;
+      continue;
     }
 
-    const citySportmonksId =
-      v.city_id ?? v.city_data?.id ?? (typeof v.city === "object" && v.city ? v.city.id : null);
-    const cityName =
-      v.city_name ??
-      (typeof v.city === "string" ? v.city : null) ??
-      v.city_data?.name ??
-      (typeof v.city === "object" && v.city ? v.city.name : null);
-
-    let cityId: number | null = null;
-    if (citySportmonksId && countryId) {
-      if (!cityCache.has(citySportmonksId)) {
-        const city = await db.city.upsert({
-          where: { sportmonksId: citySportmonksId },
-          create: {
-            sportmonksId: citySportmonksId,
-            countryId,
-            name: cityName ?? "Unknown",
-          },
-          update: { name: cityName ?? "Unknown" },
-        });
-        cityCache.set(citySportmonksId, city.id);
-      }
-      cityId = cityCache.get(citySportmonksId) ?? null;
+    const countrySportmonksId = venueDto.country_id ?? null;
+    if (!countrySportmonksId) {
+      log.warn(`⚠️  Venue skipped: ${venueDto.name}`);
+      skippedVenues += 1;
+      continue;
     }
 
-    const venueCity = cityName ?? null;
-    await db.venue.upsert({
-      where: { sportmonksId: v.id },
-      create: {
-        sportmonksId: v.id,
-        name: v.name,
-        city: venueCity,
-        capacity: v.capacity ?? null,
-        imagePath: v.image_path ?? null,
-        countryId,
-        cityId,
-      },
-      update: {
-        name: v.name,
-        city: venueCity,
-        capacity: v.capacity ?? null,
-        imagePath: v.image_path ?? null,
-        countryId,
-        cityId,
-      },
+    const country = await db.country.findUnique({
+      where: { sportmonksId: countrySportmonksId },
     });
-    if ((i + 1) % 100 === 0) {
-      ctx.info(`  💾 Progress: ${i + 1}/${items.length} venues`);
+    if (!country) {
+      log.warn(`⚠️  Venue skipped: ${venueDto.id}`);
+      skippedVenues += 1;
+      continue;
+    }
+
+    const citySportmonksId = venueDto.city_id ?? null;
+    const cityName = venueDto.city_name ?? "Unknown";
+    let cityId: number | null = null;
+
+    if (citySportmonksId) {
+      const city = await db.city.upsert({
+        where: { sportmonksId: citySportmonksId },
+        create: {
+          sportmonksId: citySportmonksId,
+          countryId: country.id,
+          name: cityName,
+        },
+        update: {
+          countryId: country.id,
+          name: cityName,
+        },
+      });
+      cityId = city.id;
+    }
+
+    const venue = mapVenue(venueDto, country.id, cityId);
+    await db.venue.upsert({
+      where: { sportmonksId: venue.sportmonksId },
+      create: venue,
+      update: venue,
+    });
+    savedVenues += 1;
+
+    const processed = i + 1;
+    if (processed % 25 === 0 || processed === venuesResponse.length) {
+      log.info(`💾 Progress: ${processed}/${venuesResponse.length} venues`);
     }
   }
 
-  ctx.info(`✅ Venues: ${items.length} synced`);
-}
+  const totalRows = await db.venue.count();
+  log.info(
+    [
+      "✅ Venues saved to database",
+      `   🟢 Saved (inserted/updated): ${savedVenues}`,
+      `   🟡 Skipped: ${skippedVenues}`,
+      `   📦 Total rows in Venue table: ${totalRows}`,
+    ].join("\n")
+  );
+};
+
+export { syncVenues };
