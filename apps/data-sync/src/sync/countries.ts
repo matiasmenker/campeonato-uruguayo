@@ -24,7 +24,7 @@ const mapCountry = (countryDto: CountryDto) => {
 
 const syncCountries = async ({ client, db, log }: SyncDependencies): Promise<void> => {
   const BATCH_SIZE = 20;
-  log.info("🌍 Syncing Countries...");
+  log.info("🚀 Syncing Countries...");
 
   const countriesResponse = await client.get<CountryDto[]>(
     "https://api.sportmonks.com/v3/core/countries",
@@ -34,12 +34,12 @@ const syncCountries = async ({ client, db, log }: SyncDependencies): Promise<voi
     }
   );
 
-  log.info(`✅ Countries fetched from API: ${countriesResponse.length}`);
+  log.info(`📥 Countries fetched from API: ${countriesResponse.length}`);
 
   const countriesToPersist = countriesResponse
     .filter((country) => {
-      if (!country.image_path || !country.iso2 || !country.iso3) {
-        log.warn(`⚠️  Skipping country: ${country.name}`);
+      if (!country.image_path || !country.official_name || !country.iso2 || !country.iso3) {
+        log.warn(`⚠️  Country skipped: ${country.name}`);
         return false;
       }
       return true;
@@ -65,13 +65,16 @@ const syncCountries = async ({ client, db, log }: SyncDependencies): Promise<voi
     }
   }
 
-  const upsertedCountries = countriesToPersist.length;
-  const persistedCountries = await db.country.count();
-  log.info("✅ Countries added in database", {
-    upsertedCountries,
-    skippedCountries,
-    persistedCountries,
-  });
+  const savedCountries = countriesToPersist.length;
+  const totalRows = await db.country.count();
+  log.info(
+    [
+      "✅ Countries saved to database",
+      `   🟢 Saved (inserted/updated): ${savedCountries}`,
+      `   🟡 Skipped: ${skippedCountries}`,
+      `   📦 Total rows in Country table: ${totalRows}`,
+    ].join("\n")
+  );
 };
 
 export { syncCountries };

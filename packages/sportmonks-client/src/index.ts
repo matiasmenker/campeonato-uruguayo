@@ -11,5 +11,5 @@ export type {
   SeasonRaw,
   SportMonksEntity,
   StageRaw,
-  VenueRaw,
+  VenueDto,
 } from "./types.js";

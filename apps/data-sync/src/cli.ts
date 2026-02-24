@@ -12,8 +12,8 @@ import { syncBase } from "./sync/base.js";
 import { syncCountries } from "./sync/countries.js";
 import { syncLeagues } from "./sync/leagues.js";
 import { syncSeasons } from "./sync/seasons.js";
-import { syncStructure } from "./sync/structure.js";
 import { syncVenues } from "./sync/venues.js";
+import { syncStructure } from "./sync/structure.js";
 
 const log = createLogger("data-sync");
 
@@ -33,10 +33,6 @@ async function main(): Promise<void> {
   const apiToken = getEnv("SPORTMONKS_API_TOKEN");
   const client = createClient(apiToken);
 
-  const leagueId = process.env.SPORTMONKS_LEAGUE_ID
-    ? parseInt(process.env.SPORTMONKS_LEAGUE_ID, 10)
-    : undefined;
-
   try {
     switch (command) {
       case "sync:base": {
@@ -44,8 +40,6 @@ async function main(): Promise<void> {
           client,
           db,
           log,
-          leagueId,
-          lastSeasons: 4,
         });
         break;
       }
@@ -55,17 +49,17 @@ async function main(): Promise<void> {
       case "sync:leagues":
         await syncLeagues({ client, db, log });
         break;
+      case "sync:seasons":
+        await syncSeasons({ client, db, log });
+        break;
       case "sync:venues":
         await syncVenues({ client, db, log });
-        break;
-      case "sync:seasons":
-        await syncSeasons({ client, db, log, leagueId, lastN: 4 });
         break;
       case "sync:structure":
         await syncStructure({ client, db, log });
         break;
       case "sync":
-        await syncBase({ client, db, log, leagueId, lastSeasons: 4 });
+        await syncBase({ client, db, log });
         break;
       default:
         log.error(

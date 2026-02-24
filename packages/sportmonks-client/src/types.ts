@@ -87,7 +87,7 @@ export interface GroupRaw {
   stage_id?: number | null;
 }
 
-export interface VenueRaw {
+export interface VenueDto {
   id: number;
   name: string;
   country_id?: number | null;
