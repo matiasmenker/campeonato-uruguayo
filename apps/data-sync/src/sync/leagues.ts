@@ -20,6 +20,7 @@ const mapLeague = (leagueDto: LeagueDto, countryId: number | null) => {
 };
 
 const syncLeagues = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+  log.info("=== LEAGUES START ===");
   log.info("🚀 Syncing Leagues...");
 
   const leaguesResponse = await client.getAllPages<LeagueDto>("/leagues", {
@@ -60,14 +61,11 @@ const syncLeagues = async ({ client, db, log }: SyncDependencies): Promise<void>
   const savedLeagues = leaguesToPersist.length;
   const skippedLeagues = leaguesResponse.length - leaguesToPersist.length;
   const totalRows = await db.league.count();
-  log.info(
-    [
-      "✅ Leagues saved to database",
-      `   🟢 Saved (inserted/updated): ${savedLeagues}`,
-      `   🟡 Skipped: ${skippedLeagues}`,
-      `   📦 Total rows in League table: ${totalRows}`,
-    ].join("\n")
-  );
+  log.info("✅ Leagues sync summary");
+  log.info(`🟢 Saved (inserted/updated): ${savedLeagues}`);
+  log.info(`🟡 Skipped: ${skippedLeagues}`);
+  log.info(`📦 Total rows in League table: ${totalRows}`);
+  log.info("=== LEAGUES END ===");
 };
 
 export { syncLeagues };

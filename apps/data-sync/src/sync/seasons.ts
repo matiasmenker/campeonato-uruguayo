@@ -14,13 +14,17 @@ const mapSeason = (seasonDto: SeasonRaw, leagueId: number) => {
     sportmonksId: seasonDto.id,
     leagueId,
     name: seasonDto.name,
+    isCurrent: seasonDto.is_current ?? false,
     startingAt: new Date(seasonDto.starting_at),
     endingAt: new Date(seasonDto.ending_at),
   };
 };
 
 const syncSeasons = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+  log.info("=== SEASONS START ===");
   log.info("🚀 Syncing Seasons...");
+  const currentYear = new Date().getUTCFullYear();
+  const minYear = currentYear - 4;
 
   const uruguayLeague = await db.league.findFirst({
     where: {
@@ -53,10 +57,13 @@ const syncSeasons = async ({ client, db, log }: SyncDependencies): Promise<void>
         log.warn(`⚠️  Season skipped: ${season.id}`);
         return false;
       }
+      const endingYear = new Date(season.ending_at).getUTCFullYear();
+      if (endingYear < minYear || endingYear > currentYear) {
+        return false;
+      }
       return true;
     })
-    .sort((a, b) => new Date(b.ending_at).getTime() - new Date(a.ending_at).getTime())
-    .slice(0, 5);
+    .sort((a, b) => new Date(b.ending_at).getTime() - new Date(a.ending_at).getTime());
 
   for (let i = 0; i < seasonsToPersist.length; i++) {
     const seasonDto = seasonsToPersist[i];
@@ -76,14 +83,14 @@ const syncSeasons = async ({ client, db, log }: SyncDependencies): Promise<void>
 
   const skippedSeasons = seasons.length - seasonsToPersist.length;
   const totalRows = await db.season.count();
-  log.info(
-    [
-      "✅ Seasons saved to database",
-      `   🟢 Saved (inserted/updated): ${seasonsToPersist.length}`,
-      `   🟡 Skipped: ${skippedSeasons}`,
-      `   📦 Total rows in Season table: ${totalRows}`,
-    ].join("\n")
-  );
+  const currentRows = await db.season.count({ where: { isCurrent: true } });
+  log.info("✅ Seasons sync summary");
+  log.info(`🗓️ Window: ${minYear}-${currentYear}`);
+  log.info(`🟢 Saved (inserted/updated): ${seasonsToPersist.length}`);
+  log.info(`🟡 Skipped: ${skippedSeasons}`);
+  log.info(`🔵 Current rows (isCurrent=true): ${currentRows}`);
+  log.info(`📦 Total rows in Season table: ${totalRows}`);
+  log.info("=== SEASONS END ===");
 };
 
 export { syncSeasons };

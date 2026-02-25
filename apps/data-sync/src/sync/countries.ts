@@ -23,6 +23,7 @@ const mapCountry = (countryDto: CountryDto) => {
 };
 
 const syncCountries = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+  log.info("=== COUNTRIES START ===");
   const BATCH_SIZE = 20;
   log.info("🚀 Syncing Countries...");
 
@@ -67,14 +68,11 @@ const syncCountries = async ({ client, db, log }: SyncDependencies): Promise<voi
 
   const savedCountries = countriesToPersist.length;
   const totalRows = await db.country.count();
-  log.info(
-    [
-      "✅ Countries saved to database",
-      `   🟢 Saved (inserted/updated): ${savedCountries}`,
-      `   🟡 Skipped: ${skippedCountries}`,
-      `   📦 Total rows in Country table: ${totalRows}`,
-    ].join("\n")
-  );
+  log.info("✅ Countries sync summary");
+  log.info(`🟢 Saved (inserted/updated): ${savedCountries}`);
+  log.info(`🟡 Skipped: ${skippedCountries}`);
+  log.info(`📦 Total rows in Country table: ${totalRows}`);
+  log.info("=== COUNTRIES END ===");
 };
 
 export { syncCountries };

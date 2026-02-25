@@ -1,135 +1,203 @@
 import type { PrismaClient } from "db";
-import type { SportMonksClient } from "../sportmonks.js";
+import type { GroupRaw, RoundRaw, StageRaw } from "sportmonks-client";
 import type { Logger } from "../logger.js";
-import type { StageRaw, RoundRaw, GroupRaw } from "sportmonks-client";
+import type { SportMonksClient } from "../sportmonks.js";
 
-export interface SyncStructureDeps {
+export interface SyncDependencies {
   client: SportMonksClient;
   db: PrismaClient;
   log: Logger;
-  /** Season sportmonks IDs to sync. If empty, sync all seasons in DB. */
-  seasonIds?: number[];
 }
 
-function extractArray<T>(raw: { data: T[] } | T[] | undefined): T[] {
+const extractArray = <T>(raw: { data: T[] } | T[] | undefined): T[] => {
   if (!raw) return [];
   return Array.isArray(raw) ? raw : raw.data ?? [];
-}
+};
 
-export async function syncStructure({
-  client,
-  db,
-  log,
-  seasonIds: filterSeasonIds,
-}: SyncStructureDeps): Promise<void> {
-  const ctx = log.child({ block: "structure" });
-  ctx.info("🏗️ Syncing structure (stages, rounds, groups)...");
+const syncStructure = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+  log.info("=== STRUCTURE START ===");
+  log.info("🚀 Syncing Structure...");
+  const currentYear = new Date().getUTCFullYear();
+  const minYear = currentYear - 4;
 
-  const seasons = await db.season.findMany({
-    where: filterSeasonIds?.length
-      ? { sportmonksId: { in: filterSeasonIds } }
-      : undefined,
+  const uruguayLeague = await db.league.findFirst({
+    where: {
+      country: {
+        code: "UY",
+      },
+    },
+    select: { id: true },
   });
 
-  if (seasons.length === 0) {
-    ctx.warn("  ⚠️ No seasons found. Run sync:base or sync:seasons first.");
+  if (!uruguayLeague) {
+    log.warn("⚠️  Structure sync skipped: Uruguay league not found. Run sync:leagues first.");
     return;
   }
 
-  let stagesCreated = 0;
-  let stagesUpdated = 0;
-  let roundsCreated = 0;
-  let roundsUpdated = 0;
-  let groupsCreated = 0;
-  let groupsUpdated = 0;
+  const seasons = await db.season.findMany({
+    where: {
+      leagueId: uruguayLeague.id,
+      endingAt: {
+        gte: new Date(Date.UTC(minYear, 0, 1)),
+        lt: new Date(Date.UTC(currentYear + 1, 0, 1)),
+      },
+    },
+    select: { id: true, sportmonksId: true },
+    orderBy: { endingAt: "desc" },
+  });
 
-  for (const season of seasons) {
-    const seasonData = await client.get<{
+  if (seasons.length === 0) {
+    log.warn("⚠️  Structure sync skipped: no seasons found. Run sync:seasons first.");
+    return;
+  }
+
+  log.info(`📥 Seasons loaded from database: ${seasons.length}`);
+
+  let savedStages = 0;
+  let skippedStages = 0;
+  let savedRounds = 0;
+  let skippedRounds = 0;
+  let savedGroups = 0;
+  let skippedGroups = 0;
+
+  for (let i = 0; i < seasons.length; i++) {
+    const season = seasons[i];
+    const processed = i + 1;
+    log.info(`🔎 Processing season ${processed}/${seasons.length}: ${season.sportmonksId}`);
+
+    const seasonResponse = await client.get<{
       stages?: { data: StageRaw[] } | StageRaw[];
     }>(`/seasons/${season.sportmonksId}`, { include: "stages" });
 
-    const stages = extractArray(seasonData?.stages);
+    const stages = extractArray(seasonResponse?.stages);
+    log.info(`📥 Stages fetched from API (${season.sportmonksId}): ${stages.length}`);
+    const stageMap = new Map<number, number>();
 
-    for (const st of stages) {
-      const existing = await db.stage.findUnique({ where: { sportmonksId: st.id } });
-      const data = {
-        seasonId: season.id,
-        name: st.name,
-        type: st.type ?? null,
-      };
-      if (existing) {
-        await db.stage.update({ where: { id: existing.id }, data });
-        stagesUpdated += 1;
-      } else {
-        await db.stage.create({ data: { sportmonksId: st.id, ...data } });
-        stagesCreated += 1;
+    for (const stageDto of stages) {
+      if (!stageDto.name) {
+        skippedStages += 1;
+        log.warn(`⚠️  Stage skipped: ${stageDto.id}`);
+        continue;
       }
+
+      const stage = await db.stage.upsert({
+        where: { sportmonksId: stageDto.id },
+        create: {
+          sportmonksId: stageDto.id,
+          seasonId: season.id,
+          name: stageDto.name,
+          type: stageDto.type ?? null,
+          isCurrent: stageDto.is_current ?? false,
+        },
+        update: {
+          seasonId: season.id,
+          name: stageDto.name,
+          type: stageDto.type ?? null,
+          isCurrent: stageDto.is_current ?? false,
+        },
+      });
+      stageMap.set(stageDto.id, stage.id);
+      savedStages += 1;
     }
 
     const roundsResponse = await client.get<RoundRaw[] | { data: RoundRaw[] }>(
       `/rounds/seasons/${season.sportmonksId}`
     );
     const rounds = extractArray(roundsResponse);
+    log.info(`📥 Rounds fetched from API (${season.sportmonksId}): ${rounds.length}`);
 
-    for (const r of rounds) {
-      const stageSportmonksId = r.stage_id;
-      if (!stageSportmonksId) continue;
-      const stage = await db.stage.findUnique({
-        where: { sportmonksId: stageSportmonksId },
-      });
-      if (!stage) continue;
-
-      const ex = await db.round.findUnique({ where: { sportmonksId: r.id } });
-      const rData = {
-        stageId: stage.id,
-        name: r.name,
-        slug: r.slug ?? null,
-      };
-      if (ex) {
-        await db.round.update({ where: { id: ex.id }, data: rData });
-        roundsUpdated += 1;
-      } else {
-        await db.round.create({ data: { sportmonksId: r.id, ...rData } });
-        roundsCreated += 1;
+    for (const roundDto of rounds) {
+      if (!roundDto.name || !roundDto.stage_id) {
+        skippedRounds += 1;
+        log.warn(`⚠️  Round skipped: ${roundDto.id}`);
+        continue;
       }
+
+      const stageId = stageMap.get(roundDto.stage_id);
+      if (!stageId) {
+        skippedRounds += 1;
+        log.warn(`⚠️  Round skipped: ${roundDto.id}`);
+        continue;
+      }
+
+      await db.round.upsert({
+        where: { sportmonksId: roundDto.id },
+        create: {
+          sportmonksId: roundDto.id,
+          stageId,
+          name: roundDto.name,
+          slug: roundDto.slug ?? null,
+          isCurrent: roundDto.is_current ?? false,
+        },
+        update: {
+          stageId,
+          name: roundDto.name,
+          slug: roundDto.slug ?? null,
+          isCurrent: roundDto.is_current ?? false,
+        },
+      });
+      savedRounds += 1;
     }
 
     try {
-      const seasonWithGroups = await client.get<{
+      const groupsResponse = await client.get<{
         groups?: { data: GroupRaw[] } | GroupRaw[];
       }>(`/seasons/${season.sportmonksId}`, { include: "groups" });
-      const groups = extractArray(seasonWithGroups?.groups);
+      const groups = extractArray(groupsResponse?.groups);
+      log.info(`📥 Groups fetched from API (${season.sportmonksId}): ${groups.length}`);
 
-      for (const g of groups) {
+      for (const groupDto of groups) {
         const stageSportmonksId =
-          g.stage_id ?? (g as { stage?: { id: number } }).stage?.id;
-        if (!stageSportmonksId) continue;
-        const stage = await db.stage.findUnique({
-          where: { sportmonksId: stageSportmonksId },
-        });
-        if (!stage) continue;
-
-        const ex = await db.group.findUnique({ where: { sportmonksId: g.id } });
-        const gData = {
-          stageId: stage.id,
-          name: g.name ?? null,
-        };
-        if (ex) {
-          await db.group.update({ where: { id: ex.id }, data: gData });
-          groupsUpdated += 1;
-        } else {
-          await db.group.create({ data: { sportmonksId: g.id, ...gData } });
-          groupsCreated += 1;
+          groupDto.stage_id ?? (groupDto as { stage?: { id: number } }).stage?.id;
+        if (!stageSportmonksId) {
+          skippedGroups += 1;
+          log.warn(`⚠️  Group skipped: ${groupDto.id}`);
+          continue;
         }
+
+        const stageId = stageMap.get(stageSportmonksId);
+        if (!stageId) {
+          skippedGroups += 1;
+          log.warn(`⚠️  Group skipped: ${groupDto.id}`);
+          continue;
+        }
+
+        await db.group.upsert({
+          where: { sportmonksId: groupDto.id },
+          create: {
+            sportmonksId: groupDto.id,
+            stageId,
+            name: groupDto.name ?? null,
+          },
+          update: {
+            stageId,
+            name: groupDto.name ?? null,
+          },
+        });
+        savedGroups += 1;
       }
     } catch {
-      ctx.warn(
-        `  ⚠️ Groups not available for season ${season.sportmonksId} (many leagues have no groups)`
-      );
+      log.warn(`⚠️  Groups skipped for season: ${season.sportmonksId}`);
     }
+
+    log.info(`💾 Progress: ${processed}/${seasons.length} seasons`);
   }
 
-  ctx.info(
-    `✅ Structure: stages ${stagesCreated}+${stagesUpdated}, rounds ${roundsCreated}+${roundsUpdated}, groups ${groupsCreated}+${groupsUpdated}`
+  const totalStages = await db.stage.count();
+  const totalRounds = await db.round.count();
+  const totalGroups = await db.group.count();
+  const currentStages = await db.stage.count({ where: { isCurrent: true } });
+  const currentRounds = await db.round.count({ where: { isCurrent: true } });
+
+  log.info("✅ Structure sync summary");
+  log.info(`🗓️ Window: ${minYear}-${currentYear}`);
+  log.info(
+    `🟢 Saved (inserted/updated): stages=${savedStages}, rounds=${savedRounds}, groups=${savedGroups}`
   );
-}
+  log.info(`🟡 Skipped: stages=${skippedStages}, rounds=${skippedRounds}, groups=${skippedGroups}`);
+  log.info(`🔵 Current rows (isCurrent=true): stages=${currentStages}, rounds=${currentRounds}`);
+  log.info(`📦 Total rows: stages=${totalStages}, rounds=${totalRounds}, groups=${totalGroups}`);
+  log.info("=== STRUCTURE END ===");
+};
+
+export { syncStructure };

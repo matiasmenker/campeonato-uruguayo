@@ -22,6 +22,7 @@ const mapVenue = (venueDto: VenueDto, countryId: number, cityId: number | null) 
 };
 
 const syncVenues = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+  log.info("=== VENUES START ===");
   log.info("🚀 Syncing Venues...");
 
   const venuesResponse = await client.getAllPages<VenueDto>("/venues", { perPage: 100 });
@@ -91,14 +92,11 @@ const syncVenues = async ({ client, db, log }: SyncDependencies): Promise<void> 
   }
 
   const totalRows = await db.venue.count();
-  log.info(
-    [
-      "✅ Venues saved to database",
-      `   🟢 Saved (inserted/updated): ${savedVenues}`,
-      `   🟡 Skipped: ${skippedVenues}`,
-      `   📦 Total rows in Venue table: ${totalRows}`,
-    ].join("\n")
-  );
+  log.info("✅ Venues sync summary");
+  log.info(`🟢 Saved (inserted/updated): ${savedVenues}`);
+  log.info(`🟡 Skipped: ${skippedVenues}`);
+  log.info(`📦 Total rows in Venue table: ${totalRows}`);
+  log.info("=== VENUES END ===");
 };
 
 export { syncVenues };

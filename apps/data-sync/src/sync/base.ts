@@ -5,6 +5,7 @@ import { syncCountries } from "./countries.js";
 import { syncLeagues } from "./leagues.js";
 import { syncSeasons } from "./seasons.js";
 import { syncVenues } from "./venues.js";
+import { syncStructure } from "./structure.js";
 
 export interface SyncBaseDeps {
   client: SportMonksClient;
@@ -18,5 +19,6 @@ export async function syncBase({ client, db, log }: SyncBaseDeps): Promise<void>
   await syncLeagues({ client, db, log });
   await syncSeasons({ client, db, log });
   await syncVenues({ client, db, log });
+  await syncStructure({ client, db, log });
   log.info("🎉 Sync Finished Successfully");
 }
