@@ -57,6 +57,7 @@ model Season {
   sportmonksId Int      @unique
   leagueId     Int
   name         String
+  isCurrent    Boolean  @default(false)
   startingAt   DateTime
   endingAt     DateTime
   createdAt    DateTime @default(now())
@@ -77,6 +78,7 @@ model Stage {
   seasonId     Int
   name         String
   type         String?
+  isCurrent    Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -95,6 +97,7 @@ model Round {
   stageId      Int
   name         String
   slug         String?
+  isCurrent    Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

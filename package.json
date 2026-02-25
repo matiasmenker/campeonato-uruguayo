@@ -17,6 +17,7 @@
     "sync:venues": "pnpm --filter data-sync sync:venues",
     "sync:seasons": "pnpm --filter data-sync sync:seasons",
     "sync:structure": "pnpm --filter data-sync sync:structure",
+    "sync:reset": "pnpm --filter db exec prisma db push --force-reset && pnpm db:generate",
     "dev": "turbo dev"
   },
   "devDependencies": {

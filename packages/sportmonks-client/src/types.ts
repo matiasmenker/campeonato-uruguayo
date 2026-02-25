@@ -63,6 +63,7 @@ export interface SeasonRaw {
   name: string;
   starting_at: string;
   ending_at: string;
+  is_current?: boolean | null;
   league_id?: number | null;
 }
 
@@ -70,6 +71,7 @@ export interface StageRaw {
   id: number;
   name: string;
   type?: string | null;
+  is_current?: boolean | null;
   season_id?: number | null;
 }
 
@@ -77,6 +79,7 @@ export interface RoundRaw {
   id: number;
   name: string;
   slug?: string | null;
+  is_current?: boolean | null;
   stage_id?: number | null;
   stage?: { id: number };
 }
