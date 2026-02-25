@@ -14,4 +14,10 @@ export type {
   StageRaw,
   VenueDto,
   TeamRaw,
+  PlayerRaw,
+  TeamPlayerRelationRaw,
+  SquadEntryRaw,
+  TeamWithPlayersRaw,
+  FixtureParticipantDto,
+  FixtureScoreDto,
 } from "./types.js";

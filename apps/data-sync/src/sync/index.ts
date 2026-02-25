@@ -6,3 +6,4 @@ export { syncSeasons } from "./seasons.js";
 export { syncStructure } from "./structure.js";
 export { syncTeams } from "./teams.js";
 export { syncPlayers } from "./players.js";
+export { syncSquadMemberships } from "./squad-memberships.js";

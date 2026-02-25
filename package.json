@@ -19,6 +19,7 @@
     "sync:structure": "pnpm --filter data-sync sync:structure",
     "sync:teams": "pnpm --filter data-sync sync:teams",
     "sync:players": "pnpm --filter data-sync sync:players",
+    "sync:squad-memberships": "pnpm --filter data-sync sync:squad-memberships",
     "sync:reset": "pnpm --filter db exec prisma db push --force-reset && pnpm db:generate",
     "dev": "turbo dev"
   },

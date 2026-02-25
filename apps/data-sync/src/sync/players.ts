@@ -1,4 +1,5 @@
 import type { PrismaClient } from "db";
+import type { PlayerRaw, TeamWithPlayersRaw } from "sportmonks-client";
 import type { Logger } from "../logger.js";
 import type { SportMonksClient } from "../sportmonks.js";
 
@@ -8,26 +9,7 @@ export interface SyncDependencies {
   log: Logger;
 }
 
-interface PlayerDetailsRaw {
-  id: number;
-  name?: string | null;
-  display_name?: string | null;
-  image_path?: string | null;
-  position_id?: number | null;
-}
-
-interface SquadPlayerRaw {
-  player_id?: number | null;
-  position_id?: number | null;
-  player?: PlayerDetailsRaw | null;
-}
-
-interface TeamWithPlayersRaw {
-  id: number;
-  players?: SquadPlayerRaw[] | null;
-}
-
-const mapPlayer = (player: PlayerDetailsRaw, fallbackPositionId: number | null) => {
+const mapPlayer = (player: PlayerRaw, fallbackPositionId: number | null) => {
   return {
     sportmonksId: player.id,
     name: player.name?.trim() || `Player ${player.id}`,

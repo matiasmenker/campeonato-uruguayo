@@ -74,6 +74,41 @@ export interface TeamRaw {
   image_path?: string | null;
 }
 
+export interface PlayerRaw {
+  id: number;
+  name?: string | null;
+  display_name?: string | null;
+  image_path?: string | null;
+  position_id?: number | null;
+}
+
+export interface TeamPlayerRelationRaw {
+  player_id?: number | null;
+  position_id?: number | null;
+  player?: PlayerRaw | null;
+}
+
+export interface TeamWithPlayersRaw extends TeamRaw {
+  players?: TeamPlayerRelationRaw[] | null;
+}
+
+export interface SquadEntryRaw {
+  id: number;
+  player_id?: number | null;
+  team_id?: number | null;
+  season_id?: number | null;
+  number?: number | null;
+  jersey_number?: number | null;
+  is_loan?: boolean | null;
+  from?: string | null;
+  to?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  starting_at?: string | null;
+  ending_at?: string | null;
+  player?: PlayerRaw | null;
+}
+
 export interface StageRaw {
   id: number;
   name: string;
