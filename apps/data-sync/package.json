@@ -11,7 +11,8 @@
     "sync:leagues": "tsx src/cli.ts sync:leagues",
     "sync:venues": "tsx src/cli.ts sync:venues",
     "sync:seasons": "tsx src/cli.ts sync:seasons",
-    "sync:structure": "tsx src/cli.ts sync:structure"
+    "sync:structure": "tsx src/cli.ts sync:structure",
+    "sync:teams": "tsx src/cli.ts sync:teams",
   },
   "dependencies": {
     "dotenv": "^16.4.5",

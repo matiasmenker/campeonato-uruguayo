@@ -67,6 +67,13 @@ export interface SeasonRaw {
   league_id?: number | null;
 }
 
+export interface TeamRaw {
+  id: number;
+  name: string;
+  short_code?: string | null;
+  image_path?: string | null;
+}
+
 export interface StageRaw {
   id: number;
   name: string;
@@ -88,6 +95,46 @@ export interface GroupRaw {
   id: number;
   name?: string | null;
   stage_id?: number | null;
+}
+
+export interface FixtureParticipantDto {
+  id: number;
+  meta?: {
+    location?: string | null;
+  } | null;
+}
+
+export interface FixtureScoreDto {
+  participant_id?: number | null;
+  participant?: { id: number } | null;
+  score?:
+    | {
+        goals?: number | null;
+      }
+    | number
+    | null;
+  description?: string | null;
+}
+
+export interface FixtureDto {
+  id: number;
+  season_id?: number | null;
+  stage_id?: number | null;
+  round_id?: number | null;
+  group_id?: number | null;
+  venue_id?: number | null;
+  referee_id?: number | null;
+  name?: string | null;
+  starting_at?: string | null;
+  kickoff_at?: string | null;
+  state_id?: number | null;
+  result_info?: string | null;
+  home_team_id?: number | null;
+  away_team_id?: number | null;
+  home_score?: number | null;
+  away_score?: number | null;
+  participants?: FixtureParticipantDto[] | null;
+  scores?: FixtureScoreDto[] | null;
 }
 
 export interface VenueDto {
