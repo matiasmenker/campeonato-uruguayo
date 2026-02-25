@@ -1,5 +1,5 @@
 import type { PrismaClient } from "db";
-import type { PlayerRaw, TeamWithPlayersRaw } from "sportmonks-client";
+import type { PlayerDto, TeamWithPlayersDto } from "sportmonks-client";
 import type { Logger } from "../logger.js";
 import type { SportMonksClient } from "../sportmonks.js";
 
@@ -9,7 +9,7 @@ export interface SyncDependencies {
   log: Logger;
 }
 
-const mapPlayer = (player: PlayerRaw, fallbackPositionId: number | null) => {
+const mapPlayer = (player: PlayerDto, fallbackPositionId: number | null) => {
   return {
     sportmonksId: player.id,
     name: player.name?.trim() || `Player ${player.id}`,
@@ -61,7 +61,7 @@ const syncPlayers = async ({ client, db, log }: SyncDependencies): Promise<void>
     const seasonProgress = i + 1;
     log.info(`🔎 Processing season ${seasonProgress}/${seasons.length}: ${season.sportmonksId}`);
 
-    const teams = await client.getAllPages<TeamWithPlayersRaw>(`/teams/seasons/${season.sportmonksId}`, {
+    const teams = await client.getAllPages<TeamWithPlayersDto>(`/teams/seasons/${season.sportmonksId}`, {
       perPage: 50,
       include: "players.player",
     });

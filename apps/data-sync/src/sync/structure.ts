@@ -1,5 +1,5 @@
 import type { PrismaClient } from "db";
-import type { GroupRaw, RoundRaw, StageRaw } from "sportmonks-client";
+import type { GroupDto, RoundDto, StageDto } from "sportmonks-client";
 import type { Logger } from "../logger.js";
 import type { SportMonksClient } from "../sportmonks.js";
 
@@ -66,7 +66,7 @@ const syncStructure = async ({ client, db, log }: SyncDependencies): Promise<voi
     log.info(`🔎 Processing season ${processed}/${seasons.length}: ${season.sportmonksId}`);
 
     const seasonResponse = await client.get<{
-      stages?: { data: StageRaw[] } | StageRaw[];
+      stages?: { data: StageDto[] } | StageDto[];
     }>(`/seasons/${season.sportmonksId}`, { include: "stages" });
 
     const stages = extractArray(seasonResponse?.stages);
@@ -100,7 +100,7 @@ const syncStructure = async ({ client, db, log }: SyncDependencies): Promise<voi
       savedStages += 1;
     }
 
-    const roundsResponse = await client.get<RoundRaw[] | { data: RoundRaw[] }>(
+    const roundsResponse = await client.get<RoundDto[] | { data: RoundDto[] }>(
       `/rounds/seasons/${season.sportmonksId}`
     );
     const rounds = extractArray(roundsResponse);
@@ -141,7 +141,7 @@ const syncStructure = async ({ client, db, log }: SyncDependencies): Promise<voi
 
     try {
       const groupsResponse = await client.get<{
-        groups?: { data: GroupRaw[] } | GroupRaw[];
+        groups?: { data: GroupDto[] } | GroupDto[];
       }>(`/seasons/${season.sportmonksId}`, { include: "groups" });
       const groups = extractArray(groupsResponse?.groups);
       log.info(`📥 Groups fetched from API (${season.sportmonksId}): ${groups.length}`);

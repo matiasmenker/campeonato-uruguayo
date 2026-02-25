@@ -1,5 +1,5 @@
 import type { PrismaClient } from "db";
-import type { SquadEntryRaw, TeamRaw } from "sportmonks-client";
+import type { SquadEntryDto, TeamDto } from "sportmonks-client";
 import type { Logger } from "../logger.js";
 import type { SportMonksClient } from "../sportmonks.js";
 
@@ -57,7 +57,7 @@ const syncSquadMemberships = async ({ client, db, log }: SyncDependencies): Prom
     const seasonProgress = i + 1;
     log.info(`🔎 Processing season ${seasonProgress}/${seasons.length}: ${season.sportmonksId}`);
 
-    const seasonTeams = await client.getAllPages<TeamRaw>(`/teams/seasons/${season.sportmonksId}`, {
+    const seasonTeams = await client.getAllPages<TeamDto>(`/teams/seasons/${season.sportmonksId}`, {
       perPage: 50,
     });
     log.info(`📥 Teams fetched from API (${season.sportmonksId}): ${seasonTeams.length}`);
@@ -83,7 +83,7 @@ const syncSquadMemberships = async ({ client, db, log }: SyncDependencies): Prom
         select: { id: true },
       });
 
-      const squadEntries = await client.getAllPages<SquadEntryRaw>(
+      const squadEntries = await client.getAllPages<SquadEntryDto>(
         `/squads/seasons/${season.sportmonksId}/teams/${teamDto.id}`,
         {
           perPage: 50,

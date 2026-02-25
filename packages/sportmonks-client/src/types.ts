@@ -52,13 +52,13 @@ export interface LeagueDto {
     country_id: number;
 }
 
-export interface CityRaw {
+export interface CityDto {
   id: number;
   name: string;
   country_id?: number | null;
 }
 
-export interface SeasonRaw {
+export interface SeasonDto {
   id: number;
   name: string;
   starting_at: string;
@@ -67,14 +67,14 @@ export interface SeasonRaw {
   league_id?: number | null;
 }
 
-export interface TeamRaw {
+export interface TeamDto {
   id: number;
   name: string;
   short_code?: string | null;
   image_path?: string | null;
 }
 
-export interface PlayerRaw {
+export interface PlayerDto {
   id: number;
   name?: string | null;
   display_name?: string | null;
@@ -82,17 +82,17 @@ export interface PlayerRaw {
   position_id?: number | null;
 }
 
-export interface TeamPlayerRelationRaw {
+export interface TeamPlayerRelationDto {
   player_id?: number | null;
   position_id?: number | null;
-  player?: PlayerRaw | null;
+  player?: PlayerDto | null;
 }
 
-export interface TeamWithPlayersRaw extends TeamRaw {
-  players?: TeamPlayerRelationRaw[] | null;
+export interface TeamWithPlayersDto extends TeamDto {
+  players?: TeamPlayerRelationDto[] | null;
 }
 
-export interface SquadEntryRaw {
+export interface SquadEntryDto {
   id: number;
   player_id?: number | null;
   team_id?: number | null;
@@ -106,10 +106,10 @@ export interface SquadEntryRaw {
   end_date?: string | null;
   starting_at?: string | null;
   ending_at?: string | null;
-  player?: PlayerRaw | null;
+  player?: PlayerDto | null;
 }
 
-export interface StageRaw {
+export interface StageDto {
   id: number;
   name: string;
   type?: string | null;
@@ -117,7 +117,7 @@ export interface StageRaw {
   season_id?: number | null;
 }
 
-export interface RoundRaw {
+export interface RoundDto {
   id: number;
   name: string;
   slug?: string | null;
@@ -126,7 +126,7 @@ export interface RoundRaw {
   stage?: { id: number };
 }
 
-export interface GroupRaw {
+export interface GroupDto {
   id: number;
   name?: string | null;
   stage_id?: number | null;
