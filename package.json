@@ -18,7 +18,7 @@
     "sync:seasons": "pnpm --filter data-sync sync:seasons",
     "sync:structure": "pnpm --filter data-sync sync:structure",
     "sync:teams": "pnpm --filter data-sync sync:teams",
-    "sync:fixtures": "pnpm --filter data-sync sync:fixtures",
+    "sync:players": "pnpm --filter data-sync sync:players",
     "sync:reset": "pnpm --filter db exec prisma db push --force-reset && pnpm db:generate",
     "dev": "turbo dev"
   },

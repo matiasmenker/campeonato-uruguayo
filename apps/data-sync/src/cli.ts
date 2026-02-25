@@ -15,6 +15,7 @@ import { syncSeasons } from "./sync/seasons.js";
 import { syncVenues } from "./sync/venues.js";
 import { syncStructure } from "./sync/structure.js";
 import { syncTeams } from "./sync/teams.js";
+import { syncPlayers } from "./sync/players.js";
 
 const log = createLogger("data-sync");
 
@@ -62,12 +63,15 @@ async function main(): Promise<void> {
       case "sync:teams":
         await syncTeams({ client, db, log });
         break;
+      case "sync:players":
+        await syncPlayers({ client, db, log });
+        break;
       case "sync":
         await syncBase({ client, db, log });
         break;
       default:
         log.error(
-          `Unknown command: ${command}. Use one of: sync, sync:base, sync:countries, sync:leagues, sync:venues, sync:seasons, sync:structure, sync:teams`
+          `Unknown command: ${command}. Use one of: sync, sync:base, sync:countries, sync:leagues, sync:venues, sync:seasons, sync:structure, sync:teams, sync:players`
         );
         process.exit(1);
     }

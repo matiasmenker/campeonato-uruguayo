@@ -13,6 +13,7 @@
     "sync:seasons": "tsx src/cli.ts sync:seasons",
     "sync:structure": "tsx src/cli.ts sync:structure",
     "sync:teams": "tsx src/cli.ts sync:teams",
+    "sync:players": "tsx src/cli.ts sync:players"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
