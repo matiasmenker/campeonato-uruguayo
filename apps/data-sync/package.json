@@ -8,13 +8,16 @@
     "sync": "tsx src/cli.ts sync",
     "sync:base": "tsx src/cli.ts sync:base",
     "sync:countries": "tsx src/cli.ts sync:countries",
+    "sync:types": "tsx src/cli.ts sync:types",
     "sync:leagues": "tsx src/cli.ts sync:leagues",
     "sync:venues": "tsx src/cli.ts sync:venues",
     "sync:seasons": "tsx src/cli.ts sync:seasons",
     "sync:structure": "tsx src/cli.ts sync:structure",
     "sync:teams": "tsx src/cli.ts sync:teams",
     "sync:players": "tsx src/cli.ts sync:players",
-    "sync:squad-memberships": "tsx src/cli.ts sync:squad-memberships"
+    "sync:squad-memberships": "tsx src/cli.ts sync:squad-memberships",
+    "sync:fixtures": "tsx src/cli.ts sync:fixtures",
+    "sync:fixture-details": "tsx src/cli.ts sync:fixture-details"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

@@ -10,6 +10,7 @@ import { createLogger } from "./logger.js";
 import { createClient } from "./sportmonks.js";
 import { syncBase } from "./sync/base.js";
 import { syncCountries } from "./sync/countries.js";
+import { syncTypes } from "./sync/types.js";
 import { syncLeagues } from "./sync/leagues.js";
 import { syncSeasons } from "./sync/seasons.js";
 import { syncVenues } from "./sync/venues.js";
@@ -17,6 +18,8 @@ import { syncStructure } from "./sync/structure.js";
 import { syncTeams } from "./sync/teams.js";
 import { syncPlayers } from "./sync/players.js";
 import { syncSquadMemberships } from "./sync/squad-memberships.js";
+import { syncFixtures } from "./sync/fixtures.js";
+import { syncFixtureDetails } from "./sync/fixture-details.js";
 
 const log = createLogger("data-sync");
 
@@ -49,6 +52,9 @@ async function main(): Promise<void> {
       case "sync:countries":
         await syncCountries({ client, db, log });
         break;
+      case "sync:types":
+        await syncTypes({ client, db, log });
+        break;
       case "sync:leagues":
         await syncLeagues({ client, db, log });
         break;
@@ -70,12 +76,18 @@ async function main(): Promise<void> {
       case "sync:squad-memberships":
         await syncSquadMemberships({ client, db, log });
         break;
+      case "sync:fixtures":
+        await syncFixtures({ client, db, log });
+        break;
+      case "sync:fixture-details":
+        await syncFixtureDetails({ client, db, log });
+        break;
       case "sync":
         await syncBase({ client, db, log });
         break;
       default:
         log.error(
-          `Unknown command: ${command}. Use one of: sync, sync:base, sync:countries, sync:leagues, sync:venues, sync:seasons, sync:structure, sync:teams, sync:players, sync:squad-memberships`
+          `Unknown command: ${command}. Use one of: sync, sync:base, sync:countries, sync:types, sync:leagues, sync:venues, sync:seasons, sync:structure, sync:teams, sync:players, sync:squad-memberships, sync:fixtures, sync:fixture-details`
         );
         process.exit(1);
     }

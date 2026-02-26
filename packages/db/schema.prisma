@@ -164,6 +164,7 @@ model Team {
   standings        Standing[]
   transfersFrom    Transfer[]        @relation("TransferFrom")
   transfersTo      Transfer[]        @relation("TransferTo")
+  teamStats        FixtureTeamStatistic[]
 }
 
 model Player {
@@ -292,7 +293,7 @@ model Fixture {
   homeTeamId   Int?
   awayTeamId   Int?
   name         String?
-  kickoffAt    DateTime
+  kickoffAt    DateTime?
   stateId      Int?
   resultInfo   String?
   homeScore    Int?
@@ -376,6 +377,7 @@ model FixtureTeamStatistic {
   id           Int      @id @default(autoincrement())
   sportmonksId Int?     @unique
   fixtureId    Int
+  teamId       Int?
   typeId       Int?
   value        Json?
   location     String?
@@ -383,8 +385,20 @@ model FixtureTeamStatistic {
   updatedAt    DateTime @updatedAt
 
   fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Restrict)
+  team    Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   @@index([fixtureId])
+  @@index([fixtureId, teamId, typeId])
+}
+
+model StatType {
+  id            Int      @id
+  name          String
+  developerName String?
+  modelType     String?
+  statGroup     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Standing {

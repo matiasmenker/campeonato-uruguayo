@@ -52,6 +52,14 @@ export interface LeagueDto {
     country_id: number;
 }
 
+export interface TypeDto {
+  id: number;
+  name?: string | null;
+  developer_name?: string | null;
+  model_type?: string | null;
+  stat_group?: string | null;
+}
+
 export interface CityDto {
   id: number;
   name: string;
@@ -170,6 +178,72 @@ export interface FixtureDto {
   away_score?: number | null;
   participants?: FixtureParticipantDto[] | null;
   scores?: FixtureScoreDto[] | null;
+  events?: FixtureEventDto[] | null;
+  lineups?: FixtureLineupDto[] | null;
+  statistics?: FixtureStatisticDto[] | null;
+}
+
+export interface FixtureEventDto {
+  id?: number | null;
+  player_id?: number | null;
+  type_id?: number | null;
+  order?: number | null;
+  sort_order?: number | null;
+  minute?: number | null;
+  extra_minute?: number | null;
+  result?: string | null;
+  info?: string | null;
+  addition?: string | null;
+  player?: {
+    id: number;
+    name?: string | null;
+    display_name?: string | null;
+    image_path?: string | null;
+    position_id?: number | null;
+  } | null;
+}
+
+export interface FixtureLineupDetailDto {
+  id?: number | null;
+  type_id?: number | null;
+  value?: unknown;
+  data?: unknown;
+}
+
+export interface FixtureLineupDto {
+  player_id?: number | null;
+  position?: string | null | { name?: string | null };
+  formation_position?: number | null;
+  jersey_number?: number | null;
+  details?: FixtureLineupDetailDto[] | null;
+  player?: {
+    id: number;
+    name?: string | null;
+    display_name?: string | null;
+    image_path?: string | null;
+    position_id?: number | null;
+  } | null;
+}
+
+export interface FixtureStatisticDto {
+  id?: number | null;
+  type_id?: number | null;
+  value?: unknown;
+  data?: unknown;
+  location?: string | null;
+  participant_id?: number | null;
+  player_id?: number | null;
+  participant?: {
+    id: number;
+    meta?: { location?: string | null } | null;
+  } | null;
+  player?: {
+    id: number;
+    name?: string | null;
+    display_name?: string | null;
+    image_path?: string | null;
+    position_id?: number | null;
+  } | null;
 }
 
 export interface VenueDto {

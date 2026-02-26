@@ -13,6 +13,7 @@
     "sync": "pnpm --filter data-sync sync",
     "sync:base": "pnpm --filter data-sync sync:base",
     "sync:countries": "pnpm --filter data-sync sync:countries",
+    "sync:types": "pnpm --filter data-sync sync:types",
     "sync:leagues": "pnpm --filter data-sync sync:leagues",
     "sync:venues": "pnpm --filter data-sync sync:venues",
     "sync:seasons": "pnpm --filter data-sync sync:seasons",
@@ -20,6 +21,8 @@
     "sync:teams": "pnpm --filter data-sync sync:teams",
     "sync:players": "pnpm --filter data-sync sync:players",
     "sync:squad-memberships": "pnpm --filter data-sync sync:squad-memberships",
+    "sync:fixtures": "pnpm --filter data-sync sync:fixtures",
+    "sync:fixture-details": "pnpm --filter data-sync sync:fixture-details",
     "sync:reset": "pnpm --filter db exec prisma db push --force-reset && pnpm db:generate",
     "dev": "turbo dev"
   },
