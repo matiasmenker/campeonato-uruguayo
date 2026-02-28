@@ -16,6 +16,7 @@
     "sync:teams": "tsx src/cli.ts sync:teams",
     "sync:players": "tsx src/cli.ts sync:players",
     "sync:squad-memberships": "tsx src/cli.ts sync:squad-memberships",
+    "sync:states": "tsx src/cli.ts sync:states",
     "sync:fixtures": "tsx src/cli.ts sync:fixtures",
     "sync:fixture-details": "tsx src/cli.ts sync:fixture-details"
   },

@@ -21,6 +21,7 @@
     "sync:teams": "pnpm --filter data-sync sync:teams",
     "sync:players": "pnpm --filter data-sync sync:players",
     "sync:squad-memberships": "pnpm --filter data-sync sync:squad-memberships",
+    "sync:states": "pnpm --filter data-sync sync:states",
     "sync:fixtures": "pnpm --filter data-sync sync:fixtures",
     "sync:fixture-details": "pnpm --filter data-sync sync:fixture-details",
     "sync:reset": "pnpm --filter db exec prisma db push --force-reset && pnpm db:generate",

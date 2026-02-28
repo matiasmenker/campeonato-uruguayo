@@ -314,8 +314,36 @@ model Fixture {
   lineups     Lineup[]
   playerStats FixturePlayerStatistic[]
   teamStats   FixtureTeamStatistic[]
+  changes     FixtureChangeLog[]
 
   @@index([seasonId, kickoffAt])
+}
+
+model FixtureState {
+  id            Int      @id
+  state         String?
+  name          String
+  shortName     String?
+  developerName String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model FixtureChangeLog {
+  id                 Int      @id @default(autoincrement())
+  fixtureId          Int
+  previousStateId    Int?
+  nextStateId        Int?
+  previousKickoffAt  DateTime?
+  nextKickoffAt      DateTime?
+  previousResultInfo String?
+  nextResultInfo     String?
+  detectedAt         DateTime @default(now())
+
+  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Restrict)
+
+  @@index([fixtureId, detectedAt])
+  @@index([detectedAt])
 }
 
 model Event {

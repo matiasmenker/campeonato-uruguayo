@@ -61,7 +61,12 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies): Promis
   }
 
   const fixtures = await db.fixture.findMany({
-    where: { season: { leagueId: uruguayLeague.id } },
+    where: {
+      season: { leagueId: uruguayLeague.id },
+      homeTeamId: { not: null },
+      awayTeamId: { not: null },
+      stateId: { not: null },
+    },
     select: {
       id: true,
       sportmonksId: true,

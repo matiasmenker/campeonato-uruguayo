@@ -8,5 +8,6 @@ export { syncStructure } from "./structure.js";
 export { syncTeams } from "./teams.js";
 export { syncPlayers } from "./players.js";
 export { syncSquadMemberships } from "./squad-memberships.js";
+export { syncStates } from "./states.js";
 export { syncFixtures } from "./fixtures.js";
 export { syncFixtureDetails } from "./fixture-details.js";

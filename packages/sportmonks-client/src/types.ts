@@ -140,6 +140,14 @@ export interface GroupDto {
   stage_id?: number | null;
 }
 
+export interface FixtureStateDto {
+  id: number;
+  state?: string | null;
+  name?: string | null;
+  short_name?: string | null;
+  developer_name?: string | null;
+}
+
 export interface FixtureParticipantDto {
   id: number;
   meta?: {

@@ -10,6 +10,7 @@ import { syncStructure } from "./structure.js";
 import { syncTeams } from "./teams.js";
 import { syncPlayers } from "./players.js";
 import { syncSquadMemberships } from "./squad-memberships.js";
+import { syncStates } from "./states.js";
 import { syncFixtures } from "./fixtures.js";
 import { syncFixtureDetails } from "./fixture-details.js";
 
@@ -30,6 +31,7 @@ export async function syncBase({ client, db, log }: SyncBaseDeps): Promise<void>
   await syncTeams({ client, db, log });
   await syncPlayers({ client, db, log });
   await syncSquadMemberships({ client, db, log });
+  await syncStates({ client, db, log });
   await syncFixtures({ client, db, log });
   await syncFixtureDetails({ client, db, log });
   log.info("🎉 Sync Finished Successfully");

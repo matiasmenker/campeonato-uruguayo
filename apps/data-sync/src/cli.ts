@@ -18,6 +18,7 @@ import { syncStructure } from "./sync/structure.js";
 import { syncTeams } from "./sync/teams.js";
 import { syncPlayers } from "./sync/players.js";
 import { syncSquadMemberships } from "./sync/squad-memberships.js";
+import { syncStates } from "./sync/states.js";
 import { syncFixtures } from "./sync/fixtures.js";
 import { syncFixtureDetails } from "./sync/fixture-details.js";
 
@@ -76,6 +77,9 @@ async function main(): Promise<void> {
       case "sync:squad-memberships":
         await syncSquadMemberships({ client, db, log });
         break;
+      case "sync:states":
+        await syncStates({ client, db, log });
+        break;
       case "sync:fixtures":
         await syncFixtures({ client, db, log });
         break;
@@ -87,7 +91,7 @@ async function main(): Promise<void> {
         break;
       default:
         log.error(
-          `Unknown command: ${command}. Use one of: sync, sync:base, sync:countries, sync:types, sync:leagues, sync:venues, sync:seasons, sync:structure, sync:teams, sync:players, sync:squad-memberships, sync:fixtures, sync:fixture-details`
+          `Unknown command: ${command}. Use one of: sync, sync:base, sync:countries, sync:types, sync:leagues, sync:venues, sync:seasons, sync:structure, sync:teams, sync:players, sync:squad-memberships, sync:states, sync:fixtures, sync:fixture-details`
         );
         process.exit(1);
     }

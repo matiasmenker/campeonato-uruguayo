@@ -7,6 +7,7 @@ export type {
   CountryDto,
   FixtureDto,
   GroupDto,
+  FixtureStateDto,
   LeagueDto,
   PaginationMeta,
   RoundDto,
