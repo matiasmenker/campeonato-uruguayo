@@ -82,6 +82,28 @@ export interface TeamDto {
   image_path?: string | null;
 }
 
+export interface CoachDto {
+  id: number;
+  coach_id?: number | null;
+  name?: string | null;
+  fullname?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  image_path?: string | null;
+  team_id?: number | null;
+  coach?: CoachDto | null;
+}
+
+export interface TeamWithCoachesDto extends TeamDto {
+  coaches?: CoachDto[] | null;
+}
+
+export interface RefereeDto {
+  id: number;
+  name?: string | null;
+  image_path?: string | null;
+}
+
 export interface PlayerDto {
   id: number;
   name?: string | null;
@@ -98,6 +120,39 @@ export interface TeamPlayerRelationDto {
 
 export interface TeamWithPlayersDto extends TeamDto {
   players?: TeamPlayerRelationDto[] | null;
+}
+
+export interface TransferDto {
+  id: number;
+  player_id?: number | null;
+  from_team_id?: number | null;
+  to_team_id?: number | null;
+  date?: string | null;
+  amount?: string | null;
+  transfer_type?: string | null | { name?: string | null };
+  type?: string | null | { name?: string | null };
+  player?: PlayerDto | null;
+  fromTeam?: TeamDto | null;
+  toTeam?: TeamDto | null;
+}
+
+export interface SidelinedDto {
+  id: number;
+  player_id?: number | null;
+  team_id?: number | null;
+  category?: string | null;
+  type?: string | null;
+  reason?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  expected_return?: string | null;
+  expected_at?: string | null;
+  player?: PlayerDto | null;
+}
+
+export interface TeamWithSidelinedDto extends TeamDto {
+  sidelined?: SidelinedDto[] | null;
+  sidelinedHistory?: SidelinedDto[] | null;
 }
 
 export interface SquadEntryDto {
@@ -148,6 +203,35 @@ export interface FixtureStateDto {
   developer_name?: string | null;
 }
 
+export interface StandingDetailTypeDto {
+  id: number;
+  name?: string | null;
+  developer_name?: string | null;
+}
+
+export interface StandingDetailDto {
+  type_id?: number | null;
+  value?: unknown;
+  data?: unknown;
+  type?: StandingDetailTypeDto | null;
+}
+
+export interface StandingDto {
+  id: number;
+  season_id?: number | null;
+  stage_id?: number | null;
+  round_id?: number | null;
+  group_id?: number | null;
+  participant_id?: number | null;
+  position?: number | null;
+  points?: number | null;
+  participant?: {
+    id: number;
+    name?: string | null;
+  } | null;
+  details?: StandingDetailDto[] | null;
+}
+
 export interface FixtureParticipantDto {
   id: number;
   meta?: {
@@ -165,6 +249,12 @@ export interface FixtureScoreDto {
     | number
     | null;
   description?: string | null;
+}
+
+export interface FixtureRefereeDto {
+  id: number;
+  name?: string | null;
+  image_path?: string | null;
 }
 
 export interface FixtureDto {
@@ -186,6 +276,7 @@ export interface FixtureDto {
   away_score?: number | null;
   participants?: FixtureParticipantDto[] | null;
   scores?: FixtureScoreDto[] | null;
+  referees?: FixtureRefereeDto[] | null;
   events?: FixtureEventDto[] | null;
   lineups?: FixtureLineupDto[] | null;
   statistics?: FixtureStatisticDto[] | null;

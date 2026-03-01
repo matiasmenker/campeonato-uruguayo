@@ -14,10 +14,15 @@
     "sync:seasons": "tsx src/cli.ts sync:seasons",
     "sync:structure": "tsx src/cli.ts sync:structure",
     "sync:teams": "tsx src/cli.ts sync:teams",
+    "sync:coaches": "tsx src/cli.ts sync:coaches",
+    "sync:referees": "tsx src/cli.ts sync:referees",
     "sync:players": "tsx src/cli.ts sync:players",
     "sync:squad-memberships": "tsx src/cli.ts sync:squad-memberships",
+    "sync:transfers": "tsx src/cli.ts sync:transfers",
+    "sync:sidelined": "tsx src/cli.ts sync:sidelined",
     "sync:states": "tsx src/cli.ts sync:states",
     "sync:fixtures": "tsx src/cli.ts sync:fixtures",
+    "sync:standings": "tsx src/cli.ts sync:standings",
     "sync:fixture-details": "tsx src/cli.ts sync:fixture-details"
   },
   "dependencies": {

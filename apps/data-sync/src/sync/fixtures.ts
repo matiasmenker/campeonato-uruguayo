@@ -117,7 +117,7 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies): Promise<void
     const seasonResponse = await client.get<{
       fixtures?: { data: FixtureDto[] } | FixtureDto[];
     }>(`/seasons/${season.sportmonksId}`, {
-      include: "fixtures;fixtures.participants;fixtures.scores",
+      include: "fixtures;fixtures.participants;fixtures.scores;fixtures.referees",
     });
 
     const fixtures = extractArray(seasonResponse?.fixtures);
@@ -161,6 +161,10 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies): Promise<void
       where: { stage: { seasonId: season.id } },
       select: { sportmonksId: true, id: true },
     });
+    const referees = await db.referee.findMany({
+      select: { sportmonksId: true, id: true },
+    });
+    const refereeIdBySportmonksId = new Map(referees.map((referee) => [referee.sportmonksId, referee.id]));
     const groupIdBySportmonksId = new Map(groups.map((group) => [group.sportmonksId, group.id]));
     const existingFixtures = await db.fixture.findMany({
       where: { seasonId: season.id },
@@ -203,6 +207,11 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies): Promise<void
       const venueId =
         fixtureDto.venue_id != null
           ? venueIdBySportmonksId.get(fixtureDto.venue_id) ?? null
+          : null;
+      const refereeSportmonksId = fixtureDto.referees?.[0]?.id ?? fixtureDto.referee_id ?? null;
+      const refereeId =
+        refereeSportmonksId != null
+          ? refereeIdBySportmonksId.get(refereeSportmonksId) ?? null
           : null;
 
       const participants = fixtureDto.participants ?? [];
@@ -259,7 +268,7 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies): Promise<void
           roundId,
           groupId,
           venueId,
-          refereeId: null,
+          refereeId,
           homeTeamId,
           awayTeamId,
           name: fixtureDto.name?.trim() || null,
@@ -275,6 +284,7 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies): Promise<void
           roundId,
           groupId,
           venueId,
+          refereeId,
           homeTeamId,
           awayTeamId,
           name: fixtureDto.name?.trim() || null,

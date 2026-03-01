@@ -16,10 +16,15 @@ import { syncSeasons } from "./sync/seasons.js";
 import { syncVenues } from "./sync/venues.js";
 import { syncStructure } from "./sync/structure.js";
 import { syncTeams } from "./sync/teams.js";
+import { syncCoaches } from "./sync/coaches.js";
+import { syncReferees } from "./sync/referees.js";
 import { syncPlayers } from "./sync/players.js";
 import { syncSquadMemberships } from "./sync/squad-memberships.js";
+import { syncTransfers } from "./sync/transfers.js";
+import { syncSidelined } from "./sync/sidelined.js";
 import { syncStates } from "./sync/states.js";
 import { syncFixtures } from "./sync/fixtures.js";
+import { syncStandings } from "./sync/standings.js";
 import { syncFixtureDetails } from "./sync/fixture-details.js";
 
 const log = createLogger("data-sync");
@@ -71,17 +76,32 @@ async function main(): Promise<void> {
       case "sync:teams":
         await syncTeams({ client, db, log });
         break;
+      case "sync:coaches":
+        await syncCoaches({ client, db, log });
+        break;
+      case "sync:referees":
+        await syncReferees({ client, db, log });
+        break;
       case "sync:players":
         await syncPlayers({ client, db, log });
         break;
       case "sync:squad-memberships":
         await syncSquadMemberships({ client, db, log });
         break;
+      case "sync:transfers":
+        await syncTransfers({ client, db, log });
+        break;
+      case "sync:sidelined":
+        await syncSidelined({ client, db, log });
+        break;
       case "sync:states":
         await syncStates({ client, db, log });
         break;
       case "sync:fixtures":
         await syncFixtures({ client, db, log });
+        break;
+      case "sync:standings":
+        await syncStandings({ client, db, log });
         break;
       case "sync:fixture-details":
         await syncFixtureDetails({ client, db, log });
@@ -91,7 +111,7 @@ async function main(): Promise<void> {
         break;
       default:
         log.error(
-          `Unknown command: ${command}. Use one of: sync, sync:base, sync:countries, sync:types, sync:leagues, sync:venues, sync:seasons, sync:structure, sync:teams, sync:players, sync:squad-memberships, sync:states, sync:fixtures, sync:fixture-details`
+          `Unknown command: ${command}. Use one of: sync, sync:base, sync:catalog, sync:daily, sync:countries, sync:types, sync:leagues, sync:venues, sync:seasons, sync:structure, sync:teams, sync:coaches, sync:referees, sync:players, sync:squad-memberships, sync:transfers, sync:player-market-values, sync:sidelined, sync:states, sync:fixtures, sync:standings, sync:fixture-details`
         );
         process.exit(1);
     }

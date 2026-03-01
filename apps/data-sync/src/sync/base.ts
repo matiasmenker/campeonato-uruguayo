@@ -13,6 +13,11 @@ import { syncSquadMemberships } from "./squad-memberships.js";
 import { syncStates } from "./states.js";
 import { syncFixtures } from "./fixtures.js";
 import { syncFixtureDetails } from "./fixture-details.js";
+import { syncCoaches } from "./coaches.js";
+import { syncReferees } from "./referees.js";
+import { syncTransfers } from "./transfers.js";
+import { syncSidelined } from "./sidelined.js";
+import { syncStandings } from "./standings.js";
 
 export interface SyncBaseDeps {
   client: SportMonksClient;
@@ -29,10 +34,15 @@ export async function syncBase({ client, db, log }: SyncBaseDeps): Promise<void>
   await syncVenues({ client, db, log });
   await syncStructure({ client, db, log });
   await syncTeams({ client, db, log });
+  await syncCoaches({ client, db, log });
+  await syncReferees({ client, db, log });
   await syncPlayers({ client, db, log });
   await syncSquadMemberships({ client, db, log });
   await syncStates({ client, db, log });
   await syncFixtures({ client, db, log });
   await syncFixtureDetails({ client, db, log });
+  await syncTransfers({ client, db, log });
+  await syncSidelined({ client, db, log });
+  await syncStandings({ client, db, log });
   log.info("🎉 Sync Finished Successfully");
 }
