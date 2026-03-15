@@ -30,7 +30,8 @@
     "sync:standings": "pnpm --filter data-sync sync:standings",
     "sync:fixture-details": "pnpm --filter data-sync sync:fixture-details",
     "sync:reset": "pnpm --filter db exec prisma db push --force-reset && pnpm db:generate",
-    "dev": "turbo dev"
+    "dev": "turbo dev",
+    "dev:api": "pnpm --filter api dev"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

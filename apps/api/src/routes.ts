@@ -1,0 +1,40 @@
+import type { Express } from "express";
+import { systemRouter } from "./modules/system/system.routes.js";
+import { countriesRouter } from "./modules/countries/countries.routes.js";
+import { statTypesRouter } from "./modules/stat-types/stat-types.routes.js";
+import { competitionRouter } from "./modules/competition/competition.routes.js";
+import { venuesRouter } from "./modules/venues/venues.routes.js";
+import { teamsRouter } from "./modules/teams/teams.routes.js";
+import { coachesRouter } from "./modules/coaches/coaches.routes.js";
+import { refereesRouter } from "./modules/referees/referees.routes.js";
+import { playersRouter } from "./modules/players/players.routes.js";
+import { squadMembershipsRouter } from "./modules/squad-memberships/squad-memberships.routes.js";
+import { fixtureStatesRouter } from "./modules/fixture-states/fixture-states.routes.js";
+import { fixturesRouter } from "./modules/fixtures/fixtures.routes.js";
+import { fixtureDetailsRouter } from "./modules/fixture-details/fixture-details.routes.js";
+import { transfersRouter } from "./modules/transfers/transfers.routes.js";
+import { availabilityRouter } from "./modules/availability/availability.routes.js";
+import { standingsRouter } from "./modules/standings/standings.routes.js";
+import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
+import { metricsRouter } from "./modules/metrics/metrics.routes.js";
+
+export function registerRoutes(app: Express): void {
+  app.use(systemRouter);
+  app.use(countriesRouter);
+  app.use(statTypesRouter);
+  app.use(competitionRouter);
+  app.use(venuesRouter);
+  app.use(teamsRouter);
+  app.use(coachesRouter);
+  app.use(refereesRouter);
+  app.use(playersRouter);
+  app.use(squadMembershipsRouter);
+  app.use(fixtureStatesRouter);
+  app.use(fixturesRouter);
+  app.use(fixtureDetailsRouter);
+  app.use(transfersRouter);
+  app.use(availabilityRouter);
+  app.use(standingsRouter);
+  app.use(dashboardRouter);
+  app.use(metricsRouter);
+}
