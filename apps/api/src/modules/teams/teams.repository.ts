@@ -1,0 +1,34 @@
+import type { Team, Prisma } from "db";
+import { getPrisma } from "../../database/index.js";
+import type { TeamsQuery } from "./teams.contracts.js";
+
+export async function findTeams(
+  query: TeamsQuery,
+): Promise<{ teams: Team[]; totalItems: number }> {
+  const prisma = getPrisma();
+  const where: Prisma.TeamWhereInput = {};
+
+  if (query.search) {
+    where.OR = [
+      { name: { contains: query.search, mode: "insensitive" } },
+      { shortCode: { contains: query.search, mode: "insensitive" } },
+    ];
+  }
+
+  const [teams, totalItems] = await Promise.all([
+    prisma.team.findMany({
+      where,
+      orderBy: { name: "asc" },
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize,
+    }),
+    prisma.team.count({ where }),
+  ]);
+
+  return { teams, totalItems };
+}
+
+export async function findTeamById(id: number): Promise<Team | null> {
+  const prisma = getPrisma();
+  return prisma.team.findUnique({ where: { id } });
+}
