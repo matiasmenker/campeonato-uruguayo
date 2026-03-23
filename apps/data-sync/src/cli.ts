@@ -26,6 +26,7 @@ import { syncStates } from "./sync/states.js";
 import { syncFixtures } from "./sync/fixtures.js";
 import { syncStandings } from "./sync/standings.js";
 import { syncFixtureDetails } from "./sync/fixture-details.js";
+import { syncDaily } from "./sync/daily.js";
 
 const log = createLogger("data-sync");
 
@@ -105,6 +106,9 @@ async function main(): Promise<void> {
         break;
       case "sync:fixture-details":
         await syncFixtureDetails({ client, db, log });
+        break;
+      case "sync:daily":
+        await syncDaily({ client, db, log });
         break;
       case "sync":
         await syncBase({ client, db, log });

@@ -16,3 +16,4 @@ export { syncStates } from "./states.js";
 export { syncFixtures } from "./fixtures.js";
 export { syncStandings } from "./standings.js";
 export { syncFixtureDetails } from "./fixture-details.js";
+export { syncDaily } from "./daily.js";
