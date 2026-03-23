@@ -9,19 +9,36 @@ export interface SyncDependencies {
   log: Logger;
 }
 
-const mapPlayer = (player: PlayerDto, fallbackPositionId: number | null) => {
+const mapPlayer = (player: PlayerDto, fallbackPositionId: number | null, countryMap: Map<number, number>) => {
+  const smCountryId = player.country_id ?? player.nationality_id ?? null;
+  const countryId = smCountryId ? (countryMap.get(smCountryId) ?? null) : null;
+
   return {
     sportmonksId: player.id,
+    countryId,
     name: player.name?.trim() || `Player ${player.id}`,
+    commonName: player.common_name?.trim() || null,
+    firstName: player.firstname?.trim() || null,
+    lastName: player.lastname?.trim() || null,
     displayName: player.display_name?.trim() || null,
     imagePath: player.image_path?.trim() || null,
     positionId: player.position_id ?? fallbackPositionId ?? null,
+    detailedPositionId: player.detailed_position_id ?? null,
+    dateOfBirth: player.date_of_birth ? new Date(player.date_of_birth) : null,
+    height: player.height ?? null,
+    weight: player.weight ?? null,
+    gender: player.gender?.trim() || null,
   };
 };
 
 const syncPlayers = async ({ client, db, log }: SyncDependencies): Promise<void> => {
   log.info("=== PLAYERS START ===");
   log.info("🚀 Syncing Players...");
+
+  // Build country sportmonksId → internal id map for player nationality
+  const countries = await db.country.findMany({ select: { id: true, sportmonksId: true } });
+  const countryMap = new Map<number, number>(countries.map((c) => [c.sportmonksId, c.id]));
+  log.info(`📥 Country map loaded: ${countryMap.size} entries`);
 
   const uruguayLeague = await db.league.findFirst({
     where: {
@@ -90,11 +107,22 @@ const syncPlayers = async ({ client, db, log }: SyncDependencies): Promise<void>
           {
             id: playerSportmonksId,
             name: player?.name ?? null,
+            common_name: player?.common_name ?? null,
+            firstname: player?.firstname ?? null,
+            lastname: player?.lastname ?? null,
             display_name: player?.display_name ?? null,
             image_path: player?.image_path ?? null,
             position_id: player?.position_id ?? null,
+            detailed_position_id: player?.detailed_position_id ?? null,
+            country_id: player?.country_id ?? null,
+            nationality_id: player?.nationality_id ?? null,
+            date_of_birth: player?.date_of_birth ?? null,
+            height: player?.height ?? null,
+            weight: player?.weight ?? null,
+            gender: player?.gender ?? null,
           },
-          squadPlayer.position_id ?? null
+          squadPlayer.position_id ?? null,
+          countryMap
         );
 
         await db.player.upsert({

@@ -20,6 +20,7 @@ model Country {
   leagues League[]
   cities  City[]
   venues  Venue[]
+  players Player[]
 }
 
 model City {
@@ -168,14 +169,25 @@ model Team {
 }
 
 model Player {
-  id           Int      @id @default(autoincrement())
-  sportmonksId Int      @unique
-  name         String
-  displayName  String?
-  imagePath    String?
-  positionId   Int?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 Int       @id @default(autoincrement())
+  sportmonksId       Int       @unique
+  countryId          Int?
+  name               String
+  commonName         String?
+  firstName          String?
+  lastName           String?
+  displayName        String?
+  imagePath          String?
+  positionId         Int?
+  detailedPositionId Int?
+  dateOfBirth        DateTime?
+  height             Int?
+  weight             Int?
+  gender             String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  country Country? @relation(fields: [countryId], references: [id], onDelete: SetNull)
 
   squadMemberships        SquadMembership[]
   transfers               Transfer[]
@@ -185,6 +197,8 @@ model Player {
   events                  Event[]
   lineups                 Lineup[]
   fixturePlayerStatistics FixturePlayerStatistic[]
+
+  @@index([countryId])
 }
 
 model Coach {

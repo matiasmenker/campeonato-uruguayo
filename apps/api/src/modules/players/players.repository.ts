@@ -1,18 +1,24 @@
-import type { Player, Prisma } from "db";
+import type { Player, Country, Prisma } from "db";
 import { getPrisma } from "../../database/index.js";
 import type { PlayersQuery } from "./players.contracts.js";
 
+type PlayerWithCountry = Player & { country: Country | null };
+
 export async function findPlayers(
   query: PlayersQuery,
-): Promise<{ players: Player[]; totalItems: number }> {
+): Promise<{ players: PlayerWithCountry[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.PlayerWhereInput = {};
 
   if (query.search) {
-    where.OR = [
-      { name: { contains: query.search, mode: "insensitive" } },
-      { displayName: { contains: query.search, mode: "insensitive" } },
-    ];
+    const pattern = `%${query.search}%`;
+    const matchingIds = await prisma.$queryRaw<{ id: number }[]>`
+      SELECT id FROM "Player"
+      WHERE unaccent("name") ILIKE unaccent(${pattern})
+         OR unaccent("displayName") ILIKE unaccent(${pattern})
+         OR unaccent("commonName") ILIKE unaccent(${pattern})
+    `;
+    where.id = { in: matchingIds.map((r) => r.id) };
   }
 
   if (query.positionId) {
@@ -22,6 +28,7 @@ export async function findPlayers(
   const [players, totalItems] = await Promise.all([
     prisma.player.findMany({
       where,
+      include: { country: true },
       orderBy: { name: "asc" },
       skip: (query.page - 1) * query.pageSize,
       take: query.pageSize,
@@ -32,7 +39,7 @@ export async function findPlayers(
   return { players, totalItems };
 }
 
-export async function findPlayerById(id: number): Promise<Player | null> {
+export async function findPlayerById(id: number): Promise<PlayerWithCountry | null> {
   const prisma = getPrisma();
-  return prisma.player.findUnique({ where: { id } });
+  return prisma.player.findUnique({ where: { id }, include: { country: true } });
 }

@@ -106,10 +106,21 @@ export interface RefereeDto {
 
 export interface PlayerDto {
   id: number;
+  country_id?: number | null;
+  nationality_id?: number | null;
+  city_id?: number | null;
+  position_id?: number | null;
+  detailed_position_id?: number | null;
   name?: string | null;
+  common_name?: string | null;
+  firstname?: string | null;
+  lastname?: string | null;
   display_name?: string | null;
   image_path?: string | null;
-  position_id?: number | null;
+  date_of_birth?: string | null;
+  height?: number | null;
+  weight?: number | null;
+  gender?: string | null;
 }
 
 export interface TeamPlayerRelationDto {
