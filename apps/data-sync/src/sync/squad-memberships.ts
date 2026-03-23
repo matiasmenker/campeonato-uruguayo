@@ -131,6 +131,9 @@ const syncSquadMemberships = async ({ client, db, log }: SyncDependencies): Prom
 
         const isLoan = squadEntry.is_loan ?? false;
 
+        const positionId = squadEntry.player?.position_id ?? null;
+        const detailedPositionId = squadEntry.player?.detailed_position_id ?? null;
+
         await db.squadMembership.upsert({
           where: {
             playerId_teamId_seasonId_from: {
@@ -144,12 +147,16 @@ const syncSquadMemberships = async ({ client, db, log }: SyncDependencies): Prom
             playerId: localPlayer.id,
             teamId: localTeam.id,
             seasonId: season.id,
+            positionId,
+            detailedPositionId,
             from: fromDate,
             to: toDate,
             shirtNumber: squadEntry.jersey_number ?? squadEntry.number ?? null,
             isLoan,
           },
           update: {
+            positionId,
+            detailedPositionId,
             to: toDate,
             shirtNumber: squadEntry.jersey_number ?? squadEntry.number ?? null,
             isLoan,

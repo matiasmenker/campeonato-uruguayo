@@ -231,16 +231,18 @@ model CoachAssignment {
 }
 
 model SquadMembership {
-  id          Int       @id @default(autoincrement())
-  playerId    Int
-  teamId      Int
-  seasonId    Int
-  from        DateTime
-  to          DateTime?
-  shirtNumber Int?
-  isLoan      Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                 Int       @id @default(autoincrement())
+  playerId           Int
+  teamId             Int
+  seasonId           Int
+  positionId         Int?
+  detailedPositionId Int?
+  from               DateTime
+  to                 DateTime?
+  shirtNumber        Int?
+  isLoan             Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   player Player @relation(fields: [playerId], references: [id], onDelete: Restrict)
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Restrict)

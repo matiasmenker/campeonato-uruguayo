@@ -31,6 +31,8 @@ export interface SquadMembershipContract {
   player: PlayerSummary;
   team: TeamSummary;
   season: SeasonSummary;
+  positionId: number | null;
+  detailedPositionId: number | null;
   from: string;
   to: string | null;
   shirtNumber: number | null;

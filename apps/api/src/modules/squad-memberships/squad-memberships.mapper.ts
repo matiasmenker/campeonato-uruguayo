@@ -18,6 +18,8 @@ export function toSquadMembershipContract(
     player: toPlayerSummary(membership.player),
     team: toTeamSummary(membership.team),
     season: toSeasonSummary(membership.season),
+    positionId: membership.positionId,
+    detailedPositionId: membership.detailedPositionId,
     from: membership.from.toISOString(),
     to: membership.to?.toISOString() ?? null,
     shirtNumber: membership.shirtNumber,
