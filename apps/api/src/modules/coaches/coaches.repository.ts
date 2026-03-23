@@ -1,10 +1,21 @@
-import type { Coach, Team, Prisma } from "db";
+import type { Coach, CoachAssignment, Team, Season, Prisma } from "db";
 import { getPrisma } from "../../database/index.js";
 import type { CoachesQuery } from "./coaches.contracts.js";
 
+type CoachWithAssignments = Coach & {
+  assignments: (CoachAssignment & { team: Team; season: Season })[];
+};
+
+const assignmentsInclude = {
+  assignments: {
+    include: { team: true, season: true },
+    orderBy: { season: { startingAt: "desc" as const } },
+  },
+};
+
 export async function findCoaches(
   query: CoachesQuery,
-): Promise<{ coaches: Coach[]; totalItems: number }> {
+): Promise<{ coaches: CoachWithAssignments[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.CoachWhereInput = {};
 
@@ -17,13 +28,17 @@ export async function findCoaches(
     where.id = { in: matchingIds.map((r) => r.id) };
   }
 
-  if (query.teamId) {
-    where.teamId = query.teamId;
+  if (query.teamId || query.seasonId) {
+    const assignmentFilter: Prisma.CoachAssignmentWhereInput = {};
+    if (query.teamId) assignmentFilter.teamId = query.teamId;
+    if (query.seasonId) assignmentFilter.seasonId = query.seasonId;
+    where.assignments = { some: assignmentFilter };
   }
 
   const [coaches, totalItems] = await Promise.all([
     prisma.coach.findMany({
       where,
+      include: assignmentsInclude,
       orderBy: { name: "asc" },
       skip: (query.page - 1) * query.pageSize,
       take: query.pageSize,
@@ -34,24 +49,19 @@ export async function findCoaches(
   return { coaches, totalItems };
 }
 
-export async function findCoachById(id: number): Promise<Coach | null> {
+export async function findCoachById(id: number): Promise<CoachWithAssignments | null> {
   const prisma = getPrisma();
-  return prisma.coach.findUnique({ where: { id } });
+  return prisma.coach.findUnique({
+    where: { id },
+    include: assignmentsInclude,
+  });
 }
 
-export async function findCoachesByTeamId(teamId: number): Promise<Coach[]> {
+export async function findCoachesByTeamId(teamId: number): Promise<CoachWithAssignments[]> {
   const prisma = getPrisma();
   return prisma.coach.findMany({
-    where: { teamId },
+    where: { assignments: { some: { teamId } } },
+    include: assignmentsInclude,
     orderBy: { name: "asc" },
   });
-}
-
-export async function findTeamsByIds(teamIds: number[]): Promise<Map<number, Team>> {
-  if (teamIds.length === 0) return new Map();
-  const prisma = getPrisma();
-  const teams = await prisma.team.findMany({
-    where: { id: { in: teamIds } },
-  });
-  return new Map(teams.map((team) => [team.id, team]));
 }

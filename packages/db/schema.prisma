@@ -69,6 +69,7 @@ model Season {
   fixtures         Fixture[]
   squadMemberships SquadMembership[]
   standings        Standing[]
+  coachAssignments CoachAssignment[]
 
   @@index([leagueId])
 }
@@ -166,6 +167,7 @@ model Team {
   transfersFrom    Transfer[]        @relation("TransferFrom")
   transfersTo      Transfer[]        @relation("TransferTo")
   teamStats        FixtureTeamStatistic[]
+  coachAssignments CoachAssignment[]
 }
 
 model Player {
@@ -202,13 +204,30 @@ model Player {
 }
 
 model Coach {
-  id           Int      @id @default(autoincrement())
-  sportmonksId Int      @unique
-  teamId       Int?
+  id           Int               @id @default(autoincrement())
+  sportmonksId Int               @unique
   name         String
   imagePath    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  assignments  CoachAssignment[]
+}
+
+model CoachAssignment {
+  id        Int      @id @default(autoincrement())
+  coachId   Int
+  teamId    Int
+  seasonId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  coach  Coach  @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([coachId, teamId, seasonId])
+  @@index([teamId])
+  @@index([seasonId])
 }
 
 model SquadMembership {

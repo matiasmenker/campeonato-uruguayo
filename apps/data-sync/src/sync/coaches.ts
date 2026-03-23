@@ -50,7 +50,7 @@ const syncCoaches = async ({ client, db, log }: SyncDependencies): Promise<void>
 
   const seasons = await db.season.findMany({
     where: { leagueId: uruguayLeague.id },
-    select: { sportmonksId: true },
+    select: { id: true, sportmonksId: true },
     orderBy: { endingAt: "desc" },
   });
 
@@ -61,21 +61,22 @@ const syncCoaches = async ({ client, db, log }: SyncDependencies): Promise<void>
 
   log.info(`📥 Seasons loaded from database: ${seasons.length}`);
 
+  const seasonMap = new Map(seasons.map((s) => [s.sportmonksId, s.id]));
+
   const teamRows = await db.team.findMany({
     select: { id: true, sportmonksId: true },
   });
-  const teamIdBySportmonksId = new Map(teamRows.map((team) => [team.sportmonksId, team.id]));
+  const teamMap = new Map(teamRows.map((t) => [t.sportmonksId, t.id]));
 
   let savedCoaches = 0;
+  let savedAssignments = 0;
   let skippedCoaches = 0;
-  let duplicateCoaches = 0;
   const seenCoachSportmonksIds = new Set<number>();
-  const sampleSkippedCoachEntries: string[] = [];
 
   for (let i = 0; i < seasons.length; i++) {
     const season = seasons[i];
-    const seasonProgress = i + 1;
-    log.info(`🔎 Processing season ${seasonProgress}/${seasons.length}: ${season.sportmonksId}`);
+    const localSeasonId = seasonMap.get(season.sportmonksId)!;
+    log.info(`🔎 Processing season ${i + 1}/${seasons.length}: ${season.sportmonksId}`);
 
     const teams = await client.getAllPages<TeamWithCoachesDto>(`/teams/seasons/${season.sportmonksId}`, {
       perPage: 50,
@@ -85,65 +86,79 @@ const syncCoaches = async ({ client, db, log }: SyncDependencies): Promise<void>
 
     for (let j = 0; j < teams.length; j++) {
       const team = teams[j];
-      const teamProgress = j + 1;
-      const localTeamId = teamIdBySportmonksId.get(team.id) ?? null;
+      const localTeamId = teamMap.get(team.id) ?? null;
       const coaches = team.coaches ?? [];
 
-      for (let k = 0; k < coaches.length; k++) {
-        const coach = coaches[k];
+      for (const coach of coaches) {
         const coachSportmonksId = resolveCoachSportmonksId(coach);
         const coachName = resolveCoachName(coach);
         const coachImagePath = resolveCoachImagePath(coach);
 
         if (coachSportmonksId == null || !coachName) {
           skippedCoaches += 1;
-          if (sampleSkippedCoachEntries.length < 20) {
-            sampleSkippedCoachEntries.push(JSON.stringify(coach));
+          continue;
+        }
+
+        if (!seenCoachSportmonksIds.has(coachSportmonksId)) {
+          seenCoachSportmonksIds.add(coachSportmonksId);
+          await db.coach.upsert({
+            where: { sportmonksId: coachSportmonksId },
+            create: {
+              sportmonksId: coachSportmonksId,
+              name: coachName,
+              imagePath: coachImagePath,
+            },
+            update: {
+              name: coachName,
+              imagePath: coachImagePath,
+            },
+          });
+          savedCoaches += 1;
+        }
+
+        if (localTeamId) {
+          const localCoach = await db.coach.findUnique({
+            where: { sportmonksId: coachSportmonksId },
+            select: { id: true },
+          });
+
+          if (localCoach) {
+            await db.coachAssignment.upsert({
+              where: {
+                coachId_teamId_seasonId: {
+                  coachId: localCoach.id,
+                  teamId: localTeamId,
+                  seasonId: localSeasonId,
+                },
+              },
+              create: {
+                coachId: localCoach.id,
+                teamId: localTeamId,
+                seasonId: localSeasonId,
+              },
+              update: {},
+            });
+            savedAssignments += 1;
           }
-          continue;
         }
-
-        if (seenCoachSportmonksIds.has(coachSportmonksId)) {
-          duplicateCoaches += 1;
-          continue;
-        }
-        seenCoachSportmonksIds.add(coachSportmonksId);
-
-        await db.coach.upsert({
-          where: { sportmonksId: coachSportmonksId },
-          create: {
-            sportmonksId: coachSportmonksId,
-            teamId: localTeamId,
-            name: coachName,
-            imagePath: coachImagePath,
-          },
-          update: {
-            teamId: localTeamId,
-            name: coachName,
-            imagePath: coachImagePath,
-          },
-        });
-
-        savedCoaches += 1;
       }
 
-      if (teamProgress % 10 === 0 || teamProgress === teams.length) {
-        log.info(`💾 Season progress (${season.sportmonksId}): ${teamProgress}/${teams.length} teams`);
+      if ((j + 1) % 10 === 0 || j + 1 === teams.length) {
+        log.info(`💾 Season progress (${season.sportmonksId}): ${j + 1}/${teams.length} teams`);
       }
     }
 
-    log.info(`💾 Progress: ${seasonProgress}/${seasons.length} seasons`);
+    log.info(`💾 Progress: ${i + 1}/${seasons.length} seasons`);
   }
 
-  const totalRows = await db.coach.count();
+  const totalCoaches = await db.coach.count();
+  const totalAssignments = await db.coachAssignment.count();
   log.info("✅ Coaches sync summary");
-  log.info(`🟢 Saved (inserted/updated): ${savedCoaches}`);
+  log.info(`🟢 Coaches saved: ${savedCoaches}`);
+  log.info(`🟢 Assignments saved: ${savedAssignments}`);
   log.info(`🟡 Skipped: ${skippedCoaches}`);
-  log.info(`🟡 Duplicates ignored: ${duplicateCoaches}`);
-  if (sampleSkippedCoachEntries.length > 0) {
-    log.warn(`⚠️  Sample skipped coach entries: ${sampleSkippedCoachEntries.join(" | ")}`);
-  }
-  log.info(`📦 Total rows in Coach table: ${totalRows}`);
+  log.info(`📦 Total Coach rows: ${totalCoaches}`);
+  log.info(`📦 Total CoachAssignment rows: ${totalAssignments}`);
   log.info("=== COACHES END ===");
 };
 
