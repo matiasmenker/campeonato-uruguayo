@@ -9,10 +9,13 @@ export async function findTeams(
   const where: Prisma.TeamWhereInput = {};
 
   if (query.search) {
-    where.OR = [
-      { name: { contains: query.search, mode: "insensitive" } },
-      { shortCode: { contains: query.search, mode: "insensitive" } },
-    ];
+    const pattern = `%${query.search}%`;
+    const matchingIds = await prisma.$queryRaw<{ id: number }[]>`
+      SELECT id FROM "Team"
+      WHERE unaccent("name") ILIKE unaccent(${pattern})
+         OR unaccent("shortCode") ILIKE unaccent(${pattern})
+    `;
+    where.id = { in: matchingIds.map((r) => r.id) };
   }
 
   const [teams, totalItems] = await Promise.all([

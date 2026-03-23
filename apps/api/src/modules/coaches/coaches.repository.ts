@@ -9,7 +9,12 @@ export async function findCoaches(
   const where: Prisma.CoachWhereInput = {};
 
   if (query.search) {
-    where.name = { contains: query.search, mode: "insensitive" };
+    const pattern = `%${query.search}%`;
+    const matchingIds = await prisma.$queryRaw<{ id: number }[]>`
+      SELECT id FROM "Coach"
+      WHERE unaccent("name") ILIKE unaccent(${pattern})
+    `;
+    where.id = { in: matchingIds.map((r) => r.id) };
   }
 
   if (query.teamId) {

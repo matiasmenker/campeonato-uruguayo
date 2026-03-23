@@ -9,11 +9,14 @@ export async function findCountries(
   const where: Prisma.CountryWhereInput = {};
 
   if (query.search) {
-    where.OR = [
-      { name: { contains: query.search, mode: "insensitive" } },
-      { officialName: { contains: query.search, mode: "insensitive" } },
-      { code: { contains: query.search, mode: "insensitive" } },
-    ];
+    const pattern = `%${query.search}%`;
+    const matchingIds = await prisma.$queryRaw<{ id: number }[]>`
+      SELECT id FROM "Country"
+      WHERE unaccent("name") ILIKE unaccent(${pattern})
+         OR unaccent("officialName") ILIKE unaccent(${pattern})
+         OR "code" ILIKE ${pattern}
+    `;
+    where.id = { in: matchingIds.map((r) => r.id) };
   }
 
   const [countries, totalItems] = await Promise.all([

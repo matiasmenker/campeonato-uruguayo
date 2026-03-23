@@ -9,10 +9,13 @@ export async function findStatTypes(
   const where: Prisma.StatTypeWhereInput = {};
 
   if (query.search) {
-    where.OR = [
-      { name: { contains: query.search, mode: "insensitive" } },
-      { developerName: { contains: query.search, mode: "insensitive" } },
-    ];
+    const pattern = `%${query.search}%`;
+    const matchingIds = await prisma.$queryRaw<{ id: number }[]>`
+      SELECT id FROM "StatType"
+      WHERE unaccent("name") ILIKE unaccent(${pattern})
+         OR unaccent("developerName") ILIKE unaccent(${pattern})
+    `;
+    where.id = { in: matchingIds.map((r) => r.id) };
   }
 
   if (query.modelType) {
