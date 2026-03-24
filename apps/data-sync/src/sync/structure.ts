@@ -1,20 +1,12 @@
-import type { PrismaClient } from "db";
 import type { GroupDto, RoundDto, StageDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
-
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
+import type { SyncDependencies, SyncOptions } from "./shared.js";
 
 const extractArray = <T>(raw: { data: T[] } | T[] | undefined): T[] => {
   if (!raw) return [];
   return Array.isArray(raw) ? raw : raw.data ?? [];
 };
 
-const syncStructure = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+const syncStructure = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
   log.info("=== STRUCTURE START ===");
   log.info("🚀 Syncing Structure...");
   const currentYear = new Date().getUTCFullYear();
@@ -37,10 +29,14 @@ const syncStructure = async ({ client, db, log }: SyncDependencies): Promise<voi
   const seasons = await db.season.findMany({
     where: {
       leagueId: uruguayLeague.id,
-      endingAt: {
-        gte: new Date(Date.UTC(minYear, 0, 1)),
-        lt: new Date(Date.UTC(currentYear + 1, 0, 1)),
-      },
+      ...(options?.seasonSportmonksIds
+        ? { sportmonksId: { in: options.seasonSportmonksIds } }
+        : {
+            endingAt: {
+              gte: new Date(Date.UTC(minYear, 0, 1)),
+              lt: new Date(Date.UTC(currentYear + 1, 0, 1)),
+            },
+          }),
     },
     select: { id: true, sportmonksId: true },
     orderBy: { endingAt: "desc" },

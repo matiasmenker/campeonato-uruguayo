@@ -1,6 +1,4 @@
-import type { PrismaClient } from "db";
-import type { SportMonksClient } from "../sportmonks.js";
-import type { Logger } from "../logger.js";
+import type { SyncDependencies } from "./shared.js";
 import { syncCountries } from "./countries.js";
 import { syncTypes } from "./types.js";
 import { syncLeagues } from "./leagues.js";
@@ -19,30 +17,24 @@ import { syncTransfers } from "./transfers.js";
 import { syncSidelined } from "./sidelined.js";
 import { syncStandings } from "./standings.js";
 
-export interface SyncBaseDeps {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
-
-export async function syncBase({ client, db, log }: SyncBaseDeps): Promise<void> {
-  log.info("🚀 Starting sync:base");
-  await syncCountries({ client, db, log });
-  await syncTypes({ client, db, log });
-  await syncLeagues({ client, db, log });
-  await syncSeasons({ client, db, log });
-  await syncVenues({ client, db, log });
-  await syncStructure({ client, db, log });
-  await syncTeams({ client, db, log });
-  await syncCoaches({ client, db, log });
-  await syncReferees({ client, db, log });
-  await syncPlayers({ client, db, log });
-  await syncSquadMemberships({ client, db, log });
-  await syncStates({ client, db, log });
-  await syncFixtures({ client, db, log });
-  await syncFixtureDetails({ client, db, log });
-  await syncTransfers({ client, db, log });
-  await syncSidelined({ client, db, log });
-  await syncStandings({ client, db, log });
-  log.info("🎉 Sync Finished Successfully");
+export async function syncBase(dependencies: SyncDependencies): Promise<void> {
+  dependencies.log.info("🚀 Starting sync:base");
+  await syncCountries(dependencies);
+  await syncTypes(dependencies);
+  await syncLeagues(dependencies);
+  await syncSeasons(dependencies);
+  await syncVenues(dependencies);
+  await syncStructure(dependencies);
+  await syncTeams(dependencies);
+  await syncCoaches(dependencies);
+  await syncReferees(dependencies);
+  await syncPlayers(dependencies);
+  await syncSquadMemberships(dependencies);
+  await syncStates(dependencies);
+  await syncFixtures(dependencies);
+  await syncFixtureDetails(dependencies);
+  await syncTransfers(dependencies);
+  await syncSidelined(dependencies);
+  await syncStandings(dependencies);
+  dependencies.log.info("🎉 Sync Finished Successfully");
 }

@@ -1,13 +1,5 @@
-import type { PrismaClient } from "db";
 import type { PlayerDto, TeamWithPlayersDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
-
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
+import type { SyncDependencies, SyncOptions } from "./shared.js";
 
 const mapPlayer = (player: PlayerDto, fallbackPositionId: number | null, countryMap: Map<number, number>) => {
   const smCountryId = player.country_id ?? player.nationality_id ?? null;
@@ -31,7 +23,7 @@ const mapPlayer = (player: PlayerDto, fallbackPositionId: number | null, country
   };
 };
 
-const syncPlayers = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+const syncPlayers = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
   log.info("=== PLAYERS START ===");
   log.info("🚀 Syncing Players...");
 
@@ -57,6 +49,7 @@ const syncPlayers = async ({ client, db, log }: SyncDependencies): Promise<void>
   const seasons = await db.season.findMany({
     where: {
       leagueId: uruguayLeague.id,
+      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
     },
     select: { sportmonksId: true },
     orderBy: { endingAt: "desc" },

@@ -1,13 +1,5 @@
-import type { PrismaClient } from "db";
 import type { VenueDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
-
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
+import type { SyncDependencies } from "./shared.js";
 
 const mapVenue = (venueDto: VenueDto, countryId: number, cityId: number | null) => {
   return {

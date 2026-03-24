@@ -1,13 +1,5 @@
-import type { PrismaClient } from "db";
 import type { LeagueDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
-
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
+import type { SyncDependencies } from "./shared.js";
 
 const mapLeague = (leagueDto: LeagueDto, countryId: number | null) => {
   return {

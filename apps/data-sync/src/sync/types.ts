@@ -1,13 +1,5 @@
-import type { PrismaClient } from "db";
 import type { TypeDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
-
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
+import type { SyncDependencies } from "./shared.js";
 
 const syncTypes = async ({ client, db, log }: SyncDependencies): Promise<void> => {
   log.info("=== TYPES START ===");

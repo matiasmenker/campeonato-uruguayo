@@ -1,13 +1,5 @@
-import type { PrismaClient } from "db";
 import type { CoachDto, TeamWithCoachesDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
-
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
+import type { SyncDependencies, SyncOptions } from "./shared.js";
 
 const resolveCoachFromEntry = (entry: CoachDto): CoachDto => {
   return entry.coach ?? entry;
@@ -34,7 +26,7 @@ const resolveCoachImagePath = (entry: CoachDto): string | null => {
   return directCoach.image_path?.trim() || null;
 };
 
-const syncCoaches = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+const syncCoaches = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
   log.info("=== COACHES START ===");
   log.info("🚀 Syncing Coaches...");
 
@@ -49,7 +41,10 @@ const syncCoaches = async ({ client, db, log }: SyncDependencies): Promise<void>
   }
 
   const seasons = await db.season.findMany({
-    where: { leagueId: uruguayLeague.id },
+    where: {
+      leagueId: uruguayLeague.id,
+      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+    },
     select: { id: true, sportmonksId: true },
     orderBy: { endingAt: "desc" },
   });

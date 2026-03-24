@@ -1,13 +1,5 @@
-import type { PrismaClient } from "db";
 import type { StandingDetailDto, StandingDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
-
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
+import type { SyncDependencies, SyncOptions } from "./shared.js";
 
 const extractArray = <T>(raw: { data: T[] } | T[] | undefined): T[] => {
   if (!raw) return [];
@@ -80,7 +72,7 @@ const DETAIL_TYPE_IDS = {
   goalsAgainst: [134] as const,
 };
 
-const syncStandings = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+const syncStandings = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
   log.info("=== STANDINGS START ===");
   log.info("🚀 Syncing Standings...");
 
@@ -99,7 +91,10 @@ const syncStandings = async ({ client, db, log }: SyncDependencies): Promise<voi
   }
 
   const seasons = await db.season.findMany({
-    where: { leagueId: uruguayLeague.id },
+    where: {
+      leagueId: uruguayLeague.id,
+      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+    },
     select: { id: true, sportmonksId: true },
     orderBy: { endingAt: "desc" },
   });

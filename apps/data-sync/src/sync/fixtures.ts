@@ -1,13 +1,5 @@
-import type { PrismaClient } from "db";
 import type { FixtureDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
-
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
+import type { SyncDependencies, SyncOptions } from "./shared.js";
 
 const toDate = (value: string | null | undefined): Date | null => {
   if (!value) return null;
@@ -37,7 +29,7 @@ const resolveGoal = (
 
 const DELAYED_STATE_KEYWORDS = ["postponed", "suspended"];
 
-const syncFixtures = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+const syncFixtures = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
   log.info("=== FIXTURES START ===");
   log.info("🚀 Syncing Fixtures...");
 
@@ -56,7 +48,10 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies): Promise<void
   }
 
   const seasons = await db.season.findMany({
-    where: { leagueId: uruguayLeague.id },
+    where: {
+      leagueId: uruguayLeague.id,
+      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+    },
     select: { id: true, sportmonksId: true },
     orderBy: { endingAt: "desc" },
   });

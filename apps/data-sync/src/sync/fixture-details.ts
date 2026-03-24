@@ -1,7 +1,6 @@
-import type { Prisma, PrismaClient } from "db";
+import type { Prisma } from "db";
 import type { FixtureDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
+import type { SyncDependencies, SyncOptions } from "./shared.js";
 
 const CHUNK_SIZE = 50;
 
@@ -26,12 +25,6 @@ const toJsonValue = (value: unknown): Prisma.InputJsonValue | undefined => {
   return value as Prisma.InputJsonValue;
 };
 
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
-
 const chunkArray = <T>(items: T[], size: number): T[][] => {
   const chunks: T[][] = [];
   for (let i = 0; i < items.length; i += size) {
@@ -46,7 +39,7 @@ const dedupeByKey = <T>(items: T[], keyOf: (item: T) => string): T[] => {
   return Array.from(map.values());
 };
 
-const syncFixtureDetails = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
   log.info("=== FIXTURE DETAILS START ===");
   log.info("🚀 Syncing Fixture Details...");
 
@@ -62,7 +55,10 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies): Promis
 
   const fixtures = await db.fixture.findMany({
     where: {
-      season: { leagueId: uruguayLeague.id },
+      season: {
+        leagueId: uruguayLeague.id,
+        ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+      },
       homeTeamId: { not: null },
       awayTeamId: { not: null },
       stateId: { not: null },

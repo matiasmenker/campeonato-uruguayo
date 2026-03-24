@@ -1,13 +1,6 @@
-import type { Country, PrismaClient } from "db";
-import type { SportMonksClient } from "../sportmonks.js";
-import type { Logger } from "../logger.js";
+import type { Country } from "db";
 import { CountryDto } from "sportmonks-client";
-
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
+import type { SyncDependencies } from "./shared.js";
 
 const mapCountry = (countryDto: CountryDto) => {
   const officialName = countryDto.official_name.trim();

@@ -1,13 +1,5 @@
-import type { PrismaClient } from "db";
 import type { PlayerDto, TeamDto, TransferDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
-
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
+import type { SyncDependencies, SyncOptions } from "./shared.js";
 
 interface TransferRow {
   sportmonksId: number;
@@ -42,7 +34,7 @@ const asString = (value: unknown): string | null => {
   return null;
 };
 
-const syncTransfers = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+const syncTransfers = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
   log.info("=== TRANSFERS START ===");
   log.info("🚀 Syncing Transfers...");
 
@@ -68,10 +60,14 @@ const syncTransfers = async ({ client, db, log }: SyncDependencies): Promise<voi
   const seasons = await db.season.findMany({
     where: {
       leagueId: uruguayLeague.id,
-      endingAt: {
-        gte: new Date(Date.UTC(minYear, 0, 1)),
-        lt: new Date(Date.UTC(currentYear + 1, 0, 1)),
-      },
+      ...(options?.seasonSportmonksIds
+        ? { sportmonksId: { in: options.seasonSportmonksIds } }
+        : {
+            endingAt: {
+              gte: new Date(Date.UTC(minYear, 0, 1)),
+              lt: new Date(Date.UTC(currentYear + 1, 0, 1)),
+            },
+          }),
     },
     select: { id: true, sportmonksId: true },
     orderBy: { endingAt: "desc" },

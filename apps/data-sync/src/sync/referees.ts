@@ -1,15 +1,7 @@
-import type { PrismaClient } from "db";
 import type { RefereeDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
+import type { SyncDependencies, SyncOptions } from "./shared.js";
 
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
-
-const syncReferees = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+const syncReferees = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
   log.info("=== REFEREES START ===");
   log.info("🚀 Syncing Referees...");
 
@@ -24,7 +16,10 @@ const syncReferees = async ({ client, db, log }: SyncDependencies): Promise<void
   }
 
   const seasons = await db.season.findMany({
-    where: { leagueId: uruguayLeague.id },
+    where: {
+      leagueId: uruguayLeague.id,
+      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+    },
     select: { sportmonksId: true },
     orderBy: { endingAt: "desc" },
   });

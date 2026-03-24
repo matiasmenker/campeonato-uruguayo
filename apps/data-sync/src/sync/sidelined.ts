@@ -1,13 +1,6 @@
 import type { PrismaClient } from "db";
 import type { PlayerDto, SidelinedDto, TeamWithSidelinedDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
-
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
+import type { SyncDependencies, SyncOptions } from "./shared.js";
 
 const toDate = (value: string | null | undefined): Date | null => {
   if (!value) return null;
@@ -54,7 +47,7 @@ const upsertPlayer = async (
   return persistedPlayer.id;
 };
 
-const syncSidelined = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+const syncSidelined = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
   log.info("=== SIDELINED START ===");
   log.info("🚀 Syncing Sidelined (Injuries & Suspensions)...");
 
@@ -69,7 +62,10 @@ const syncSidelined = async ({ client, db, log }: SyncDependencies): Promise<voi
   }
 
   const seasons = await db.season.findMany({
-    where: { leagueId: uruguayLeague.id },
+    where: {
+      leagueId: uruguayLeague.id,
+      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+    },
     select: { sportmonksId: true },
     orderBy: { endingAt: "desc" },
   });

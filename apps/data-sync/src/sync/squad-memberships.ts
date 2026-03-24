@@ -1,13 +1,5 @@
-import type { PrismaClient } from "db";
 import type { SquadEntryDto, TeamDto } from "sportmonks-client";
-import type { Logger } from "../logger.js";
-import type { SportMonksClient } from "../sportmonks.js";
-
-export interface SyncDependencies {
-  client: SportMonksClient;
-  db: PrismaClient;
-  log: Logger;
-}
+import type { SyncDependencies, SyncOptions } from "./shared.js";
 
 const firstDate = (...values: Array<string | null | undefined>): Date | null => {
   for (const value of values) {
@@ -18,7 +10,7 @@ const firstDate = (...values: Array<string | null | undefined>): Date | null => 
   return null;
 };
 
-const syncSquadMemberships = async ({ client, db, log }: SyncDependencies): Promise<void> => {
+const syncSquadMemberships = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
   log.info("=== SQUAD MEMBERSHIPS START ===");
   log.info("🚀 Syncing Squad Memberships...");
 
@@ -37,7 +29,10 @@ const syncSquadMemberships = async ({ client, db, log }: SyncDependencies): Prom
   }
 
   const seasons = await db.season.findMany({
-    where: { leagueId: uruguayLeague.id },
+    where: {
+      leagueId: uruguayLeague.id,
+      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+    },
     select: { id: true, sportmonksId: true, startingAt: true },
     orderBy: { endingAt: "desc" },
   });

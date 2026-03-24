@@ -1,3 +1,4 @@
+export type { SyncDependencies, SyncOptions } from "./shared.js";
 export { syncBase } from "./base.js";
 export { syncCountries } from "./countries.js";
 export { syncTypes } from "./types.js";
