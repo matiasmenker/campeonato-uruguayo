@@ -119,12 +119,13 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
       null;
 
     const scores = fixtureDto.scores ?? [];
-    const homeScoreRow = scores.find((score) => {
-      const participantId = score.participant?.id ?? score.participant_id ?? null;
+    const currentScores = scores.filter((score) => score.description === "CURRENT");
+    const homeScoreRow = currentScores.find((score) => {
+      const participantId = score.participant_id ?? null;
       return participantId === homeSportmonksId;
     });
-    const awayScoreRow = scores.find((score) => {
-      const participantId = score.participant?.id ?? score.participant_id ?? null;
+    const awayScoreRow = currentScores.find((score) => {
+      const participantId = score.participant_id ?? null;
       return participantId === awaySportmonksId;
     });
 
