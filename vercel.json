@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm db:generate && pnpm --filter api build",
+  "buildCommand": "pnpm --filter db generate && pnpm --filter api build",
   "installCommand": "pnpm install",
   "framework": null,
   "rewrites": [
