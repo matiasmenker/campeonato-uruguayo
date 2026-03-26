@@ -2,9 +2,9 @@ name: Sync Live
 
 on:
   schedule:
-    # Every 5 minutes, every day, 17:00-03:59 UTC (14:00-00:59 UYT)
-    - cron: "*/5 17-23 * * *"
-    - cron: "*/5 0-3 * * *"
+    # Every 15 minutes, every day, 17:00-03:59 UTC (14:00-00:59 UYT)
+    - cron: "*/15 17-23 * * *"
+    - cron: "*/15 0-3 * * *"
   workflow_dispatch:
 
 jobs:
