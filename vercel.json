@@ -3,6 +3,7 @@
   "buildCommand": "pnpm --filter db generate && pnpm --filter api build",
   "installCommand": "pnpm install",
   "framework": null,
+  "outputDirectory": ".",
   "rewrites": [
     { "source": "/(.*)", "destination": "/api" }
   ]
