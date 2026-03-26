@@ -34,7 +34,9 @@
     "sync:health": "pnpm --filter data-sync sync:health",
     "sync:reset": "cd packages/db && cp ../../.env .env && pnpm exec prisma db push --force-reset && rm .env && cd ../.. && pnpm db:generate",
     "dev": "turbo dev",
-    "dev:api": "pnpm --filter api dev"
+    "dev:api": "pnpm --filter api dev",
+    "build:api": "pnpm db:generate && pnpm --filter api build",
+    "start:api": "pnpm --filter api start"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
