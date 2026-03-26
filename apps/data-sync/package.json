@@ -24,7 +24,9 @@
     "sync:fixtures": "tsx src/cli.ts sync:fixtures",
     "sync:standings": "tsx src/cli.ts sync:standings",
     "sync:fixture-details": "tsx src/cli.ts sync:fixture-details",
-    "sync:daily": "tsx src/cli.ts sync:daily"
+    "sync:daily": "tsx src/cli.ts sync:daily",
+    "sync:live": "tsx src/cli.ts sync:live",
+    "sync:health": "tsx src/cli.ts sync:health"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

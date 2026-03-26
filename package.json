@@ -29,7 +29,10 @@
     "sync:fixtures": "pnpm --filter data-sync sync:fixtures",
     "sync:standings": "pnpm --filter data-sync sync:standings",
     "sync:fixture-details": "pnpm --filter data-sync sync:fixture-details",
-    "sync:reset": "pnpm --filter db exec prisma db push --force-reset && pnpm db:generate",
+    "sync:daily": "pnpm --filter data-sync sync:daily",
+    "sync:live": "pnpm --filter data-sync sync:live",
+    "sync:health": "pnpm --filter data-sync sync:health",
+    "sync:reset": "cd packages/db && cp ../../.env .env && pnpm exec prisma db push --force-reset && rm .env && cd ../.. && pnpm db:generate",
     "dev": "turbo dev",
     "dev:api": "pnpm --filter api dev"
   },
