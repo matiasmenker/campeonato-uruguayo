@@ -168,11 +168,12 @@ model Team {
   transfersTo      Transfer[]        @relation("TransferTo")
   teamStats        FixtureTeamStatistic[]
   coachAssignments CoachAssignment[]
+  lineups          Lineup[]
 }
 
 model Player {
   id                 Int       @id @default(autoincrement())
-  sportmonksId       Int       @unique
+  sportmonksId       Int?      @unique
   countryId          Int?
   name               String
   commonName         String?
@@ -406,6 +407,7 @@ model Event {
 model Lineup {
   id                Int      @id @default(autoincrement())
   fixtureId         Int
+  teamId            Int?
   playerId          Int
   position          String?
   formationPosition Int?
@@ -414,10 +416,12 @@ model Lineup {
   updatedAt         DateTime @updatedAt
 
   fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Restrict)
+  team    Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
   player  Player  @relation(fields: [playerId], references: [id], onDelete: Restrict)
 
   @@unique([fixtureId, playerId])
   @@index([fixtureId])
+  @@index([teamId])
 }
 
 model FixturePlayerStatistic {

@@ -322,6 +322,8 @@ export interface FixtureLineupDetailDto {
 
 export interface FixtureLineupDto {
   player_id?: number | null;
+  team_id?: number | null;
+  player_name?: string | null;
   position?: string | null | { name?: string | null };
   formation_position?: number | null;
   jersey_number?: number | null;

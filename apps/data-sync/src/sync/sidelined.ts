@@ -78,7 +78,9 @@ const syncSidelined = async ({ client, db, log }: SyncDependencies, options?: Sy
   log.info(`📥 Seasons loaded from database: ${seasons.length}`);
 
   const playerRows = await db.player.findMany({ select: { id: true, sportmonksId: true } });
-  const playerIdBySportmonksId = new Map(playerRows.map((player) => [player.sportmonksId, player.id]));
+  const playerIdBySportmonksId = new Map(
+    playerRows.filter((p) => p.sportmonksId != null).map((player) => [player.sportmonksId as number, player.id])
+  );
 
   let savedInjuries = 0;
   let savedSuspensions = 0;
