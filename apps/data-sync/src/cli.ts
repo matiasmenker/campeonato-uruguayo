@@ -29,6 +29,7 @@ import { syncFixtureDetails } from "./sync/fixture-details.js";
 import { syncDaily } from "./sync/daily.js";
 import { syncLive } from "./sync/live.js";
 import { syncHealth } from "./sync/health.js";
+import { syncFillStats } from "./sync/fill-stats.js";
 
 const log = createLogger("data-sync");
 
@@ -118,6 +119,12 @@ async function main(): Promise<void> {
       case "sync:health":
         await syncHealth({ client, db, log });
         break;
+      case "sync:fill-stats": {
+        const seasonArg = process.argv.find((a) => a.startsWith("--season="));
+        const seasonName = seasonArg?.split("=")[1];
+        await syncFillStats({ client, db, log }, seasonName ? { seasonName } : undefined);
+        break;
+      }
       case "sync":
         await syncBase({ client, db, log });
         break;

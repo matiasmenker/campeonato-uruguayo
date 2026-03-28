@@ -11,6 +11,7 @@ import { syncSidelined } from "./sidelined.js";
 import { syncFixtures } from "./fixtures.js";
 import { syncFixtureDetails } from "./fixture-details.js";
 import { syncStandings } from "./standings.js";
+import { syncFillStats } from "./fill-stats.js";
 
 /**
  * Daily sync: updates only the current season.
@@ -31,6 +32,7 @@ import { syncStandings } from "./standings.js";
  * 10. Fixtures       — current season only
  * 11. Fixture details — current season only
  * 12. Standings      — current season only
+ * 13. Fill stats     — fill missing advanced stats from external source
  */
 export async function syncDaily(dependencies: SyncDependencies): Promise<void> {
   const { db, log } = dependencies;
@@ -68,6 +70,9 @@ export async function syncDaily(dependencies: SyncDependencies): Promise<void> {
   await syncFixtures(dependencies, currentSeasonFilter);
   await syncFixtureDetails(dependencies, currentSeasonFilter);
   await syncStandings(dependencies, currentSeasonFilter);
+
+  // Step 13: Fill missing advanced stats from external source
+  await syncFillStats(dependencies);
 
   const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
   log.info(`=== DAILY SYNC END (${elapsedSeconds}s) ===`);
