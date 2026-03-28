@@ -10,7 +10,7 @@ const syncStructure = async ({ client, db, log }: SyncDependencies, options?: Sy
   log.info("=== STRUCTURE START ===");
   log.info("🚀 Syncing Structure...");
   const currentYear = new Date().getUTCFullYear();
-  const minYear = currentYear - 4;
+  const minYear = currentYear - 2;
 
   const uruguayLeague = await db.league.findFirst({
     where: {
