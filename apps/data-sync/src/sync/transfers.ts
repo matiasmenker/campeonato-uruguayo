@@ -150,7 +150,9 @@ const syncTransfers = async ({ client, db, log }: SyncDependencies, options?: Sy
   const teamRows = await db.team.findMany({ select: { id: true, sportmonksId: true } });
   const playerRows = await db.player.findMany({ select: { id: true, sportmonksId: true } });
   const teamIdBySportmonksId = new Map(teamRows.map((team) => [team.sportmonksId, team.id]));
-  const playerIdBySportmonksId = new Map(playerRows.map((player) => [player.sportmonksId, player.id]));
+  const playerIdBySportmonksId = new Map(
+    playerRows.filter((p) => p.sportmonksId != null).map((player) => [player.sportmonksId as number, player.id])
+  );
 
   let skippedTransfers = 0;
   let createdTeamsFromTransfer = 0;

@@ -84,7 +84,9 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
   const teamRows = await db.team.findMany({ select: { id: true, sportmonksId: true } });
   const teamIdBySportmonksId = new Map(teamRows.map((team) => [team.sportmonksId, team.id]));
   const playerRows = await db.player.findMany({ select: { id: true, sportmonksId: true } });
-  const playerIdBySportmonksId = new Map(playerRows.map((player) => [player.sportmonksId, player.id]));
+  const playerIdBySportmonksId = new Map(
+    playerRows.filter((p) => p.sportmonksId != null).map((player) => [player.sportmonksId as number, player.id])
+  );
 
   const apiFixtures = await client.get<FixtureDto[]>(
     `/fixtures/multi/${fixtureSportmonksIds.join(",")}`,
