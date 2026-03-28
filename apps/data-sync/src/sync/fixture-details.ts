@@ -99,11 +99,105 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
   const players = await db.player.findMany({
     select: { id: true, sportmonksId: true },
   });
-  const playerIdBySportmonksId = new Map(players.map((player) => [player.sportmonksId, player.id]));
+  const playerIdBySportmonksId = new Map(
+    players.filter((p) => p.sportmonksId != null).map((p) => [p.sportmonksId as number, p.id])
+  );
   const teams = await db.team.findMany({
     select: { id: true, sportmonksId: true },
   });
   const teamIdBySportmonksId = new Map(teams.map((team) => [team.sportmonksId, team.id]));
+
+  const seasons = await db.season.findMany({ select: { id: true, sportmonksId: true } });
+  const seasonIdBySportmonksId = new Map(seasons.map((s) => [s.sportmonksId, s.id]));
+
+  // Build squad lookup maps for fallback matching when player_id is null
+  // Key: "teamSportmonksId:shirtNumber" or "teamSportmonksId:normalizedName"
+  const squadMemberships = await db.squadMembership.findMany({
+    select: {
+      playerId: true,
+      shirtNumber: true,
+      team: { select: { sportmonksId: true } },
+      player: { select: { name: true } },
+    },
+  });
+
+  const normalizePlayerName = (name: string): string =>
+    name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+
+  const squadByShirt = new Map<string, number[]>();
+  const squadByName = new Map<string, number[]>();
+  for (const sm of squadMemberships) {
+    const teamSmId = sm.team.sportmonksId;
+    if (sm.shirtNumber != null) {
+      const shirtKey = `${teamSmId}:${sm.shirtNumber}`;
+      const existing = squadByShirt.get(shirtKey) ?? [];
+      existing.push(sm.playerId);
+      squadByShirt.set(shirtKey, existing);
+    }
+    const nameKey = `${teamSmId}:${normalizePlayerName(sm.player.name)}`;
+    const existingName = squadByName.get(nameKey) ?? [];
+    existingName.push(sm.playerId);
+    squadByName.set(nameKey, existingName);
+  }
+
+  const createPlayerWithSquad = async (opts: {
+    sportmonksId: number | null;
+    name: string;
+    firstName: string | null;
+    lastName: string | null;
+    positionId: number | null;
+    dateOfBirth: Date | null;
+    countryId: number | null;
+    teamSmId: number;
+    seasonSmId: number;
+    jerseyNumber: number | null;
+  }): Promise<number> => {
+    const teamId = teamIdBySportmonksId.get(opts.teamSmId) ?? null;
+    const seasonId = seasonIdBySportmonksId.get(opts.seasonSmId) ?? null;
+
+    const player = await db.player.create({
+      data: {
+        sportmonksId: opts.sportmonksId,
+        name: opts.name,
+        firstName: opts.firstName,
+        lastName: opts.lastName,
+        positionId: opts.positionId,
+        dateOfBirth: opts.dateOfBirth,
+        countryId: opts.countryId,
+      },
+      select: { id: true },
+    });
+
+    if (teamId != null && seasonId != null) {
+      await db.squadMembership.create({
+        data: {
+          playerId: player.id,
+          teamId,
+          seasonId,
+          shirtNumber: opts.jerseyNumber,
+          from: new Date(),
+        },
+      });
+
+      // Update in-memory squad maps so subsequent fixtures in this chunk can match this player
+      if (opts.jerseyNumber != null) {
+        const shirtKey = `${opts.teamSmId}:${opts.jerseyNumber}`;
+        const existing = squadByShirt.get(shirtKey) ?? [];
+        existing.push(player.id);
+        squadByShirt.set(shirtKey, existing);
+      }
+      const nameKey = `${opts.teamSmId}:${normalizePlayerName(opts.name)}`;
+      const existingName = squadByName.get(nameKey) ?? [];
+      existingName.push(player.id);
+      squadByName.set(nameKey, existingName);
+    }
+
+    if (opts.sportmonksId != null) {
+      playerIdBySportmonksId.set(opts.sportmonksId, player.id);
+    }
+
+    return player.id;
+  };
 
   let savedEvents = 0;
   let savedLineups = 0;
@@ -112,11 +206,11 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
   let missingPlayerRefs = 0;
   const missingPlayerSamples: number[] = [];
 
-  const seasons = Array.from(fixturesBySeason.entries());
-  for (let seasonIndex = 0; seasonIndex < seasons.length; seasonIndex++) {
-    const [seasonSportmonksId, seasonFixtureSportmonksIds] = seasons[seasonIndex];
+  const seasonEntries = Array.from(fixturesBySeason.entries());
+  for (let seasonIndex = 0; seasonIndex < seasonEntries.length; seasonIndex++) {
+    const [seasonSportmonksId, seasonFixtureSportmonksIds] = seasonEntries[seasonIndex]!
     log.info(
-      `🔎 Processing season ${seasonIndex + 1}/${seasons.length}: ${seasonSportmonksId} (${seasonFixtureSportmonksIds.length} fixtures)`
+      `🔎 Processing season ${seasonIndex + 1}/${seasonEntries.length}: ${seasonSportmonksId} (${seasonFixtureSportmonksIds.length} fixtures)`
     );
 
     const chunks = chunkArray(seasonFixtureSportmonksIds, CHUNK_SIZE);
@@ -183,17 +277,131 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
         const lineups = fixtureDto.lineups ?? [];
         for (const lineup of lineups) {
           const lineupPlayerSportmonksId = lineup.player?.id ?? lineup.player_id ?? null;
-          if (!lineupPlayerSportmonksId) continue;
+          let lineupPlayerId: number | null = null;
 
-          const lineupPlayerId = playerIdBySportmonksId.get(lineupPlayerSportmonksId) ?? null;
-          if (!lineupPlayerId) {
-            missingPlayerRefs += 1;
-            if (missingPlayerSamples.length < 20) missingPlayerSamples.push(lineupPlayerSportmonksId);
-            continue;
+          if (lineupPlayerSportmonksId != null) {
+            lineupPlayerId = playerIdBySportmonksId.get(lineupPlayerSportmonksId) ?? null;
+            if (!lineupPlayerId) {
+              // Player has a SportMonks ID but is not in our DB — fetch and create
+              try {
+                const smPlayer = await client.get<{ id: number; name: string; firstname: string; lastname: string; position_id: number | null; country_id: number | null; date_of_birth: string | null }>(
+                  `/players/${lineupPlayerSportmonksId}`
+                );
+                lineupPlayerId = await createPlayerWithSquad({
+                  sportmonksId: smPlayer.id,
+                  name: smPlayer.name,
+                  firstName: smPlayer.firstname ?? null,
+                  lastName: smPlayer.lastname ?? null,
+                  positionId: smPlayer.position_id ?? null,
+                  dateOfBirth: smPlayer.date_of_birth ? new Date(smPlayer.date_of_birth) : null,
+                  countryId: smPlayer.country_id ?? null,
+                  teamSmId: lineup.team_id!,
+                  seasonSmId: seasonSportmonksId,
+                  jerseyNumber: lineup.jersey_number ?? null,
+                });
+                log.info(`✅ Player fetched by ID and created: ${smPlayer.name} (SM: ${smPlayer.id})`);
+              } catch {
+                missingPlayerRefs += 1;
+                if (missingPlayerSamples.length < 20) missingPlayerSamples.push(lineupPlayerSportmonksId);
+                continue;
+              }
+            }
+          } else {
+            // player_id is null — attempt fallback matching via jersey number + team, then name + team
+            const teamSmId = lineup.team_id ?? null;
+            const jerseyNumber = lineup.jersey_number ?? null;
+            const playerName = lineup.player_name ?? null;
+            const detailCount = (lineup.details ?? []).length;
+
+            if (teamSmId != null) {
+              // Attempt 1: match by shirt number within team squad
+              if (jerseyNumber != null) {
+                const shirtKey = `${teamSmId}:${jerseyNumber}`;
+                const candidates = squadByShirt.get(shirtKey) ?? [];
+                if (candidates.length === 1) {
+                  lineupPlayerId = candidates[0]!;
+                }
+              }
+
+              // Attempt 2: match by normalized name within team squad
+              if (lineupPlayerId == null && playerName != null) {
+                const nameKey = `${teamSmId}:${normalizePlayerName(playerName)}`;
+                const candidates = squadByName.get(nameKey) ?? [];
+                if (candidates.length === 1) {
+                  lineupPlayerId = candidates[0]!;
+                }
+              }
+            }
+
+            if (lineupPlayerId == null) {
+              if (detailCount === 0) {
+                // Did not play — skip silently
+                continue;
+              }
+
+              // Player played but couldn't be matched — try SportMonks search then create
+              let resolvedPlayer: { id: number; sportmonksId: number | null } | null = null;
+
+              if (playerName) {
+                try {
+                  const searchResults = await client.get<{ id: number; name: string; firstname: string; lastname: string; position_id: number | null; country_id: number | null; date_of_birth: string | null }[]>(
+                    `/players/search/${encodeURIComponent(playerName.trim().replace(/\s+/g, " "))}`
+                  );
+
+                  if (searchResults.length === 1) {
+                    const smPlayer = searchResults[0]!;
+                    const existing = playerIdBySportmonksId.get(smPlayer.id);
+                    if (existing) {
+                      lineupPlayerId = existing;
+                    } else {
+                      lineupPlayerId = await createPlayerWithSquad({
+                        sportmonksId: smPlayer.id,
+                        name: smPlayer.name,
+                        firstName: smPlayer.firstname ?? null,
+                        lastName: smPlayer.lastname ?? null,
+                        positionId: smPlayer.position_id ?? null,
+                        dateOfBirth: smPlayer.date_of_birth ? new Date(smPlayer.date_of_birth) : null,
+                        countryId: smPlayer.country_id ?? null,
+                        teamSmId: teamSmId!,
+                        seasonSmId: seasonSportmonksId,
+                        jerseyNumber,
+                      });
+                      log.info(`✅ Player resolved via search and created: "${playerName}" → ${smPlayer.name} (SM: ${smPlayer.id})`);
+                    }
+                  }
+                } catch {
+                  // Search failed — fall through to create from lineup
+                }
+              }
+
+              // If still unresolved — create from lineup data (no sportmonksId)
+              if (lineupPlayerId == null && playerName) {
+                const nameParts = playerName.trim().split(" ");
+                lineupPlayerId = await createPlayerWithSquad({
+                  sportmonksId: null,
+                  name: playerName.trim(),
+                  firstName: nameParts[0] ?? null,
+                  lastName: nameParts.slice(1).join(" ") || null,
+                  positionId: null,
+                  dateOfBirth: null,
+                  countryId: null,
+                  teamSmId: teamSmId!,
+                  seasonSmId: seasonSportmonksId,
+                  jerseyNumber,
+                });
+                log.warn(`⚠️  Player created from lineup (no SportMonks ID): "${playerName}" jersey=${jerseyNumber} team=${teamSmId} fixture=${fixtureDto.id}`);
+              }
+
+              if (lineupPlayerId == null) {
+                log.error(`❌ Unresolved player in lineup — fixture=${fixtureDto.id} team=${teamSmId} name="${playerName}" jersey=${jerseyNumber} details=${detailCount}`);
+                continue;
+              }
+            }
           }
 
           lineupsBatch.push({
             fixtureId,
+            teamId: lineup.team_id != null ? (teamIdBySportmonksId.get(lineup.team_id) ?? null) : null,
             playerId: lineupPlayerId,
             position:
               typeof lineup.position === "string" ? lineup.position : (lineup.position?.name ?? null),
