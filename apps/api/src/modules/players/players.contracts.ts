@@ -20,7 +20,7 @@ export interface CountrySummaryInPlayer {
 
 export interface PlayerContract {
   id: number;
-  sportmonksId: number;
+  sportmonksId: number | null;
   name: string;
   commonName: string | null;
   firstName: string | null;
