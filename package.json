@@ -32,6 +32,7 @@
     "sync:daily": "pnpm --filter data-sync sync:daily",
     "sync:live": "pnpm --filter data-sync sync:live",
     "sync:fill-stats": "pnpm --filter data-sync sync:fill-stats",
+    "report:fixture-players": "pnpm --filter data-sync report:fixture-players",
     "sync:health": "pnpm --filter data-sync sync:health",
     "sync:reset": "cd packages/db && cp ../../.env .env && pnpm exec prisma db push --force-reset && rm .env && cd ../.. && pnpm db:generate",
     "dev": "turbo dev",

@@ -30,6 +30,7 @@ import { syncDaily } from "./sync/daily.js";
 import { syncLive } from "./sync/live.js";
 import { syncHealth } from "./sync/health.js";
 import { syncFillStats } from "./sync/fill-stats.js";
+import { reportFixturePlayerDetails } from "./reports/fixture-player-details.js";
 
 const log = createLogger("data-sync");
 
@@ -125,12 +126,16 @@ async function main(): Promise<void> {
         await syncFillStats({ client, db, log }, seasonName ? { seasonName } : undefined);
         break;
       }
+      case "report:fixture-players": {
+        await reportFixturePlayerDetails({ db });
+        break;
+      }
       case "sync":
         await syncBase({ client, db, log });
         break;
       default:
         log.error(
-          `Unknown command: ${command}. Use one of: sync, sync:base, sync:catalog, sync:daily, sync:countries, sync:types, sync:leagues, sync:venues, sync:seasons, sync:structure, sync:teams, sync:coaches, sync:referees, sync:players, sync:squad-memberships, sync:transfers, sync:player-market-values, sync:sidelined, sync:states, sync:fixtures, sync:standings, sync:fixture-details`
+          `Unknown command: ${command}. Use one of: sync, sync:base, sync:catalog, sync:daily, sync:countries, sync:types, sync:leagues, sync:venues, sync:seasons, sync:structure, sync:teams, sync:coaches, sync:referees, sync:players, sync:squad-memberships, sync:transfers, sync:player-market-values, sync:sidelined, sync:states, sync:fixtures, sync:standings, sync:fixture-details, sync:fill-stats, report:fixture-players`
         );
         process.exit(1);
     }
