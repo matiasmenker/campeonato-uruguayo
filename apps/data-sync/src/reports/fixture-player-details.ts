@@ -830,6 +830,9 @@ function toStatValueString(value: Prisma.JsonValue | null): string {
   if (value === null) return "null";
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   if (typeof value === "string") return value;
+  if (value && typeof value === "object" && !Array.isArray(value) && "value" in value) {
+    return toStatValueString((value as { value?: Prisma.JsonValue | null }).value ?? null);
+  }
   return JSON.stringify(value);
 }
 
@@ -1956,7 +1959,7 @@ export async function reportFixturePlayerDetails(
     throw new Error(`No pude cargar la temporada resuelta con ID ${season.id}.`);
   }
 
-  const groups = seasonRecord.stages.flatMap((stage) => {
+  const groups: GroupScopeCandidate[] = seasonRecord.stages.flatMap((stage): GroupScopeCandidate[] => {
     if (stage.groups.length === 0) {
       return [{
         id: stage.id,
@@ -1965,20 +1968,21 @@ export async function reportFixturePlayerDetails(
         stageId: stage.id,
         stageName: stage.name,
         actualGroupId: null,
-      } satisfies GroupScopeCandidate];
+      }];
     }
 
     return stage.groups.map((group) => ({
-      ...group,
+      id: group.id,
+      sportmonksId: group.sportmonksId,
       name: group.name ?? stage.name,
       stageId: stage.id,
       stageName: stage.name,
       actualGroupId: group.id,
-    } satisfies GroupScopeCandidate));
+    }));
   });
 
   const matchedGroup = pickBestCandidate(groups, options.group, "grupo");
-  const matchedStage = seasonRecord.stages.find((stage) => stage.id === matchedGroup.stageId);
+  const matchedStage = seasonRecord.stages.find((stage) => stage.id === (matchedGroup as GroupScopeCandidate).stageId);
   if (!matchedStage) {
     throw new Error(`No pude resolver el stage del grupo ${matchedGroup.name ?? matchedGroup.id}.`);
   }
@@ -1989,12 +1993,13 @@ export async function reportFixturePlayerDetails(
   }));
   const matchedRound = pickBestCandidate(rounds, options.jornada, "jornada");
 
+  const groupCandidate = matchedGroup as GroupScopeCandidate;
   const fixtures = await db.fixture.findMany({
     where: {
       seasonId: seasonRecord.id,
       stageId: matchedStage.id,
       roundId: matchedRound.id,
-      ...(matchedGroup.actualGroupId !== null ? { groupId: matchedGroup.actualGroupId } : {}),
+      ...(groupCandidate.actualGroupId !== null ? { groupId: groupCandidate.actualGroupId } : {}),
     },
     include: {
       season: true,

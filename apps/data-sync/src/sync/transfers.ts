@@ -221,7 +221,9 @@ const syncTransfers = async ({ client, db, log }: SyncDependencies, options?: Sy
     });
     for (let i = 0; i < refreshedPlayers.length; i++) {
       const row = refreshedPlayers[i];
-      playerIdBySportmonksId.set(row.sportmonksId, row.id);
+      if (row.sportmonksId != null) {
+        playerIdBySportmonksId.set(row.sportmonksId, row.id);
+      }
     }
   }
 

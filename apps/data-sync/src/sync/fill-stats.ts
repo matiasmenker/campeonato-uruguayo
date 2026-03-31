@@ -89,23 +89,62 @@ async function createBrowser(): Promise<{ browser: Browser; page: Page }> {
   return { browser, page };
 }
 
-async function fetchJson<T>(page: Page, endpoint: string): Promise<T | null> {
-  try {
-    const result = await page.evaluate(async (url: string) => {
-      const res = await fetch(url);
-      if (!res.ok) return null;
-      return res.json();
-    }, `${EXTERNAL_BASE_URL}${endpoint}`);
-    return result as T | null;
-  } catch {
-    return null;
-  }
+const FETCH_TIMEOUT_MS = 15_000;
+const FETCH_MAX_RETRIES = 3;
+const FETCH_DELAY_MS = 800;
+const FETCH_RETRY_DELAY_MS = 3_000;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function findExternalSeasonId(page: Page, year: string): Promise<number | null> {
+async function fetchJson<T>(page: Page, endpoint: string, log?: SyncDependencies["log"]): Promise<T | null> {
+  for (let attempt = 1; attempt <= FETCH_MAX_RETRIES; attempt++) {
+    try {
+      const result = await page.evaluate(async (url: string) => {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), 12_000);
+        try {
+          const res = await fetch(url, { signal: controller.signal });
+          if (!res.ok) return { __error: true, status: res.status };
+          return res.json();
+        } finally {
+          clearTimeout(id);
+        }
+      }, `${EXTERNAL_BASE_URL}${endpoint}`);
+
+      if (result && typeof result === "object" && "__error" in result) {
+        const status = (result as { status: number }).status;
+        if (status === 403 || status === 429) {
+          log?.warn(`⚠️  Fetch ${endpoint} → HTTP ${status}, retry ${attempt}/${FETCH_MAX_RETRIES}...`);
+          await delay(FETCH_RETRY_DELAY_MS * attempt);
+          continue;
+        }
+        log?.warn(`⚠️  Fetch ${endpoint} → HTTP ${status}`);
+        return null;
+      }
+
+      await delay(FETCH_DELAY_MS);
+      return result as T | null;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (attempt < FETCH_MAX_RETRIES) {
+        log?.warn(`⚠️  Fetch ${endpoint} failed (attempt ${attempt}/${FETCH_MAX_RETRIES}): ${message}`);
+        await delay(FETCH_RETRY_DELAY_MS * attempt);
+        continue;
+      }
+      log?.error(`❌ Fetch ${endpoint} failed after ${FETCH_MAX_RETRIES} attempts: ${message}`);
+      return null;
+    }
+  }
+  return null;
+}
+
+async function findExternalSeasonId(page: Page, year: string, log?: SyncDependencies["log"]): Promise<number | null> {
   const data = await fetchJson<{ seasons: { id: number; year: string }[] }>(
     page,
-    `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/seasons`
+    `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/seasons`,
+    log,
   );
   if (!data?.seasons) return null;
   return data.seasons.find((s) => s.year === year)?.id ?? null;
@@ -132,14 +171,16 @@ async function findExternalEvents(
   page: Page,
   seasonId: number,
   roundName: string,
-  stageName: string
+  stageName: string,
+  log?: SyncDependencies["log"],
 ): Promise<ExternalEvent[]> {
   const prefix = stageToExternalPrefix(stageName);
   if (!prefix) return []; // Finals/Semi-finals — not mapped
 
   const data = await fetchJson<{ events: ExternalEvent[] }>(
     page,
-    `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/season/${seasonId}/events/round/${roundName}/prefix/${prefix}`
+    `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/season/${seasonId}/events/round/${roundName}/prefix/${prefix}`,
+    log,
   );
   return data?.events ?? [];
 }
@@ -340,7 +381,7 @@ export async function syncFillStats(
   const { browser, page } = await createBrowser();
 
   try {
-    const seasonId = await findExternalSeasonId(page, targetSeason.name);
+    const seasonId = await findExternalSeasonId(page, targetSeason.name, log);
     if (!seasonId) {
       log.error("❌ Could not find season on external source.");
       return;
@@ -357,7 +398,7 @@ export async function syncFillStats(
       const cacheKey = `${fixture.stageName}::${roundName}`;
 
       if (!eventsByKey.has(cacheKey)) {
-        const events = await findExternalEvents(page, seasonId, roundName, fixture.stageName);
+        const events = await findExternalEvents(page, seasonId, roundName, fixture.stageName, log);
         eventsByKey.set(cacheKey, events);
         log.info(`📥 ${fixture.stageName} Round ${roundName}: ${events.length} events fetched`);
       }
@@ -383,7 +424,8 @@ export async function syncFillStats(
 
       const lineups = await fetchJson<ExternalLineups>(
         page,
-        `/api/v1/event/${matchedEvent.id}/lineups`
+        `/api/v1/event/${matchedEvent.id}/lineups`,
+        log,
       );
 
       if (!lineups || !lineups.home?.players?.length || !lineups.away?.players?.length) {
@@ -425,7 +467,11 @@ export async function syncFillStats(
 
         for (const extPlayer of players) {
           const stats = extPlayer.statistics;
-          if (!stats || !stats.minutesPlayed) continue;
+          if (!stats) continue;
+
+          // Check if the player has at least one stat that maps to our schema
+          const hasMappableStat = Object.keys(stats).some((key) => key in EXTERNAL_TO_STAT_TYPE);
+          if (!hasMappableStat) continue;
 
           const extJersey = extPlayer.jerseyNumber ? parseInt(extPlayer.jerseyNumber, 10) : null;
           let playerId = matchPlayer(extPlayer.player.name, teamPlayers, extJersey);
