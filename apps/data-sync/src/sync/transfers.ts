@@ -39,7 +39,7 @@ const syncTransfers = async ({ client, db, log }: SyncDependencies, options?: Sy
   log.info("🚀 Syncing Transfers...");
 
   const currentYear = new Date().getUTCFullYear();
-  const minYear = currentYear - 2;
+  const minYear = currentYear - 3;
   const minDate = new Date(Date.UTC(minYear, 0, 1));
   const maxDateExclusive = new Date(Date.UTC(currentYear + 1, 0, 1));
   const TEAM_FETCH_CONCURRENCY = 3;

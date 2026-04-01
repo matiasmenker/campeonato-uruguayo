@@ -16,7 +16,7 @@ const syncSeasons = async ({ client, db, log }: SyncDependencies): Promise<void>
   log.info("=== SEASONS START ===");
   log.info("🚀 Syncing Seasons...");
   const currentYear = new Date().getUTCFullYear();
-  const minYear = currentYear - 2;
+  const minYear = currentYear - 3;
 
   const uruguayLeague = await db.league.findFirst({
     where: {
