@@ -1,4 +1,4 @@
-/** SportMonks API v3 pagination response */
+
 export interface PaginationMeta {
   current_page: number;
   first_page_url: string;
@@ -13,7 +13,6 @@ export interface PaginationMeta {
   total: number;
 }
 
-/** API response envelope with pagination */
 export interface ApiResponse<T> {
   data: T;
   message?: string;
@@ -25,7 +24,6 @@ export interface ApiResponse<T> {
   };
 }
 
-/** Minimal entity with id for SportMonks */
 export interface SportMonksEntity {
   id: number;
 }

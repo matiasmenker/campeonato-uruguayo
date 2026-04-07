@@ -27,7 +27,6 @@ const syncPlayers = async ({ client, db, log }: SyncDependencies, options?: Sync
   log.info("=== PLAYERS START ===");
   log.info("🚀 Syncing Players...");
 
-  // Build country sportmonksId → internal id map for player nationality
   const countries = await db.country.findMany({ select: { id: true, sportmonksId: true } });
   const countryMap = new Map<number, number>(countries.map((c) => [c.sportmonksId, c.id]));
   log.info(`📥 Country map loaded: ${countryMap.size} entries`);

@@ -17,8 +17,6 @@ import type {
   FixtureTeamStatsQuery,
 } from "./fixture-details.contracts.js";
 
-// --- Change Logs ---
-
 export async function findChangeLogs(
   query: ChangeLogsQuery,
 ): Promise<{ changeLogs: FixtureChangeLog[]; totalItems: number }> {
@@ -59,8 +57,6 @@ export async function findChangeLogsByFixtureId(
 
   return { changeLogs, totalItems };
 }
-
-// --- Events ---
 
 type EventWithPlayer = Event & { player: Player | null };
 
@@ -112,8 +108,6 @@ export async function findEventsByFixtureId(
   return { events, totalItems };
 }
 
-// --- Lineups ---
-
 type LineupWithPlayer = Lineup & { player: Player };
 
 export async function findLineups(
@@ -161,8 +155,6 @@ export async function findLineupsByFixtureId(
 
   return { lineups, totalItems };
 }
-
-// --- Resolve lineup team via squad membership ---
 
 export async function resolveLineupTeams(
   lineups: LineupWithPlayer[],
@@ -223,8 +215,6 @@ export async function resolveLineupTeams(
   return result;
 }
 
-// --- Fixture Player Statistics ---
-
 type PlayerStatWithPlayer = FixturePlayerStatistic & { player: Player };
 
 export async function findFixturePlayerStats(
@@ -274,8 +264,6 @@ export async function findFixturePlayerStatsByFixtureId(
 
   return { stats, totalItems };
 }
-
-// --- Fixture Team Statistics ---
 
 type TeamStatWithTeam = FixtureTeamStatistic & { team: Team | null };
 

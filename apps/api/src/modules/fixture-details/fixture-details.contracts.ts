@@ -5,8 +5,6 @@ import type { TeamSummary } from "../teams/teams.contracts.js";
 import type { FixtureStateSummary } from "../fixture-states/fixture-states.contracts.js";
 import type { StatTypeSummary } from "../stat-types/stat-types.contracts.js";
 
-// --- Param schemas ---
-
 export const fixtureIdParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
@@ -14,8 +12,6 @@ export const fixtureIdParamSchema = z.object({
 export const resourceIdParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
-
-// --- Change Logs ---
 
 export const changeLogsQuerySchema = paginationQuerySchema.extend({
   fixtureId: z.coerce.number().int().positive().optional(),
@@ -36,8 +32,6 @@ export interface ChangeLogContract {
   nextResultInfo: string | null;
   detectedAt: string;
 }
-
-// --- Events ---
 
 export const eventsQuerySchema = paginationQuerySchema.extend({
   fixtureId: z.coerce.number().int().positive().optional(),
@@ -63,8 +57,6 @@ export interface EventContract {
   updatedAt: string;
 }
 
-// --- Lineups ---
-
 export const lineupsQuerySchema = paginationQuerySchema.extend({
   fixtureId: z.coerce.number().int().positive().optional(),
   playerId: z.coerce.number().int().positive().optional(),
@@ -86,8 +78,6 @@ export interface LineupContract {
   createdAt: string;
   updatedAt: string;
 }
-
-// --- Fixture Player Statistics ---
 
 export const fixturePlayerStatsQuerySchema = paginationQuerySchema.extend({
   fixtureId: z.coerce.number().int().positive().optional(),
@@ -114,8 +104,6 @@ export interface FixturePlayerStatContract {
   createdAt: string;
   updatedAt: string;
 }
-
-// --- Fixture Team Statistics ---
 
 export const fixtureTeamStatsQuerySchema = paginationQuerySchema.extend({
   fixtureId: z.coerce.number().int().positive().optional(),

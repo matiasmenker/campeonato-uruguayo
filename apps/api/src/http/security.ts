@@ -1,10 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import type { AppConfig } from "../config/index.js";
 
-/**
- * Security headers middleware.
- * Replaces helmet — sets standard headers to prevent XSS, clickjacking, MIME sniffing, etc.
- */
 export function securityHeaders(
   _request: Request,
   response: Response,
@@ -22,11 +18,6 @@ export function securityHeaders(
   next();
 }
 
-/**
- * API Key authentication middleware.
- * If API_KEY is configured, every request must include it via X-API-Key header.
- * If API_KEY is not set, all requests pass through (development mode).
- */
 export function apiKeyAuth(config: AppConfig) {
   return (request: Request, response: Response, next: NextFunction): void => {
     if (!config.apiKey) {
@@ -34,7 +25,6 @@ export function apiKeyAuth(config: AppConfig) {
       return;
     }
 
-    // Allow health/system endpoints without auth
     if (request.path === "/" || request.path === "/health") {
       next();
       return;
@@ -57,16 +47,11 @@ export function apiKeyAuth(config: AppConfig) {
   };
 }
 
-/**
- * Rate limiter middleware using an in-memory sliding window per IP.
- * No external dependencies — uses a Map with periodic cleanup.
- */
 export function rateLimiter(config: AppConfig) {
   const windowMs = config.rateLimitWindowMs;
   const maxRequests = config.rateLimitMaxRequests;
   const store = new Map<string, number[]>();
 
-  // Clean expired entries every 2 minutes to avoid memory leaks
   const cleanupIntervalMs = 120_000;
   const cleanupInterval = setInterval(() => {
     const now = Date.now();
@@ -80,7 +65,6 @@ export function rateLimiter(config: AppConfig) {
     }
   }, cleanupIntervalMs);
 
-  // Allow the process to exit without waiting for the interval
   if (cleanupInterval.unref) {
     cleanupInterval.unref();
   }

@@ -23,8 +23,6 @@ import type {
   NormalizedStatValue,
 } from "./fixture-details.contracts.js";
 
-// --- Stat Value Normalization ---
-
 export function normalizeStatValue(rawValue: unknown): NormalizedStatValue {
   if (rawValue === null || rawValue === undefined) {
     return { rawValue, normalizedValue: null, normalizedType: "null" };
@@ -53,8 +51,6 @@ export function normalizeStatValue(rawValue: unknown): NormalizedStatValue {
   };
 }
 
-// --- Change Log ---
-
 export function toChangeLogContract(
   changeLog: FixtureChangeLog,
   previousState: FixtureState | null,
@@ -75,8 +71,6 @@ export function toChangeLogContract(
   };
 }
 
-// --- Event ---
-
 type EventWithPlayer = Event & { player: Player | null };
 
 export function toEventContract(event: EventWithPlayer): EventContract {
@@ -96,8 +90,6 @@ export function toEventContract(event: EventWithPlayer): EventContract {
     updatedAt: event.updatedAt.toISOString(),
   };
 }
-
-// --- Lineup ---
 
 type LineupWithPlayer = Lineup & { player: Player };
 
@@ -121,8 +113,6 @@ export function toLineupContract(
   };
 }
 
-// --- Fixture Player Statistic ---
-
 type PlayerStatWithPlayer = FixturePlayerStatistic & { player: Player };
 
 export function toFixturePlayerStatContract(
@@ -141,8 +131,6 @@ export function toFixturePlayerStatContract(
     updatedAt: stat.updatedAt.toISOString(),
   };
 }
-
-// --- Fixture Team Statistic ---
 
 type TeamStatWithTeam = FixtureTeamStatistic & { team: Team | null };
 

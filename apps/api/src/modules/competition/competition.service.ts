@@ -39,8 +39,6 @@ import {
   findCurrentSeason,
 } from "./competition.repository.js";
 
-// --- League ---
-
 export async function listLeagues(
   query: LeaguesQuery,
 ): Promise<PaginatedResponse<LeagueContract>> {
@@ -58,8 +56,6 @@ export async function getLeague(
   if (!league) throw new NotFoundError("League");
   return { data: toLeagueContract(league) };
 }
-
-// --- Season ---
 
 export async function listSeasons(
   query: SeasonsQuery,
@@ -79,8 +75,6 @@ export async function getSeason(
   return { data: toSeasonContract(season) };
 }
 
-// --- Stage ---
-
 export async function listStages(
   query: StagesQuery,
 ): Promise<PaginatedResponse<StageContract>> {
@@ -98,8 +92,6 @@ export async function getStage(
   if (!stage) throw new NotFoundError("Stage");
   return { data: toStageContract(stage) };
 }
-
-// --- Round ---
 
 export async function listRounds(
   query: RoundsQuery,
@@ -119,8 +111,6 @@ export async function getRound(
   return { data: toRoundContract(round) };
 }
 
-// --- Group ---
-
 export async function listGroups(
   query: GroupsQuery,
 ): Promise<PaginatedResponse<GroupContract>> {
@@ -138,8 +128,6 @@ export async function getGroup(
   if (!group) throw new NotFoundError("Group");
   return { data: toGroupContract(group) };
 }
-
-// --- Current Competition ---
 
 export async function getCurrentCompetition(): Promise<
   DetailResponse<CurrentCompetitionContract>

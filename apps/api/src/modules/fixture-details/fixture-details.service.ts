@@ -35,8 +35,6 @@ import {
 } from "./fixture-details.repository.js";
 import { getPrisma } from "../../database/index.js";
 
-// --- Stat type resolution helper ---
-
 async function resolveStatTypes(typeIds: (number | null)[]): Promise<Map<number, import("db").StatType>> {
   const validIds = typeIds.filter((id): id is number => id !== null);
   if (validIds.length === 0) return new Map();
@@ -47,8 +45,6 @@ async function resolveStatTypes(typeIds: (number | null)[]): Promise<Map<number,
   });
   return new Map(statTypes.map((statType) => [statType.id, statType]));
 }
-
-// --- Change Logs ---
 
 export async function listChangeLogs(
   query: ChangeLogsQuery,
@@ -95,8 +91,6 @@ export async function listFixtureChangeLogs(
   };
 }
 
-// --- Events ---
-
 export async function listEvents(
   query: EventsQuery,
 ): Promise<PaginatedResponse<EventContract>> {
@@ -117,8 +111,6 @@ export async function listFixtureEvents(
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
 }
-
-// --- Lineups ---
 
 export async function listLineups(
   query: LineupsQuery,
@@ -148,8 +140,6 @@ export async function listFixtureLineups(
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
 }
-
-// --- Fixture Player Statistics ---
 
 export async function listFixturePlayerStats(
   query: FixturePlayerStatsQuery,
@@ -185,8 +175,6 @@ export async function listFixturePlayerStatsByFixture(
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
 }
-
-// --- Fixture Team Statistics ---
 
 export async function listFixtureTeamStats(
   query: FixtureTeamStatsQuery,

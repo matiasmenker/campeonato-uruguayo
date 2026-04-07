@@ -6,8 +6,6 @@ export const playerIdParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
-// --- Player Market Values ---
-
 export const marketValuesQuerySchema = paginationQuerySchema.extend({
   playerId: z.coerce.number().int().positive().optional(),
 });
@@ -24,8 +22,6 @@ export interface PlayerMarketValueContract {
   createdAt: string;
   updatedAt: string;
 }
-
-// --- Injuries ---
 
 export const injuriesQuerySchema = paginationQuerySchema.extend({
   playerId: z.coerce.number().int().positive().optional(),
@@ -44,8 +40,6 @@ export interface InjuryContract {
   createdAt: string;
   updatedAt: string;
 }
-
-// --- Suspensions ---
 
 export const suspensionsQuerySchema = paginationQuerySchema.extend({
   playerId: z.coerce.number().int().positive().optional(),

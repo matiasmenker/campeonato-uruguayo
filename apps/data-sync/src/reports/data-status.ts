@@ -3,16 +3,6 @@ import type { PrismaClient } from "db";
 import type { SportMonksClient } from "../sportmonks.js";
 import type { FixtureDto } from "sportmonks-client";
 
-/**
- * Real-time diagnostic report: compares our DB against live data from
- * SportMonks API and SoFaScore for a given season + group + round.
- *
- * Does NOT write to the database. Read-only comparison.
- *
- * Usage:
- *   pnpm --filter data-sync report:data-status -- --season=2026 --group=Apertura --jornada=10
- */
-
 const EXTERNAL_TOURNAMENT_ID = 278;
 const EXTERNAL_BASE_URL = process.env["EXTERNAL_STATS_URL"] ?? "https://www.sofascore.com";
 
@@ -23,8 +13,6 @@ const STAGE_TO_PREFIX: Record<string, string> = {
   clausura: "Clausura",
   "intermediate round": "Intermedio",
 };
-
-// ─── Types ───
 
 interface ReportDependencies {
   db: PrismaClient;
@@ -42,8 +30,6 @@ interface ExternalLineups {
   home: { players: { player: { name: string }; statistics?: Record<string, unknown> }[] };
   away: { players: { player: { name: string }; statistics?: Record<string, unknown> }[] };
 }
-
-// ─── Helpers ───
 
 const normalize = (name: string): string =>
   name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -75,8 +61,6 @@ async function fetchJson<T>(page: Page, endpoint: string): Promise<T | null> {
     return null;
   }
 }
-
-// ─── Styling ───
 
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
@@ -113,8 +97,6 @@ function printTable(headers: string[], rows: string[][], colorFn?: (cell: string
   console.log(`└${sep.replace(/┼/g, "┴")}┘`);
 }
 
-// ─── Main report ───
-
 export async function reportDataStatus({ db, client }: ReportDependencies): Promise<void> {
   const seasonArg = process.argv.find((a) => a.startsWith("--season="))?.split("=")[1];
   const groupArg = process.argv.find((a) => a.startsWith("--group="))?.split("=")[1];
@@ -130,8 +112,6 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
   console.log(`${BOLD}${CYAN}║  📊 DATA STATUS — Season ${seasonArg}, ${groupArg}, Jornada ${jornadaArg.padEnd(25)}║${RESET}`);
   console.log(`${BOLD}${CYAN}╚═══════════════════════════════════════════════════════════════════════════╝${RESET}`);
   console.log();
-
-  // ─── 1. Find fixtures in DB ───
 
   const season = await db.season.findFirst({
     where: { name: { contains: seasonArg } },
@@ -178,8 +158,6 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
   console.log(`${BOLD}${WHITE}📋 Finished fixtures in DB: ${fixtures.length} (${stage.name})${RESET}`);
   console.log();
 
-  // ─── 2. Fetch from SportMonks API (real-time) ───
-
   console.log(`${DIM}🔵 Fetching from SportMonks API...${RESET}`);
   const sportmonksIds = fixtures.map((f) => f.sportmonksId);
 
@@ -206,8 +184,6 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
   }
 
   const apiFixtureById = new Map(apiFixtures.map((f) => [f.id, f]));
-
-  // ─── 3. Fetch from SoFaScore (real-time) ───
 
   console.log(`${DIM}🟠 Fetching from SoFaScore...${RESET}`);
   let browser: Browser | null = null;
@@ -258,8 +234,6 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
 
   console.log();
 
-  // ─── 4. Build comparison for each fixture ───
-
   interface FixtureStatus {
     label: string;
     db: { totalStats: number; source: string; complete: boolean; events: number; lineups: number };
@@ -275,7 +249,6 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
     const away = fixture.awayTeam?.name ?? "?";
     const label = `${home} ${fixture.homeScore}-${fixture.awayScore} ${away}`;
 
-    // --- DB analysis ---
     const fromSportMonks = fixture.playerStats.filter((s) => s.sportmonksId !== null).length;
     const fromSoFaScore = fixture.playerStats.filter((s) => s.sportmonksId === null).length;
     const hasCompleteStats = COMPLETE_STAT_INDICATORS.every((id) =>
@@ -286,7 +259,6 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
       fromSportMonks > 0 && fromSoFaScore === 0 ? "SportMonks" :
       fromSportMonks > 0 && fromSoFaScore > 0 ? "Mixed" : "None";
 
-    // --- SportMonks API analysis ---
     const apiFixture = apiFixtureById.get(fixture.sportmonksId);
     let smPlayerStats = 0;
     let smEvents = 0;
@@ -312,7 +284,6 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
       smError = "Not returned by API";
     }
 
-    // --- SoFaScore analysis ---
     let sfsStatus = "—";
     let sfsPlayersWithStats = 0;
     let sfsError: string | null = sofaScoreError;
@@ -346,7 +317,6 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
       sfsStatus = "NO_EVENTS";
     }
 
-    // --- Verdict ---
     let verdict: string;
     if (hasCompleteStats) {
       verdict = "✅ OK";
@@ -367,9 +337,6 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
     });
   }
 
-  // ─── 5. Print results ───
-
-  // Main comparison table
   console.log(`${BOLD}${WHITE}📊 DB vs External Sources Comparison:${RESET}`);
   console.log();
 
@@ -390,18 +357,14 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
 
   printTable(headers, rows, (cell, col) => {
     const padded = cell.padEnd(colWidths[col]);
-    // DB OK?
     if (col === 3) return cell === "YES" ? `${GREEN}${padded}${RESET}` : `${RED}${padded}${RESET}`;
-    // SM Detail?
     if (col === 5) return cell === "YES" ? `${GREEN}${padded}${RESET}` : `${YELLOW}${padded}${RESET}`;
-    // SFS Stats
     if (col === 6) {
       if (cell === "DETAILED") return `${GREEN}${padded}${RESET}`;
       if (cell === "BASIC_ONLY" || cell === "NO_EVENTS") return `${YELLOW}${padded}${RESET}`;
       if (cell === "NOT_FOUND" || cell === "NO_LINEUPS") return `${RED}${padded}${RESET}`;
       return `${DIM}${padded}${RESET}`;
     }
-    // Verdict
     if (col === 8) {
       if (cell.includes("OK")) return `${GREEN}${BOLD}${padded}${RESET}`;
       if (cell.includes("READY")) return `${YELLOW}${BOLD}${padded}${RESET}`;
@@ -409,8 +372,6 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
     }
     return padded;
   });
-
-  // ─── 6. Detailed breakdown per fixture ───
 
   console.log();
   console.log(`${BOLD}${WHITE}🔍 Detail per fixture:${RESET}`);
@@ -423,7 +384,6 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
     console.log(`   ${CYAN}SportMonks:${RESET} ${s.sportMonks.playerStats} stats | ${s.sportMonks.events} events | ${s.sportMonks.lineups} lineups | Detailed: ${s.sportMonks.hasDetailedStats ? "YES" : "NO"}${s.sportMonks.error ? ` | ⚠️ ${s.sportMonks.error}` : ""}`);
     console.log(`   ${CYAN}SoFaScore:${RESET}  ${s.sofaScore.status} | ${s.sofaScore.playersWithStats} players with stats${s.sofaScore.error ? ` | ⚠️ ${s.sofaScore.error}` : ""}`);
 
-    // Action needed?
     if (s.db.complete) {
       console.log(`   ${GREEN}→ No action needed${RESET}`);
     } else if (s.sportMonks.hasDetailedStats && !s.db.complete) {
@@ -434,8 +394,6 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
       console.log(`   ${RED}→ No source has detailed data right now. They may not be available yet.${RESET}`);
     }
   }
-
-  // ─── 7. Summary ───
 
   console.log();
   console.log(`${BOLD}═══════════════════════════════════════${RESET}`);

@@ -14,8 +14,6 @@ import type {
   GroupSummary,
 } from "./competition.contracts.js";
 
-// --- League ---
-
 type LeagueWithCountry = League & { country: Country | null };
 
 export function toLeagueContract(league: LeagueWithCountry): LeagueContract {
@@ -39,8 +37,6 @@ export function toLeagueSummary(league: League): LeagueSummary {
     imagePath: league.imagePath,
   };
 }
-
-// --- Season ---
 
 type SeasonWithLeague = Season & { league: League };
 
@@ -66,8 +62,6 @@ export function toSeasonSummary(season: Season): SeasonSummary {
   };
 }
 
-// --- Stage ---
-
 type StageWithSeason = Stage & { season: Season };
 
 export function toStageContract(stage: StageWithSeason): StageContract {
@@ -92,8 +86,6 @@ export function toStageSummary(stage: Stage): StageSummary {
   };
 }
 
-// --- Round ---
-
 type RoundWithStage = Round & { stage: Stage };
 
 export function toRoundContract(round: RoundWithStage): RoundContract {
@@ -116,8 +108,6 @@ export function toRoundSummary(round: Round): RoundSummary {
     isCurrent: round.isCurrent,
   };
 }
-
-// --- Group ---
 
 type GroupWithStage = Group & { stage: Stage };
 

@@ -282,7 +282,6 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
           if (lineupPlayerSportmonksId != null) {
             lineupPlayerId = playerIdBySportmonksId.get(lineupPlayerSportmonksId) ?? null;
             if (!lineupPlayerId) {
-              // Player has a SportMonks ID but is not in our DB — fetch and create
               try {
                 const smPlayer = await client.get<{ id: number; name: string; firstname: string; lastname: string; position_id: number | null; country_id: number | null; date_of_birth: string | null }>(
                   `/players/${lineupPlayerSportmonksId}`
@@ -307,14 +306,12 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
               }
             }
           } else {
-            // player_id is null — attempt fallback matching via jersey number + team, then name + team
             const teamSmId = lineup.team_id ?? null;
             const jerseyNumber = lineup.jersey_number ?? null;
             const playerName = lineup.player_name ?? null;
             const detailCount = (lineup.details ?? []).length;
 
             if (teamSmId != null) {
-              // Attempt 1: match by shirt number within team squad
               if (jerseyNumber != null) {
                 const shirtKey = `${teamSmId}:${jerseyNumber}`;
                 const candidates = squadByShirt.get(shirtKey) ?? [];
@@ -335,7 +332,6 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
 
             if (lineupPlayerId == null) {
               if (detailCount === 0) {
-                // Did not play — skip silently
                 continue;
               }
 

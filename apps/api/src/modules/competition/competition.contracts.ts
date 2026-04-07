@@ -2,8 +2,6 @@ import { z } from "zod";
 import { paginationQuerySchema } from "../../contracts/pagination.js";
 import type { CountrySummary } from "../countries/countries.contracts.js";
 
-// --- Query schemas ---
-
 export const leaguesQuerySchema = paginationQuerySchema.extend({
   search: z.string().optional(),
   countryId: z.coerce.number().int().positive().optional(),
@@ -42,8 +40,6 @@ export type GroupsQuery = z.infer<typeof groupsQuerySchema>;
 export const idParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
-
-// --- Response contracts ---
 
 export interface LeagueContract {
   id: number;

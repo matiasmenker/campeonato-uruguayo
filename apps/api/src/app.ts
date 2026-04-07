@@ -17,7 +17,6 @@ const config = loadConfig();
 
 const app = express();
 
-// Security: headers, rate limiting, API key auth
 app.use(securityHeaders);
 app.use(rateLimiter(config));
 app.use(apiKeyAuth(config));

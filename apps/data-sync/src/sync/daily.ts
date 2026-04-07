@@ -13,33 +13,11 @@ import { syncFixtureDetails } from "./fixture-details.js";
 import { syncStandings } from "./standings.js";
 import { syncFillStats } from "./fill-stats.js";
 
-/**
- * Daily sync: updates only the current season.
- *
- * Reuses the same modular sync functions used by sync:base,
- * scoped to a single season via SyncOptions.seasonSportmonksIds.
- *
- * Steps:
- *  1. Seasons        — detect isCurrent changes
- *  2. Structure      — stages, rounds, groups
- *  3. Venues         — global (no season scope)
- *  4. Referees       — current season only
- *  5. Players        — current season only
- *  6. Squad members  — current season only
- *  7. Coaches        — current season only
- *  8. Transfers      — current season only
- *  9. Sidelined      — current season only
- * 10. Fixtures       — current season only
- * 11. Fixture details — current season only
- * 12. Standings      — current season only
- * 13. Fill stats     — fill missing advanced stats from external source
- */
 export async function syncDaily(dependencies: SyncDependencies): Promise<void> {
   const { db, log } = dependencies;
   log.info("=== DAILY SYNC START ===");
   const startTime = Date.now();
 
-  // Step 1: Update seasons (detect isCurrent flag changes)
   await syncSeasons(dependencies);
 
   const currentSeason = await db.season.findFirst({
@@ -58,7 +36,6 @@ export async function syncDaily(dependencies: SyncDependencies): Promise<void> {
     seasonSportmonksIds: [currentSeason.sportmonksId],
   };
 
-  // Steps 2-12: all scoped to current season
   await syncStructure(dependencies, currentSeasonFilter);
   await syncVenues(dependencies);
   await syncReferees(dependencies, currentSeasonFilter);
@@ -71,7 +48,6 @@ export async function syncDaily(dependencies: SyncDependencies): Promise<void> {
   await syncFixtureDetails(dependencies, currentSeasonFilter);
   await syncStandings(dependencies, currentSeasonFilter);
 
-  // Step 13: Fill missing advanced stats from external source
   await syncFillStats(dependencies);
 
   const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);

@@ -16,8 +16,6 @@ import {
 
 const availabilityRouter = Router();
 
-// --- Market Values ---
-
 availabilityRouter.get(
   "/api/v1/player-market-values",
   async (request, response, next) => {
@@ -45,8 +43,6 @@ availabilityRouter.get(
   },
 );
 
-// --- Injuries ---
-
 availabilityRouter.get(
   "/api/v1/injuries",
   async (request, response, next) => {
@@ -73,8 +69,6 @@ availabilityRouter.get(
     }
   },
 );
-
-// --- Suspensions ---
 
 availabilityRouter.get(
   "/api/v1/suspensions",

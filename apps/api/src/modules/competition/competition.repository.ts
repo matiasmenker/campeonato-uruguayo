@@ -8,8 +8,6 @@ import type {
   GroupsQuery,
 } from "./competition.contracts.js";
 
-// --- League ---
-
 type LeagueWithCountry = League & { country: Country | null };
 
 export async function findLeagues(
@@ -55,8 +53,6 @@ export async function findLeagueById(
   });
 }
 
-// --- Season ---
-
 type SeasonWithLeague = Season & { league: League };
 
 export async function findSeasons(
@@ -97,8 +93,6 @@ export async function findSeasonById(
   });
 }
 
-// --- Stage ---
-
 type StageWithSeason = Stage & { season: Season };
 
 export async function findStages(
@@ -134,8 +128,6 @@ export async function findStageById(
     include: { season: true },
   });
 }
-
-// --- Round ---
 
 type RoundWithStage = Round & { stage: Stage };
 
@@ -173,8 +165,6 @@ export async function findRoundById(
   });
 }
 
-// --- Group ---
-
 type GroupWithStage = Group & { stage: Stage };
 
 export async function findGroups(
@@ -210,8 +200,6 @@ export async function findGroupById(
     include: { stage: true },
   });
 }
-
-// --- Current Competition ---
 
 export async function findCurrentSeason(): Promise<
   (Season & { league: League; stages: (Stage & { rounds: Round[] })[] }) | null

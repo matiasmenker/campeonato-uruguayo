@@ -12,8 +12,6 @@ import type {
   SuspensionsQuery,
 } from "./availability.contracts.js";
 
-// --- Market Values ---
-
 type MarketValueWithPlayer = PlayerMarketValue & { player: Player };
 
 export async function findMarketValues(
@@ -59,8 +57,6 @@ export async function findMarketValuesByPlayerId(
   return { marketValues, totalItems };
 }
 
-// --- Injuries ---
-
 type InjuryWithPlayer = Injury & { player: Player };
 
 export async function findInjuries(
@@ -105,8 +101,6 @@ export async function findInjuriesByPlayerId(
 
   return { injuries, totalItems };
 }
-
-// --- Suspensions ---
 
 type SuspensionWithPlayer = Suspension & { player: Player };
 

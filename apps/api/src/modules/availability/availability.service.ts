@@ -22,8 +22,6 @@ import {
   findSuspensionsByPlayerId,
 } from "./availability.repository.js";
 
-// --- Market Values ---
-
 export async function listMarketValues(
   query: MarketValuesQuery,
 ): Promise<PaginatedResponse<PlayerMarketValueContract>> {
@@ -45,8 +43,6 @@ export async function listPlayerMarketValues(
   };
 }
 
-// --- Injuries ---
-
 export async function listInjuries(
   query: InjuriesQuery,
 ): Promise<PaginatedResponse<InjuryContract>> {
@@ -67,8 +63,6 @@ export async function listPlayerInjuries(
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
 }
-
-// --- Suspensions ---
 
 export async function listSuspensions(
   query: SuspensionsQuery,

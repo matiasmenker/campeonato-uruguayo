@@ -22,8 +22,6 @@ import {
 
 const fixtureDetailsRouter = Router();
 
-// --- Change Logs ---
-
 fixtureDetailsRouter.get(
   "/api/v1/fixture-change-logs",
   async (request, response, next) => {
@@ -50,8 +48,6 @@ fixtureDetailsRouter.get(
     }
   },
 );
-
-// --- Events ---
 
 fixtureDetailsRouter.get(
   "/api/v1/events",
@@ -80,8 +76,6 @@ fixtureDetailsRouter.get(
   },
 );
 
-// --- Lineups ---
-
 fixtureDetailsRouter.get(
   "/api/v1/lineups",
   async (request, response, next) => {
@@ -109,8 +103,6 @@ fixtureDetailsRouter.get(
   },
 );
 
-// --- Fixture Player Statistics ---
-
 fixtureDetailsRouter.get(
   "/api/v1/fixture-player-statistics",
   async (request, response, next) => {
@@ -137,8 +129,6 @@ fixtureDetailsRouter.get(
     }
   },
 );
-
-// --- Fixture Team Statistics ---
 
 fixtureDetailsRouter.get(
   "/api/v1/fixture-team-statistics",

@@ -23,8 +23,6 @@ import {
 
 const competitionRouter = Router();
 
-// --- Leagues ---
-
 competitionRouter.get("/api/v1/leagues", async (request, response, next) => {
   try {
     const query = leaguesQuerySchema.parse(request.query);
@@ -44,8 +42,6 @@ competitionRouter.get("/api/v1/leagues/:id", async (request, response, next) => 
     next(error);
   }
 });
-
-// --- Seasons ---
 
 competitionRouter.get("/api/v1/seasons", async (request, response, next) => {
   try {
@@ -67,8 +63,6 @@ competitionRouter.get("/api/v1/seasons/:id", async (request, response, next) => 
   }
 });
 
-// --- Stages ---
-
 competitionRouter.get("/api/v1/stages", async (request, response, next) => {
   try {
     const query = stagesQuerySchema.parse(request.query);
@@ -88,8 +82,6 @@ competitionRouter.get("/api/v1/stages/:id", async (request, response, next) => {
     next(error);
   }
 });
-
-// --- Rounds ---
 
 competitionRouter.get("/api/v1/rounds", async (request, response, next) => {
   try {
@@ -111,8 +103,6 @@ competitionRouter.get("/api/v1/rounds/:id", async (request, response, next) => {
   }
 });
 
-// --- Groups ---
-
 competitionRouter.get("/api/v1/groups", async (request, response, next) => {
   try {
     const query = groupsQuerySchema.parse(request.query);
@@ -132,8 +122,6 @@ competitionRouter.get("/api/v1/groups/:id", async (request, response, next) => {
     next(error);
   }
 });
-
-// --- Current Competition ---
 
 competitionRouter.get("/api/v1/competition/current", async (_request, response, next) => {
   try {

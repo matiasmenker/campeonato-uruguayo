@@ -44,8 +44,6 @@ const EXTERNAL_TO_STAT_TYPE: Record<string, number> = {
   dispossessed: 94,
 };
 
-// Stat types that are ALWAYS present in fixtures with complete statistics.
-// If a fixture has NONE of these, it only has basic data (minutes, goals, cards, rating).
 const COMPLETE_STAT_INDICATORS = [
   80,   // Total passes
   78,   // Total tackles
@@ -150,9 +148,6 @@ async function findExternalSeasonId(page: Page, year: string, log?: SyncDependen
   return data.seasons.find((s) => s.year === year)?.id ?? null;
 }
 
-/**
- * Maps our DB stage names to the external source prefix.
- */
 const STAGE_TO_PREFIX: Record<string, string> = {
   apertura: "Apertura",
   clausura: "Clausura",
@@ -175,8 +170,7 @@ async function findExternalEvents(
   log?: SyncDependencies["log"],
 ): Promise<ExternalEvent[]> {
   const prefix = stageToExternalPrefix(stageName);
-  if (!prefix) return []; // Finals/Semi-finals — not mapped
-
+  if (!prefix) return []; 
   const data = await fetchJson<{ events: ExternalEvent[] }>(
     page,
     `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/season/${seasonId}/events/round/${roundName}/prefix/${prefix}`,
@@ -205,7 +199,6 @@ function matchFixtureToEvent(
         evtHome.includes(normHome.substring(0, 5)) || normHome.includes(evtHome.substring(0, 5));
       const awayMatch =
         evtAway.includes(normAway.substring(0, 5)) || normAway.includes(evtAway.substring(0, 5));
-      // Allow ±25h tolerance: late-night matches can cross midnight UTC between sources
       const dateMatch = Math.abs(evtMs - kickoffMs) <= 25 * 60 * 60 * 1000;
 
       return homeMatch && awayMatch && dateMatch;
@@ -213,11 +206,6 @@ function matchFixtureToEvent(
   );
 }
 
-/**
- * Checks if all words from the external name exist in the DB name.
- * Supports initials: a 1-2 char word matches if a DB word starts with it.
- * Returns true only if at least one non-initial word matches.
- */
 function allWordsMatch(extWords: string[], dbWords: string[]): boolean {
   let hasFullWordMatch = false;
 
@@ -249,18 +237,15 @@ function matchPlayer(
 ): number | null {
   const extNorm = normalize(externalName);
 
-  // Level 1: Exact normalized match
   for (const dbPlayer of dbPlayers) {
     if (normalize(dbPlayer.name) === extNorm) return dbPlayer.id;
   }
 
-  // Level 2: Substring match (one contains the other)
   for (const dbPlayer of dbPlayers) {
     const dbNorm = normalize(dbPlayer.name);
     if (extNorm.includes(dbNorm) || dbNorm.includes(extNorm)) return dbPlayer.id;
   }
 
-  // Level 3: All words match (with initial support)
   const extWords = extNorm.split(" ").filter((w) => w.length > 0);
   const candidates: PlayerCandidate[] = [];
 
@@ -273,13 +258,11 @@ function matchPlayer(
 
   if (candidates.length === 1) return candidates[0].id;
 
-  // Level 4: Multiple candidates — use jersey number as tiebreaker
   if (candidates.length > 1 && externalJerseyNumber != null) {
     const byJersey = candidates.find((c) => c.jerseyNumber === externalJerseyNumber);
     if (byJersey) return byJersey.id;
   }
 
-  // Level 5: Jersey number only match (last resort)
   if (externalJerseyNumber != null) {
     const byJersey = dbPlayers.filter((p) => p.jerseyNumber === externalJerseyNumber);
     if (byJersey.length === 1) return byJersey[0].id;
@@ -289,8 +272,7 @@ function matchPlayer(
 }
 
 export interface FillStatsOptions {
-  seasonName?: string; // e.g. "2025" — if omitted, uses current season
-}
+  seasonName?: string; }
 
 export async function syncFillStats(
   { db, log }: SyncDependencies,
@@ -433,7 +415,6 @@ export async function syncFillStats(
         continue;
       }
 
-      // Load lineup jersey numbers for this fixture to help with matching
       const fixtureLineups = await db.lineup.findMany({
         where: { fixtureId: fixture.fixtureId },
         select: { playerId: true, jerseyNumber: true },
@@ -459,7 +440,6 @@ export async function syncFillStats(
         const players = lineups[side].players;
         const basePlayers = playersByTeamId.get(teamIdBySide[side]) ?? [];
 
-        // Enrich squad players with jersey numbers from lineup, falling back to squad shirt number
         const teamPlayers: PlayerCandidate[] = basePlayers.map((p) => ({
           ...p,
           jerseyNumber: jerseyByPlayerId.get(p.id) ?? p.shirtNumber,
@@ -469,14 +449,12 @@ export async function syncFillStats(
           const stats = extPlayer.statistics;
           if (!stats) continue;
 
-          // Check if the player has at least one stat that maps to our schema
           const hasMappableStat = Object.keys(stats).some((key) => key in EXTERNAL_TO_STAT_TYPE);
           if (!hasMappableStat) continue;
 
           const extJersey = extPlayer.jerseyNumber ? parseInt(extPlayer.jerseyNumber, 10) : null;
           let playerId = matchPlayer(extPlayer.player.name, teamPlayers, extJersey);
           if (!playerId) {
-            // Player not in DB — create from SoFaScore data
             const teamId = teamIdBySide[side];
             const newPlayer = await db.player.create({
               data: { name: extPlayer.player.name, sportmonksId: null },
@@ -527,7 +505,6 @@ export async function syncFillStats(
           });
           await tx.fixturePlayerStatistic.createMany({ data: statsBatch });
 
-          // Enrich card stats from Events table (SoFaScore doesn't provide cards)
           const cardEvents = await tx.event.findMany({
             where: {
               fixtureId: fixture.fixtureId,

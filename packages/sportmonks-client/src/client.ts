@@ -1,13 +1,13 @@
 const BASE_URL = "https://api.sportmonks.com/v3/football";
 
 export interface FetchOptions {
-  /** Max items per page (1–50 default, up to 1000 with filters=populate) */
+  
   perPage?: number;
-  /** Page number (1-based) */
+  
   page?: number;
-  /** Include relations, e.g. "country,seasons" */
+  
   include?: string;
-  /** Filters, e.g. "populate" for higher per_page limit */
+  
   filters?: string;
 }
 
@@ -16,10 +16,6 @@ export interface SportMonksClientConfig {
   baseUrl?: string;
 }
 
-/**
- * HTTP client for SportMonks Football API v3.
- * Auth via api_token query param.
- */
 export function createSportMonksClient(config: SportMonksClientConfig) {
   const { apiToken, baseUrl = BASE_URL } = config;
 
@@ -50,9 +46,7 @@ export function createSportMonksClient(config: SportMonksClientConfig) {
     return url.toString();
   }
 
-  /**
-   * Fetch a single resource by path (e.g. "/countries/123").
-   */
+  
   async function get<T>(path: string, options: FetchOptions = {}): Promise<T> {
     const url = buildUrl(path, options);
     const res = await fetch(url);
@@ -66,10 +60,7 @@ export function createSportMonksClient(config: SportMonksClientConfig) {
     return (json.data ?? json) as T;
   }
 
-  /**
-   * Fetch all pages of a list endpoint using pagination.
-   * Uses per_page and page; stops when has_more is false or data is empty.
-   */
+  
   async function getAllPages<T>(
     path: string,
     options: Omit<FetchOptions, "page"> & {

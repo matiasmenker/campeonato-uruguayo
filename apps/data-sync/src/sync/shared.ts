@@ -9,6 +9,6 @@ export interface SyncDependencies {
 }
 
 export interface SyncOptions {
-  /** When provided, only these SportMonks season IDs are processed. */
+  
   seasonSportmonksIds?: number[];
 }
