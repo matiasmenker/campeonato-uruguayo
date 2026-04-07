@@ -197,65 +197,65 @@ const REPORT_WIDTH = Math.max(92, Math.min(process.stdout.columns ?? 120, 118));
 const LABEL_WIDTH = 10;
 
 const POSITION_LABELS: Record<number, string> = {
-  24: "Arquero",
-  25: "Defensa",
-  26: "Mediocampo",
-  27: "Delantero",
-  148: "Zaguero",
-  149: "Volante cont.",
-  150: "Enganche",
+  24: "Goalkeeper",
+  25: "Defender",
+  26: "Midfielder",
+  27: "Forward",
+  148: "Centre-Back",
+  149: "Def. Midfield",
+  150: "Att. Midfield",
   151: "9",
-  152: "Extremo der.",
-  153: "Volante mixto",
-  154: "Lateral der.",
-  155: "Lateral izq.",
-  156: "Extremo izq.",
-  157: "Media punta",
-  158: "Carrilero",
-  163: "Segundo punta",
+  152: "Right Winger",
+  153: "Central Mid.",
+  154: "Right-Back",
+  155: "Left-Back",
+  156: "Left Winger",
+  157: "Playmaker",
+  158: "Wing-Back",
+  163: "Second Str.",
 };
 
 const STAT_LABELS: Record<string, { label: string; short: string }> = {
-  ACCURATE_CROSSES: { label: "Centros OK", short: "C.OK" },
-  ACCURATE_PASSES: { label: "Pases OK", short: "P.OK" },
-  AERIALS_LOST: { label: "Aereos perdidos", short: "Aer P" },
-  AERIALS_WON: { label: "Aereos ganados", short: "Aer G" },
-  ASSISTS: { label: "Asistencias", short: "A" },
-  BLOCKED_SHOTS: { label: "Tiros bloqueados", short: "TB" },
-  CLEARANCES: { label: "Despejes", short: "Desp" },
-  DISPOSSESSED: { label: "Balones perdidos", short: "Perd" },
-  DRIBBLED_ATTEMPTS: { label: "Gambetas intentadas", short: "Gamb" },
-  DUELS_LOST: { label: "Duelos perdidos", short: "DP" },
-  DUELS_WON: { label: "Duelos ganados", short: "DG" },
-  ERROR_LEAD_TO_SHOT: { label: "Errores que terminan en tiro", short: "Err->T" },
-  FOULS: { label: "Faltas cometidas", short: "Falt" },
-  FOULS_DRAWN: { label: "Faltas recibidas", short: "Rec" },
-  GOALS: { label: "Goles", short: "G" },
-  GOALS_CONCEDED: { label: "Goles recibidos", short: "GR" },
-  GOALKEEPER_GOALS_CONCEDED: { label: "Goles recibidos arquero", short: "GRA" },
-  GOOD_HIGH_CLAIM: { label: "Centros aereos asegurados", short: "Cent A" },
-  INTERCEPTIONS: { label: "Intercepciones", short: "Int" },
-  KEY_PASSES: { label: "Pases clave", short: "P.Cl" },
-  LONG_BALLS: { label: "Pases largos", short: "Larg" },
-  LONG_BALLS_WON: { label: "Pases largos OK", short: "L.OK" },
-  MINUTES_PLAYED: { label: "Minutos", short: "Min" },
+  ACCURATE_CROSSES: { label: "Acc. Crosses", short: "C.OK" },
+  ACCURATE_PASSES: { label: "Acc. Passes", short: "P.OK" },
+  AERIALS_LOST: { label: "Aerials Lost", short: "Aer L" },
+  AERIALS_WON: { label: "Aerials Won", short: "Aer W" },
+  ASSISTS: { label: "Assists", short: "A" },
+  BLOCKED_SHOTS: { label: "Blocked Shots", short: "BS" },
+  CLEARANCES: { label: "Clearances", short: "Clr" },
+  DISPOSSESSED: { label: "Dispossessed", short: "Disp" },
+  DRIBBLED_ATTEMPTS: { label: "Dribble Attempts", short: "Drb" },
+  DUELS_LOST: { label: "Duels Lost", short: "DL" },
+  DUELS_WON: { label: "Duels Won", short: "DW" },
+  ERROR_LEAD_TO_SHOT: { label: "Errors Leading to Shot", short: "Err" },
+  FOULS: { label: "Fouls Committed", short: "Fls" },
+  FOULS_DRAWN: { label: "Fouls Drawn", short: "FD" },
+  GOALS: { label: "Goals", short: "G" },
+  GOALS_CONCEDED: { label: "Goals Conceded", short: "GC" },
+  GOALKEEPER_GOALS_CONCEDED: { label: "GK Goals Conceded", short: "GKC" },
+  GOOD_HIGH_CLAIM: { label: "High Claims", short: "HC" },
+  INTERCEPTIONS: { label: "Interceptions", short: "Int" },
+  KEY_PASSES: { label: "Key Passes", short: "KP" },
+  LONG_BALLS: { label: "Long Balls", short: "LB" },
+  LONG_BALLS_WON: { label: "Acc. Long Balls", short: "LB+" },
+  MINUTES_PLAYED: { label: "Minutes", short: "Min" },
   OFFSIDES: { label: "Offsides", short: "Off" },
-  PASSES: { label: "Pases", short: "Pas" },
-  POSSESSION_LOST: { label: "Perdidas de posesion", short: "Pos P" },
+  PASSES: { label: "Passes", short: "Pas" },
+  POSSESSION_LOST: { label: "Possession Lost", short: "PL" },
   RATING: { label: "Rating", short: "Rt" },
-  REDCARDS: { label: "Rojas", short: "TR" },
-  SAVES: { label: "Atajadas", short: "Atj" },
-  SAVES_INSIDE_BOX: { label: "Atajadas dentro del area", short: "Atj A" },
-  SHOTS_BLOCKED: { label: "Tiros bloqueados", short: "TB" },
-  SHOTS_OFF_TARGET: { label: "Tiros afuera", short: "TF" },
-  SHOTS_ON_TARGET: { label: "Tiros al arco", short: "TA" },
-  SHOTS_TOTAL: { label: "Tiros", short: "T" },
-  SUCCESSFUL_DRIBBLES: { label: "Gambetas OK", short: "G.OK" },
-  TACKLES: { label: "Entradas", short: "Entr" },
-  TOUCHES: { label: "Toques", short: "Toq" },
-  TOTAL_CROSSES: { label: "Centros", short: "Cent" },
-  TOTAL_DUELS: { label: "Duelos", short: "Duel" },
-  YELLOWCARDS: { label: "Amarillas", short: "TA" },
+  REDCARDS: { label: "Red Cards", short: "RC" },
+  SAVES: { label: "Saves", short: "Sav" },
+  SAVES_INSIDE_BOX: { label: "Saves Inside Box", short: "SiB" },
+  SHOTS_BLOCKED: { label: "Shots Blocked", short: "SB" },
+  SHOTS_OFF_TARGET: { label: "Shots Off Target", short: "SOT" },
+  SHOTS_ON_TARGET: { label: "Shots On Target", short: "ShT" },
+  SHOTS_TOTAL: { label: "Shots", short: "Sh" },
+  SUCCESSFUL_DRIBBLES: { label: "Succ. Dribbles", short: "Dr+" },
+  TACKLES: { label: "Tackles", short: "Tkl" },
+  TOUCHES: { label: "Touches", short: "Tch" },
+  TOTAL_CROSSES: { label: "Crosses", short: "Crs" },
+  TOTAL_DUELS: { label: "Duels", short: "Duel" },
+  YELLOWCARDS: { label: "Yellow Cards", short: "YC" },
 };
 
 const HEADLINE_KEYS = [
@@ -343,40 +343,40 @@ const DENSE_STAT_CATEGORY_ORDER: DenseStatCategory[] = [
 ];
 
 const STAT_COLUMN_HEADERS: Record<string, string> = {
-  PASSES: "Pases",
-  ACCURATE_PASSES: "Pases+",
-  KEY_PASSES: "P.Clave",
-  TOUCHES: "Toques",
-  POSSESSION_LOST: "Pos.Perd",
-  LONG_BALLS: "Largos",
-  LONG_BALLS_WON: "Larg+",
-  AERIALS_WON: "Aereo+",
-  AERIALS_LOST: "Aereo-",
-  TOTAL_DUELS: "Duelos",
+  PASSES: "Pass",
+  ACCURATE_PASSES: "Pass+",
+  KEY_PASSES: "KeyP",
+  TOUCHES: "Tch",
+  POSSESSION_LOST: "PosL",
+  LONG_BALLS: "LBall",
+  LONG_BALLS_WON: "LB+",
+  AERIALS_WON: "Aer+",
+  AERIALS_LOST: "Aer-",
+  TOTAL_DUELS: "Duels",
   DUELS_WON: "Duel+",
   DUELS_LOST: "Duel-",
-  SHOTS_TOTAL: "Tiros",
-  SHOTS_ON_TARGET: "T.Arco",
-  SHOTS_OFF_TARGET: "T.Fuera",
-  SHOTS_BLOCKED: "T.Bloq",
-  BLOCKED_SHOTS: "Bloq",
-  SUCCESSFUL_DRIBBLES: "Reg+",
-  DRIBBLED_ATTEMPTS: "Reg",
-  TOTAL_CROSSES: "Cent",
-  ACCURATE_CROSSES: "Cent+",
+  SHOTS_TOTAL: "Shots",
+  SHOTS_ON_TARGET: "ShT",
+  SHOTS_OFF_TARGET: "ShOff",
+  SHOTS_BLOCKED: "ShBlk",
+  BLOCKED_SHOTS: "Blk",
+  SUCCESSFUL_DRIBBLES: "Drb+",
+  DRIBBLED_ATTEMPTS: "Drb",
+  TOTAL_CROSSES: "Crs",
+  ACCURATE_CROSSES: "Crs+",
   OFFSIDES: "Off",
-  DISPOSSESSED: "Bal.Perd",
-  TACKLES: "Entrad",
-  INTERCEPTIONS: "Inter",
-  CLEARANCES: "Desp",
-  ERROR_LEAD_TO_SHOT: "Err.Tiro",
-  SAVES: "Ataj",
-  SAVES_INSIDE_BOX: "Atj.Area",
-  GOOD_HIGH_CLAIM: "Sal.Aer",
-  GOALS_CONCEDED: "Encaj.",
-  GOALKEEPER_GOALS_CONCEDED: "Encaj.A",
-  FOULS: "Falt",
-  FOULS_DRAWN: "F.Rec",
+  DISPOSSESSED: "Disp",
+  TACKLES: "Tkl",
+  INTERCEPTIONS: "Int",
+  CLEARANCES: "Clr",
+  ERROR_LEAD_TO_SHOT: "Err",
+  SAVES: "Sav",
+  SAVES_INSIDE_BOX: "SiB",
+  GOOD_HIGH_CLAIM: "HC",
+  GOALS_CONCEDED: "GC",
+  GOALKEEPER_GOALS_CONCEDED: "GKC",
+  FOULS: "Fls",
+  FOULS_DRAWN: "FD",
 };
 
 const STAT_COLUMN_ORDER = [
@@ -446,9 +446,9 @@ function ratingBadge(value: string): string {
 
 function roleBadge(role: string): string {
   switch (role) {
-    case "TIT":
+    case "STR":
       return badge(role, ANSI.white, ANSI.bgBlue);
-    case "SUP":
+    case "SUB":
       return badge(role, ANSI.black, ANSI.bgYellow);
     default:
       return badge(role, ANSI.white, ANSI.bgGray);
@@ -466,11 +466,11 @@ function stateBadge(state: string): string {
 function teamBadge(kind: "home" | "away" | "unknown"): string {
   switch (kind) {
     case "home":
-      return badge("LOCAL", ANSI.white, ANSI.bgBlue);
+      return badge("HOME", ANSI.white, ANSI.bgBlue);
     case "away":
-      return badge("VISITA", ANSI.white, ANSI.bgPurple);
+      return badge("AWAY", ANSI.white, ANSI.bgPurple);
     default:
-      return badge("SIN EQ", ANSI.white, ANSI.bgGray);
+      return badge("NO TM", ANSI.white, ANSI.bgGray);
   }
 }
 
@@ -693,8 +693,8 @@ function printWrappedLine(label: string, value: string, indent = 5, width = REPO
 }
 
 function formatDate(value: Date | null | undefined): string {
-  if (!value) return "Sin fecha";
-  return new Intl.DateTimeFormat("es-UY", {
+  if (!value) return "No date";
+  return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "America/Montevideo",
@@ -702,8 +702,8 @@ function formatDate(value: Date | null | undefined): string {
 }
 
 function formatDateOnly(value: Date | null | undefined): string {
-  if (!value) return "Sin fecha";
-  return new Intl.DateTimeFormat("es-UY", {
+  if (!value) return "No date";
+  return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeZone: "America/Montevideo",
   }).format(value);
@@ -774,7 +774,7 @@ function pickBestCandidate<T extends MatchableEntity>(
   label: string,
 ): T {
   if (items.length === 0) {
-    throw new Error(`No hay ${label}s cargados para resolver "${query}".`);
+    throw new Error(`No ${label}s loaded to resolve "${query}".`);
   }
 
   const ranked = items
@@ -790,7 +790,7 @@ function pickBestCandidate<T extends MatchableEntity>(
     .map((item) => item.name ?? item.slug ?? `ID ${item.id}`)
     .join(", ");
 
-  throw new Error(`No pude encontrar ${label} para "${query}". Algunas opciones: ${sample}`);
+  throw new Error(`Could not find ${label} for "${query}". Some options: ${sample}`);
 }
 
 function parseArgs(argv: string[]): ReportOptions {
@@ -812,7 +812,7 @@ function parseArgs(argv: string[]): ReportOptions {
 
   if (!season || !group || !jornada) {
     throw new Error(
-      'Faltan argumentos. Uso: pnpm report:fixture-players --season="2026" --group="Apertura" --jornada="1" [--view="compact|full"]',
+      'Missing arguments. Usage: pnpm report:fixture-players --season="2026" --group="Apertura" --jornada="1" [--view="compact|full"]',
     );
   }
 
@@ -910,7 +910,7 @@ function comparePreparedStats(left: PreparedStat, right: PreparedStat): number {
   const safeRight = rightHeadlineIndex === -1 ? Number.MAX_SAFE_INTEGER : rightHeadlineIndex;
   if (safeLeft !== safeRight) return safeLeft - safeRight;
 
-  return left.label.localeCompare(right.label, "es");
+  return left.label.localeCompare(right.label, "en");
 }
 
 function buildSyntheticPreparedStat(key: string, numericValue: number): PreparedStat {
@@ -1061,26 +1061,26 @@ function resolvePositionLabel(entry: ResolvedPlayerEntry): { label: string; used
   const general = entry.player.positionId ? POSITION_LABELS[entry.player.positionId] : null;
   if (general) return { label: general, usedFallback: true };
 
-  return { label: "Pos no cargada", usedFallback: false };
+  return { label: "No position", usedFallback: false };
 }
 
 function resolveRole(entry: ResolvedPlayerEntry, statMap: Map<string, PreparedStat>): string {
-  if (entry.lineup?.formationPosition !== null && entry.lineup?.formationPosition !== undefined) return "TIT";
+  if (entry.lineup?.formationPosition !== null && entry.lineup?.formationPosition !== undefined) return "STR";
 
   const minutes = getStatNumber(statMap, "MINUTES_PLAYED");
-  if ((minutes ?? 0) > 0 || entry.stats.length > 0 || entry.events.length > 0) return "SUP";
+  if ((minutes ?? 0) > 0 || entry.stats.length > 0 || entry.events.length > 0) return "SUB";
 
-  return "BAN";
+  return "BCH";
 }
 
 function summarizeEvents(events: EventWithPlayer[]): string {
-  if (events.length === 0) return "Sin eventos";
+  if (events.length === 0) return "No events";
 
   return events
     .map((event) => {
       const minute = event.minute !== null
         ? `${event.minute}${event.extraMinute ? `+${event.extraMinute}` : ""}'`
-        : "s/min";
+        : "n/a";
 
       switch (event.typeId) {
         case 14:
@@ -1108,7 +1108,7 @@ function buildProfileItems(entry: ResolvedPlayerEntry): string[] {
   const age = calculateAge(entry.player.dateOfBirth);
 
   return [
-    `🌍 ${entry.player.country?.name ?? "Pais s/dato"}`,
+    `🌍 ${entry.player.country?.name ?? "Country n/a"}`,
     age !== null ? `🎂 ${age}a` : null,
     entry.player.height ? `📏 ${entry.player.height} cm` : null,
     entry.player.weight ? `⚖️ ${entry.player.weight} kg` : null,
@@ -1122,12 +1122,12 @@ function buildContextItems(entry: ResolvedPlayerEntry, position: { label: string
     entry.player.commonName && entry.player.commonName !== entry.player.displayName ? `🪪 ${entry.player.commonName}` : null,
     `🆔 Player ${entry.player.id}`,
     entry.player.sportmonksId ? `🧩 SM ${entry.player.sportmonksId}` : null,
-    entry.lineup ? `📋 Lineup ${entry.lineup.id}` : "📋 Sin lineup",
+    entry.lineup ? `📋 Lineup ${entry.lineup.id}` : "📋 No lineup",
     entry.lineup?.formationPosition !== null && entry.lineup?.formationPosition !== undefined
       ? `🧭 XI ${entry.lineup.formationPosition}`
       : null,
-    position.usedFallback ? "🛟 Posicion inferida desde ficha" : null,
-    position.label === "Pos no cargada" ? "🚫 Posicion sin dato" : null,
+    position.usedFallback ? "🛟 Position inferred from profile" : null,
+    position.label === "No position" ? "🚫 No position data" : null,
   ].filter((value): value is string => Boolean(value));
 }
 
@@ -1135,23 +1135,23 @@ function buildSummaryMetricItems(statMap: Map<string, PreparedStat>): string[] {
   const items = [
     getStatValue(statMap, "MINUTES_PLAYED") !== "-" ? `⏱ ${getStatValue(statMap, "MINUTES_PLAYED")} min` : null,
     getStatValue(statMap, "RATING") !== "-" ? `⭐ Rating ${getStatValue(statMap, "RATING")}` : null,
-    getStatValue(statMap, "GOALS") !== "-" ? `⚽ Goles ${getStatValue(statMap, "GOALS")}` : null,
-    getStatValue(statMap, "ASSISTS") !== "-" ? `🅰 Asist ${getStatValue(statMap, "ASSISTS")}` : null,
-    getStatValue(statMap, "YELLOWCARDS") !== "-" ? `🟨 Amarillas ${getStatValue(statMap, "YELLOWCARDS")}` : null,
-    getStatValue(statMap, "REDCARDS") !== "-" ? `🟥 Rojas ${getStatValue(statMap, "REDCARDS")}` : null,
-    buildComboStat(statMap, "ACCURATE_PASSES", "PASSES", "🎯 Pases"),
-    buildComboStat(statMap, "DUELS_WON", "TOTAL_DUELS", "🤺 Duelos"),
-    buildComboStat(statMap, "SHOTS_ON_TARGET", "SHOTS_TOTAL", "🥅 Tiros"),
-    buildComboStat(statMap, "SUCCESSFUL_DRIBBLES", "DRIBBLED_ATTEMPTS", "🪄 Gambetas"),
-    buildComboStat(statMap, "ACCURATE_CROSSES", "TOTAL_CROSSES", "📨 Centros"),
-    buildComboStat(statMap, "LONG_BALLS_WON", "LONG_BALLS", "🚀 Largos"),
-    getStatValue(statMap, "TOUCHES") !== "-" ? `👟 Toques ${getStatValue(statMap, "TOUCHES")}` : null,
-    getStatValue(statMap, "POSSESSION_LOST") !== "-" ? `📉 Perdidas ${getStatValue(statMap, "POSSESSION_LOST")}` : null,
-    getStatValue(statMap, "SAVES") !== "-" ? `🧤 Atajadas ${getStatValue(statMap, "SAVES")}` : null,
-    getStatValue(statMap, "GOALS_CONCEDED") !== "-" ? `🥅 Goles recibidos ${getStatValue(statMap, "GOALS_CONCEDED")}` : null,
+    getStatValue(statMap, "GOALS") !== "-" ? `⚽ Goals ${getStatValue(statMap, "GOALS")}` : null,
+    getStatValue(statMap, "ASSISTS") !== "-" ? `🅰 Assists ${getStatValue(statMap, "ASSISTS")}` : null,
+    getStatValue(statMap, "YELLOWCARDS") !== "-" ? `🟨 Yellows ${getStatValue(statMap, "YELLOWCARDS")}` : null,
+    getStatValue(statMap, "REDCARDS") !== "-" ? `🟥 Reds ${getStatValue(statMap, "REDCARDS")}` : null,
+    buildComboStat(statMap, "ACCURATE_PASSES", "PASSES", "🎯 Passes"),
+    buildComboStat(statMap, "DUELS_WON", "TOTAL_DUELS", "🤺 Duels"),
+    buildComboStat(statMap, "SHOTS_ON_TARGET", "SHOTS_TOTAL", "🥅 Shots"),
+    buildComboStat(statMap, "SUCCESSFUL_DRIBBLES", "DRIBBLED_ATTEMPTS", "🪄 Dribbles"),
+    buildComboStat(statMap, "ACCURATE_CROSSES", "TOTAL_CROSSES", "📨 Crosses"),
+    buildComboStat(statMap, "LONG_BALLS_WON", "LONG_BALLS", "🚀 Long balls"),
+    getStatValue(statMap, "TOUCHES") !== "-" ? `👟 Touches ${getStatValue(statMap, "TOUCHES")}` : null,
+    getStatValue(statMap, "POSSESSION_LOST") !== "-" ? `📉 Lost ${getStatValue(statMap, "POSSESSION_LOST")}` : null,
+    getStatValue(statMap, "SAVES") !== "-" ? `🧤 Saves ${getStatValue(statMap, "SAVES")}` : null,
+    getStatValue(statMap, "GOALS_CONCEDED") !== "-" ? `🥅 Goals Conceded ${getStatValue(statMap, "GOALS_CONCEDED")}` : null,
   ].filter((value): value is string => Boolean(value));
 
-  return items.length > 0 ? items : ["Sin resumen estadistico"];
+  return items.length > 0 ? items : ["No statistical summary"];
 }
 
 function formatStatComboCell(
@@ -1169,28 +1169,28 @@ function formatStatComboCell(
 
 function formatCompactPositionLabel(value: string): string {
   switch (value) {
-    case "Lateral der.":
-      return "Lat. der.";
-    case "Lateral izq.":
-      return "Lat. izq.";
-    case "Volante cont.":
-      return "Vol. cont.";
-    case "Volante mixto":
-      return "Vol. mixt.";
-    case "Extremo der.":
-      return "Ext. der.";
-    case "Extremo izq.":
-      return "Ext. izq.";
-    case "Media punta":
-      return "Med. punta";
-    case "Segundo punta":
-      return "2do punta";
-    case "Mediocampo":
-      return "Medio";
-    case "Delantero":
-      return "Delant.";
-    case "Carrilero":
-      return "Carril.";
+    case "Right-Back":
+      return "RB";
+    case "Left-Back":
+      return "LB";
+    case "Def. Midfield":
+      return "DM";
+    case "Central Mid.":
+      return "CM";
+    case "Right Winger":
+      return "RW";
+    case "Left Winger":
+      return "LW";
+    case "Playmaker":
+      return "AM";
+    case "Second Str.":
+      return "SS";
+    case "Midfielder":
+      return "MF";
+    case "Forward":
+      return "FW";
+    case "Wing-Back":
+      return "WB";
     default:
       return value;
   }
@@ -1225,32 +1225,32 @@ function sortStatKeys(left: string, right: string): number {
   const safeRight = rightIndex === -1 ? Number.MAX_SAFE_INTEGER : rightIndex;
 
   if (safeLeft !== safeRight) return safeLeft - safeRight;
-  return left.localeCompare(right, "es");
+  return left.localeCompare(right, "en");
 }
 
 function buildColumnLegend(statKeys: string[]): string[] {
-  const items = ["Dors=dorsal", "Punt=puntuacion"];
+  const items = ["No=jersey", "Rtg=rating"];
 
   if (statKeys.some((key) => key.includes("ACCURATE") || key.endsWith("_WON"))) {
-    items.push("+= acertado/ganado");
+    items.push("+= accurate/won");
   }
   if (statKeys.includes("POSSESSION_LOST")) {
-    items.push("Pos.Perd=posesiones perdidas");
+    items.push("PosL=possession lost");
   }
   if (statKeys.includes("DISPOSSESSED")) {
-    items.push("Bal.Perd=balones perdidos");
+    items.push("Disp=dispossessed");
   }
   if (statKeys.includes("GOOD_HIGH_CLAIM")) {
-    items.push("Sal.Aer=salidas aereas");
+    items.push("HC=high claims");
   }
   if (statKeys.includes("SAVES_INSIDE_BOX")) {
-    items.push("Atj.Area=atajadas dentro del area");
+    items.push("SiB=saves inside box");
   }
   if (statKeys.some((key) => key === "GOALS_CONCEDED" || key === "GOALKEEPER_GOALS_CONCEDED")) {
-    items.push("Encaj.=goles encajados/recibidos");
+    items.push("GC=goals conceded");
   }
   if (statKeys.includes("ERROR_LEAD_TO_SHOT")) {
-    items.push("Err.Tiro=error que termina en tiro");
+    items.push("Err=error leading to shot");
   }
 
   return items;
@@ -1278,7 +1278,7 @@ function printDenseStatTables(rows: TeamPlayerRow[], kind: "home" | "away" | "un
     const statKeys = [...bucket.keys()].sort(sortStatKeys);
     const columns: TableColumn[] = [
       { header: "#", width: 2, align: "right" },
-      { header: "Jug", width: 14 },
+      { header: "Player", width: 14 },
       ...statKeys.map((key) => {
         const stat = bucket.get(key)!;
         const header = resolveDenseStatHeader(stat);
@@ -1319,22 +1319,22 @@ function buildStatSections(stats: PreparedStat[]): StatSection[] {
 
   const sections: StatSection[] = [
     {
-      title: "🎮 Juego",
+      title: "🎮 Game",
       accent: ANSI.cyan,
       items: buildItems(stats.filter((stat) => stat.category === "overall")),
     },
     {
-      title: "⚔️ Ataque",
+      title: "⚔️ Attack",
       accent: ANSI.orange,
       items: buildItems(stats.filter((stat) => stat.category === "offensive")),
     },
     {
-      title: "🛡️ Defensa",
+      title: "🛡️ Defense",
       accent: ANSI.blue,
       items: buildItems(stats.filter((stat) => stat.category === "defensive")),
     },
     {
-      title: "🚨 Disciplina",
+      title: "🚨 Discipline",
       accent: ANSI.red,
       items: buildItems(
         stats.filter((stat) => stat.category === "discipline" || ["FOULS", "FOULS_DRAWN"].includes(stat.key)),
@@ -1346,7 +1346,7 @@ function buildStatSections(stats: PreparedStat[]): StatSection[] {
       ),
     },
     {
-      title: "🧩 Otros",
+      title: "🧩 Other",
       accent: ANSI.purple,
       items: buildItems(stats.filter((stat) => stat.category === "other")),
     },
@@ -1366,7 +1366,7 @@ function comparePlayerEntries(left: ResolvedPlayerEntry, right: ResolvedPlayerEn
 
   return (left.player.displayName ?? left.player.name).localeCompare(
     right.player.displayName ?? right.player.name,
-    "es",
+    "en",
   );
 }
 
@@ -1375,10 +1375,10 @@ function resolveTeamBucket(
   teamId: number | null,
 ): { teamBucket: "home" | "away" | "unknown"; teamName: string | null } {
   if (teamId !== null && fixture.homeTeamId === teamId) {
-    return { teamBucket: "home", teamName: fixture.homeTeam?.name ?? "Local" };
+    return { teamBucket: "home", teamName: fixture.homeTeam?.name ?? "Home" };
   }
   if (teamId !== null && fixture.awayTeamId === teamId) {
-    return { teamBucket: "away", teamName: fixture.awayTeam?.name ?? "Visitante" };
+    return { teamBucket: "away", teamName: fixture.awayTeam?.name ?? "Away" };
   }
   return { teamBucket: "unknown", teamName: null };
 }
@@ -1459,11 +1459,11 @@ function prepareFixture(
       const role = resolveRole(playerEntry, prepared.statMap);
 
       acc.playersTotal += 1;
-      if (role === "TIT") acc.starters += 1;
-      if (role === "SUP") acc.substitutes += 1;
-      if (role === "BAN") acc.benchOnly += 1;
+      if (role === "STR") acc.starters += 1;
+      if (role === "SUB") acc.substitutes += 1;
+      if (role === "BCH") acc.benchOnly += 1;
       if (position.usedFallback) acc.fallbackPositionCount += 1;
-      if (position.label === "Pos no cargada") acc.unresolvedPositionCount += 1;
+      if (position.label === "No position") acc.unresolvedPositionCount += 1;
       if (!playerEntry.player.country || !playerEntry.player.dateOfBirth || !playerEntry.player.displayName) {
         acc.missingBioCount += 1;
       }
@@ -1486,7 +1486,7 @@ function prepareFixture(
   );
 
   const resolvedState = fixture.stateId ? stateMap.get(fixture.stateId) ?? null : null;
-  const stateLabel = resolvedState?.state ?? resolvedState?.name ?? "Sin estado";
+  const stateLabel = resolvedState?.state ?? resolvedState?.name ?? "No state";
 
   return {
     fixture,
@@ -1528,11 +1528,11 @@ function buildGlobalQuality(reports: PreparedFixtureReport[]): GlobalQuality {
 }
 
 function printQualityBox(globalQuality: GlobalQuality): void {
-  printBox("📊 Lectura Rápida", [
-    `👥 Jugadores ${globalQuality.playersTotal} | 🧱 Titulares ${globalQuality.starters} | 🔁 Suplentes ${globalQuality.substitutes} | 🪑 Banco ${globalQuality.benchOnly}`,
-    `🧭 Posición inferida ${globalQuality.fallbackPositionCount} | ❓ Posición vacía ${globalQuality.unresolvedPositionCount}`,
-    `🧬 Fichas incompletas ${globalQuality.missingBioCount} | 📉 Sin stats ${globalQuality.withoutStatsCount} | 🚫 Equipos sin resolver ${globalQuality.unresolvedTeamCount}`,
-    `🗂 Fixtures sin groupId ${globalQuality.fixturesWithoutGroup} (puede ser normal si la competencia vive por stage)`,
+  printBox("📊 Quick Overview", [
+    `👥 Players ${globalQuality.playersTotal} | 🧱 Starters ${globalQuality.starters} | 🔁 Substitutes ${globalQuality.substitutes} | 🪑 Bench ${globalQuality.benchOnly}`,
+    `🧭 Position inferred ${globalQuality.fallbackPositionCount} | ❓ Position missing ${globalQuality.unresolvedPositionCount}`,
+    `🧬 Incomplete profiles ${globalQuality.missingBioCount} | 📉 No stats ${globalQuality.withoutStatsCount} | 🚫 Unresolved teams ${globalQuality.unresolvedTeamCount}`,
+    `🗂 Fixtures without groupId ${globalQuality.fixturesWithoutGroup} (may be normal if competition uses stage only)`,
   ], ANSI.purple);
   console.log("");
 }
@@ -1581,13 +1581,13 @@ function printPlayerCard(
   const position = resolvePositionLabel(entry);
   const role = resolveRole(entry, summary.statMap);
   const name = truncate(entry.player.displayName ?? entry.player.name, 34);
-  const positionColor = position.label === "Arquero"
+  const positionColor = position.label === "Goalkeeper"
     ? ANSI.cyan
-    : position.label.includes("Lateral") || position.label === "Zaguero" || position.label === "Defensa"
+    : position.label.includes("Back") || position.label === "Centre-Back" || position.label === "Defender"
       ? ANSI.blue
-      : position.label.includes("Volante") || position.label === "Mediocampo" || position.label === "Enganche" || position.label === "Media punta"
+      : position.label.includes("Midfield") || position.label === "Midfielder" || position.label === "Central Mid." || position.label === "Playmaker" || position.label === "Second Str."
         ? ANSI.yellow
-        : position.label === "Pos no cargada"
+        : position.label === "No position"
           ? ANSI.red
           : ANSI.magenta;
 
@@ -1607,10 +1607,10 @@ function printPlayerCard(
 
   const lines: string[] = [
     ...headerLines,
-    ...buildLabeledItemLines("👤 Perfil", buildProfileItems(entry), contentWidth),
-    ...buildLabeledItemLines("📌 Claves", buildSummaryMetricItems(summary.statMap), contentWidth),
-    ...buildLabeledItemLines("🧭 Contexto", buildContextItems(entry, position), contentWidth),
-    ...buildLabeledTextLines("🎬 Eventos", summarizeEvents(entry.events), contentWidth),
+    ...buildLabeledItemLines("👤 Profile", buildProfileItems(entry), contentWidth),
+    ...buildLabeledItemLines("📌 Highlights", buildSummaryMetricItems(summary.statMap), contentWidth),
+    ...buildLabeledItemLines("🧭 Context", buildContextItems(entry, position), contentWidth),
+    ...buildLabeledTextLines("🎬 Events", summarizeEvents(entry.events), contentWidth),
   ];
 
   const sections = buildStatSections(summary.stats);
@@ -1635,11 +1635,11 @@ function printTeamSection(
   const teamPlayers = players.length;
   const starters = players.filter((player) => {
     const summary = buildPlayerSummary(player, statTypeMap);
-    return resolveRole(player, summary.statMap) === "TIT";
+    return resolveRole(player, summary.statMap) === "STR";
   }).length;
   const subs = players.filter((player) => {
     const summary = buildPlayerSummary(player, statTypeMap);
-    return resolveRole(player, summary.statMap) === "SUP";
+    return resolveRole(player, summary.statMap) === "SUB";
   }).length;
   const bench = Math.max(0, teamPlayers - starters - subs);
   const averageRating = formatAverageRating(players, statTypeMap);
@@ -1647,7 +1647,7 @@ function printTeamSection(
   console.log(`${teamBadge(kind)} ${color(title, ANSI.bold, highlight)}`);
   const summaryLines = packInlineItems(
     [
-      `👥 ${teamPlayers} jugadores`,
+      `👥 ${teamPlayers} players`,
       `🧱 ${starters} titulares`,
       `🔁 ${subs} suplentes`,
       `🪑 ${bench} solo banco`,
@@ -1659,7 +1659,7 @@ function printTeamSection(
   console.log("");
 
   if (players.length === 0) {
-    console.log(color("  Sin jugadores en este bloque", ANSI.dim));
+    console.log(color("  No players in this section", ANSI.dim));
     console.log("");
     return;
   }
@@ -1690,25 +1690,25 @@ function printTeamSection(
     ),
   )].sort(sortStatKeys);
 
-  console.log(color(`  📋 ${view === "full" ? "Resumen jugadores" : "Jugadores"}`, ANSI.bold, highlight));
+  console.log(color(`  📋 ${view === "full" ? "Player Summary" : "Players"}`, ANSI.bold, highlight));
   if (teamHasPartialOnlyStats) {
-    console.log(color("  ⚠️ Stats parciales: llegaron solo ratings/datos base; oculto columnas ruidosas hasta tener stats completas.", ANSI.yellow));
+    console.log(color("  ⚠️ Partial stats: only ratings/basic data available; hiding detailed columns until full stats arrive.", ANSI.yellow));
   }
   const legendLines = packInlineItems(buildColumnLegend(statKeys), REPORT_WIDTH - 4);
   legendLines.forEach((line) => console.log(color(`  ℹ ${line}`, ANSI.dim)));
   printTable(
     [
       { header: "#", width: 2, align: "right" },
-      { header: "Dors", width: 4, align: "right" },
-      { header: "Jugador", width: 17 },
-      { header: "Rol", width: 5 },
-      { header: "Posic", width: 10 },
+      { header: "No", width: 4, align: "right" },
+      { header: "Player", width: 17 },
+      { header: "Role", width: 5 },
+      { header: "Pos", width: 10 },
       { header: "Min", width: 3, align: "right" },
-      { header: "Goles", width: 5, align: "right" },
-      { header: "Asist", width: 5, align: "right" },
-      { header: "Amar", width: 4, align: "right" },
-      { header: "Rojas", width: 5, align: "right" },
-      { header: "Punt", width: 6, align: "right" },
+      { header: "Goals", width: 5, align: "right" },
+      { header: "Ast", width: 5, align: "right" },
+      { header: "YC", width: 4, align: "right" },
+      { header: "RC", width: 5, align: "right" },
+      { header: "Rtg", width: 6, align: "right" },
       ...statKeys.map((key) => {
         const sample = teamRows
           .flatMap((row) => row.summary.stats)
@@ -1747,7 +1747,7 @@ function printTeamSection(
 
   if (view === "full") {
     console.log("");
-    console.log(color("  🧾 Fichas completas", ANSI.bold, highlight));
+    console.log(color("  🧾 Full Profiles", ANSI.bold, highlight));
     console.log("");
 
     players.forEach((entry, index) => {
@@ -1792,34 +1792,34 @@ function buildFixtureDataNotice(
   if (isNotStartedLike) {
     if (kickoffInFuture) {
       return [
-        "⏳ Este partido todavía no se jugó; por eso no tiene sentido pintar tabla de jugadores ni stats.",
-        `📦 Estado actual: ${stateLabel} | lineups ${fixture.lineups.length} | playerStats ${fixture.playerStats.length} | eventos ${fixture.events.length} | teamStats ${fixture.teamStats.length}.`,
+        "⏳ This match has not been played yet; no point in showing the player table or stats.",
+        `📦 Current state: ${stateLabel} | lineups ${fixture.lineups.length} | playerStats ${fixture.playerStats.length} | events ${fixture.events.length} | teamStats ${fixture.teamStats.length}.`,
       ];
     }
 
     return [
-      "⏳ Este partido sigue figurando como no iniciado o pendiente de actualización en el feed.",
-      `📦 Estado actual: ${stateLabel} | lineups ${fixture.lineups.length} | playerStats ${fixture.playerStats.length} | eventos ${fixture.events.length} | teamStats ${fixture.teamStats.length}.`,
+      "⏳ This match is still listed as not started or pending update in the feed.",
+      `📦 Current state: ${stateLabel} | lineups ${fixture.lineups.length} | playerStats ${fixture.playerStats.length} | events ${fixture.events.length} | teamStats ${fixture.teamStats.length}.`,
     ];
   }
 
   if (isDelayedLike && !hasAnyDetailFeed && !hasMatchBasics) {
     return [
-      "⏸️ Este partido figura como aplazado, suspendido o cancelado; por eso no se muestra tabla de jugadores.",
-      `📦 Estado actual: ${stateLabel} | lineups ${fixture.lineups.length} | playerStats ${fixture.playerStats.length} | eventos ${fixture.events.length} | teamStats ${fixture.teamStats.length}.`,
+      "⏸️ This match is listed as postponed, suspended or cancelled; the player table is not shown.",
+      `📦 Current state: ${stateLabel} | lineups ${fixture.lineups.length} | playerStats ${fixture.playerStats.length} | events ${fixture.events.length} | teamStats ${fixture.teamStats.length}.`,
     ];
   }
 
   if (hasAnyDetailFeed || hasMatchBasics) {
     return [
-      "⚠️ La cabecera del partido ya llegó, pero el detalle de jugadores todavía no está completo en esta sync.",
-      `⏳ Estado actual: ${stateLabel} | lineups ${fixture.lineups.length} | playerStats ${fixture.playerStats.length} | eventos ${fixture.events.length} | teamStats ${fixture.teamStats.length}.`,
+      "⚠️ The match header is in, but the player detail is not yet complete in this sync.",
+      `⏳ Current state: ${stateLabel} | lineups ${fixture.lineups.length} | playerStats ${fixture.playerStats.length} | events ${fixture.events.length} | teamStats ${fixture.teamStats.length}.`,
     ];
   }
 
   return [
-    "⏳ Todavía no hay alineaciones ni estadísticas de jugadores para este partido.",
-    "📦 Por ahora solo tenemos la ficha base del fixture; cuando llegue el detalle, esta vista se llenará sola.",
+    "⏳ No lineups or player statistics yet for this match.",
+    "📦 For now we only have the base fixture record; once the detail arrives, this view will fill in automatically.",
   ];
 }
 
@@ -1835,23 +1835,23 @@ function printFixtureReport(
   const awayPlayers = players.filter((player) => player.teamBucket === "away");
   const unknownPlayers = players.filter((player) => player.teamBucket === "unknown");
 
-  const title = `Partido ${fixtureIndex}/${totalFixtures} · ${fixture.homeTeam?.name ?? "Local"} ${fixture.homeScore ?? "-"} - ${fixture.awayScore ?? "-"} ${fixture.awayTeam?.name ?? "Visitante"}`;
+  const title = `Match ${fixtureIndex}/${totalFixtures} · ${fixture.homeTeam?.name ?? "Home"} ${fixture.homeScore ?? "-"} - ${fixture.awayScore ?? "-"} ${fixture.awayTeam?.name ?? "Away"}`;
 
   const boxLines = [
     ...packInlineItems(
       [
         `🗓 ${formatDate(fixture.kickoffAt)}`,
         stateBadge(stateLabel),
-        `🏁 Jornada ${fixture.round?.name ?? "?"}`,
-        `🧱 ${fixture.stage?.name ?? "Sin stage"}`,
+        `🏁 Round ${fixture.round?.name ?? "?"}`,
+        `🧱 ${fixture.stage?.name ?? "No stage"}`,
       ],
       REPORT_WIDTH - 4,
       color("  |  ", ANSI.gray),
     ),
     ...packInlineItems(
       [
-        `🏟 ${fixture.venue?.name ?? "Sin estadio"}`,
-        `🧑‍⚖️ ${fixture.referee?.name ?? "Sin arbitro"}`,
+        `🏟 ${fixture.venue?.name ?? "No venue"}`,
+        `🧑‍⚖️ ${fixture.referee?.name ?? "No referee"}`,
         `🆔 ${fixture.id} / ${fixture.sportmonksId}`,
       ],
       REPORT_WIDTH - 4,
@@ -1859,11 +1859,11 @@ function printFixtureReport(
     ),
     ...packInlineItems(
       [
-        `👥 Local ${homePlayers.length}`,
-        `👥 Visita ${awayPlayers.length}`,
-        `❓ Sin equipo ${unknownPlayers.length}`,
-        `📉 Sin stats ${quality.withoutStatsCount}`,
-        `🧬 Bio incompleta ${quality.missingBioCount}`,
+        `👥 Home ${homePlayers.length}`,
+        `👥 Away ${awayPlayers.length}`,
+        `❓ No team ${unknownPlayers.length}`,
+        `📉 No stats ${quality.withoutStatsCount}`,
+        `🧬 Incomplete bio ${quality.missingBioCount}`,
       ],
       REPORT_WIDTH - 4,
       color("  |  ", ANSI.gray),
@@ -1872,7 +1872,7 @@ function printFixtureReport(
       [
         `📋 Lineups ${fixture.lineups.length}`,
         `📈 P.Stats ${fixture.playerStats.length}`,
-        `🎬 Eventos ${fixture.events.length}`,
+        `🎬 Events ${fixture.events.length}`,
         `📊 T.Stats ${fixture.teamStats.length}`,
       ],
       REPORT_WIDTH - 4,
@@ -1906,11 +1906,11 @@ function printFixtureReport(
     return;
   }
 
-  printTeamSection("home", `${fixture.homeTeam?.name ?? "Local"}`, homePlayers, statTypeMap, view);
-  printTeamSection("away", `${fixture.awayTeam?.name ?? "Visitante"}`, awayPlayers, statTypeMap, view);
+  printTeamSection("home", `${fixture.homeTeam?.name ?? "Home"}`, homePlayers, statTypeMap, view);
+  printTeamSection("away", `${fixture.awayTeam?.name ?? "Away"}`, awayPlayers, statTypeMap, view);
 
   if (unknownPlayers.length > 0) {
-    printTeamSection("unknown", "Jugadores sin equipo resuelto", unknownPlayers, statTypeMap, view);
+    printTeamSection("unknown", "Players with unresolved team", unknownPlayers, statTypeMap, view);
   }
 
   printRule();
@@ -1951,12 +1951,12 @@ export async function reportFixturePlayerDetails(
       name: `${item.name} ${item.league.name}`,
     })),
     options.season,
-    "temporada",
+    "season",
   );
 
   const seasonRecord = seasons.find((item) => item.id === season.id);
   if (!seasonRecord) {
-    throw new Error(`No pude cargar la temporada resuelta con ID ${season.id}.`);
+    throw new Error(`Could not load resolved season with ID ${season.id}.`);
   }
 
   const groups: GroupScopeCandidate[] = seasonRecord.stages.flatMap((stage): GroupScopeCandidate[] => {
@@ -1981,17 +1981,17 @@ export async function reportFixturePlayerDetails(
     }));
   });
 
-  const matchedGroup = pickBestCandidate(groups, options.group, "grupo");
+  const matchedGroup = pickBestCandidate(groups, options.group, "group");
   const matchedStage = seasonRecord.stages.find((stage) => stage.id === (matchedGroup as GroupScopeCandidate).stageId);
   if (!matchedStage) {
-    throw new Error(`No pude resolver el stage del grupo ${matchedGroup.name ?? matchedGroup.id}.`);
+    throw new Error(`Could not resolve stage for group ${matchedGroup.name ?? matchedGroup.id}.`);
   }
 
   const rounds = matchedStage.rounds.map((round) => ({
     ...round,
     slug: round.slug ?? undefined,
   }));
-  const matchedRound = pickBestCandidate(rounds, options.jornada, "jornada");
+  const matchedRound = pickBestCandidate(rounds, options.jornada, "round");
 
   const groupCandidate = matchedGroup as GroupScopeCandidate;
   const fixtures = await db.fixture.findMany({
@@ -2046,7 +2046,7 @@ export async function reportFixturePlayerDetails(
 
   if (fixtures.length === 0) {
     throw new Error(
-      `No encontré partidos para season="${seasonRecord.name}", group="${matchedGroup.name ?? matchedStage.name}" y jornada="${matchedRound.name}".`,
+      `No matches found for season="${seasonRecord.name}", group="${matchedGroup.name ?? matchedStage.name}" and round="${matchedRound.name}".`,
     );
   }
 
@@ -2105,10 +2105,10 @@ export async function reportFixturePlayerDetails(
   );
   const globalQuality = buildGlobalQuality(preparedReports);
 
-  printBox("⚽ Reporte profesional por jornada", [
-    `🏆 Temporada ${seasonRecord.name} (${seasonRecord.league.name})`,
-    `🧱 Grupo/Stage ${matchedGroup.name ?? "Sin nombre"}  |  Stage real ${matchedStage.name}  |  🏁 Jornada ${matchedRound.name}`,
-    `📦 Fixtures ${preparedReports.length}  |  👁 Vista ${options.view.toUpperCase()}  |  🔎 --season="${options.season}" --group="${options.group}" --jornada="${options.jornada}"`,
+  printBox("⚽ Professional Matchday Report", [
+    `🏆 Season ${seasonRecord.name} (${seasonRecord.league.name})`,
+    `🧱 Group/Stage ${matchedGroup.name ?? "No name"}  |  Real stage ${matchedStage.name}  |  🏁 Round ${matchedRound.name}`,
+    `📦 Fixtures ${preparedReports.length}  |  👁 View ${options.view.toUpperCase()}  |  🔎 --season="${options.season}" --group="${options.group}" --jornada="${options.jornada}"`,
   ], ANSI.orange);
   console.log("");
 

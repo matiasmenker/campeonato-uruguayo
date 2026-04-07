@@ -2,7 +2,7 @@ name: Sync Daily
 
 on:
   schedule:
-    - cron: "0 9 * * *" # Todos los días a las 06:00 UYT (09:00 UTC)
+    - cron: "0 9 * * *" # Every day at 06:00 UYT (09:00 UTC)
   workflow_dispatch:
 
 jobs:
