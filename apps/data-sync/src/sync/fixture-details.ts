@@ -480,34 +480,46 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
       );
       const teamStatsWithoutId = teamStatsBatch.filter((stat) => stat.sportmonksId == null);
 
-      const dbStart = Date.now();
-      await db.$transaction(async (tx) => {
-        if (uniqueFixtureIds.length > 0) {
-          await tx.event.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
-          await tx.lineup.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
-          await tx.fixturePlayerStatistic.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
-          await tx.fixtureTeamStatistic.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
-        }
+      const hasReplacementData =
+        uniqueEvents.length > 0 ||
+        uniqueLineups.length > 0 ||
+        playerStatsWithId.length > 0 ||
+        playerStatsWithoutId.length > 0 ||
+        teamStatsWithId.length > 0 ||
+        teamStatsWithoutId.length > 0;
 
-        if (uniqueEvents.length > 0) {
-          await tx.event.createMany({ data: uniqueEvents });
-        }
-        if (uniqueLineups.length > 0) {
-          await tx.lineup.createMany({ data: uniqueLineups });
-        }
-        if (playerStatsWithId.length > 0) {
-          await tx.fixturePlayerStatistic.createMany({ data: playerStatsWithId });
-        }
-        if (playerStatsWithoutId.length > 0) {
-          await tx.fixturePlayerStatistic.createMany({ data: playerStatsWithoutId });
-        }
-        if (teamStatsWithId.length > 0) {
-          await tx.fixtureTeamStatistic.createMany({ data: teamStatsWithId });
-        }
-        if (teamStatsWithoutId.length > 0) {
-          await tx.fixtureTeamStatistic.createMany({ data: teamStatsWithoutId });
-        }
-      }, { maxWait: 20_000, timeout: 120_000 });
+      const dbStart = Date.now();
+      if (!hasReplacementData && uniqueFixtureIds.length > 0) {
+        log.warn(`⚠️ No detail data returned for chunk ${chunkProgress}/${chunks.length} (season ${seasonSportmonksId}, ${uniqueFixtureIds.length} fixtures). Skipping delete to preserve existing data.`);
+      } else {
+        await db.$transaction(async (tx) => {
+          if (uniqueFixtureIds.length > 0) {
+            await tx.event.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
+            await tx.lineup.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
+            await tx.fixturePlayerStatistic.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
+            await tx.fixtureTeamStatistic.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
+          }
+
+          if (uniqueEvents.length > 0) {
+            await tx.event.createMany({ data: uniqueEvents });
+          }
+          if (uniqueLineups.length > 0) {
+            await tx.lineup.createMany({ data: uniqueLineups });
+          }
+          if (playerStatsWithId.length > 0) {
+            await tx.fixturePlayerStatistic.createMany({ data: playerStatsWithId });
+          }
+          if (playerStatsWithoutId.length > 0) {
+            await tx.fixturePlayerStatistic.createMany({ data: playerStatsWithoutId });
+          }
+          if (teamStatsWithId.length > 0) {
+            await tx.fixtureTeamStatistic.createMany({ data: teamStatsWithId });
+          }
+          if (teamStatsWithoutId.length > 0) {
+            await tx.fixtureTeamStatistic.createMany({ data: teamStatsWithoutId });
+          }
+        }, { maxWait: 20_000, timeout: 120_000 });
+      }
       const dbMs = Date.now() - dbStart;
 
       savedEvents += uniqueEvents.length;

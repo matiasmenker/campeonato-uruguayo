@@ -355,13 +355,13 @@ export async function syncFillStats(
 
   log.info(`📊 Fixtures with incomplete stats: ${fixturesWithBasicStats.length}`);
   for (const fixture of fixturesWithBasicStats) {
-    const date = fixture.kickoffAt.toLocaleDateString("es-UY", {
+    const date = fixture.kickoffAt.toLocaleDateString("en-US", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
     });
     log.info(
-      `   ⚠️  ${fixture.stageName} Jornada ${fixture.roundName} | ${fixture.homeTeam} vs ${fixture.awayTeam} | ${date}`
+      `   ⚠️  ${fixture.stageName} Round ${fixture.roundName} | ${fixture.homeTeam} vs ${fixture.awayTeam} | ${date}`
     );
   }
 
@@ -526,6 +526,40 @@ export async function syncFillStats(
             where: { fixtureId: fixture.fixtureId },
           });
           await tx.fixturePlayerStatistic.createMany({ data: statsBatch });
+
+          // Enrich card stats from Events table (SoFaScore doesn't provide cards)
+          const cardEvents = await tx.event.findMany({
+            where: {
+              fixtureId: fixture.fixtureId,
+              typeId: { in: [19, 20, 21] }, // yellow, red, yellow-red
+              playerId: { not: null },
+            },
+            select: { playerId: true, typeId: true },
+          });
+
+          if (cardEvents.length > 0) {
+            const cardCounts = new Map<string, { playerId: number; statTypeId: number; count: number }>();
+            for (const event of cardEvents) {
+              const statTypeId = event.typeId === 19 ? 84 : event.typeId === 20 ? 83 : 85;
+              const key = `${event.playerId}:${statTypeId}`;
+              const existing = cardCounts.get(key);
+              if (existing) {
+                existing.count += 1;
+              } else {
+                cardCounts.set(key, { playerId: event.playerId!, statTypeId, count: 1 });
+              }
+            }
+
+            const cardStats = Array.from(cardCounts.values()).map((entry) => ({
+              sportmonksId: null as null,
+              fixtureId: fixture.fixtureId,
+              playerId: entry.playerId,
+              typeId: entry.statTypeId,
+              value: entry.count,
+            }));
+
+            await tx.fixturePlayerStatistic.createMany({ data: cardStats });
+          }
         });
 
         filledFixtures++;

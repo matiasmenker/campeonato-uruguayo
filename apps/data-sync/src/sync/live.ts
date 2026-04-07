@@ -40,15 +40,27 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
   log.info("=== LIVE SYNC START ===");
   const startTime = Date.now();
 
-  const todayStart = new Date();
-  todayStart.setUTCHours(0, 0, 0, 0);
+  // Fix 2: Skip live sync during daily sync window to prevent concurrent execution
+  const currentUtcHour = new Date().getUTCHours();
+  if (currentUtcHour === 9) {
+    log.info("⏸️ Live sync skipped: daily sync window (09:00 UTC). Will resume next cycle.");
+    log.info("=== LIVE SYNC END ===");
+    return;
+  }
+
+  // Include yesterday's fixtures to catch late-night matches (e.g. 23:30 UTC kickoff
+  // that finish after midnight UTC). Without this, live sync misses post-match stats
+  // for fixtures whose kickoff falls on the previous UTC day.
+  const yesterdayStart = new Date();
+  yesterdayStart.setUTCDate(yesterdayStart.getUTCDate() - 1);
+  yesterdayStart.setUTCHours(0, 0, 0, 0);
   const todayEnd = new Date();
   todayEnd.setUTCHours(23, 59, 59, 999);
 
-  const todayFixtures = await db.fixture.findMany({
+  const recentFixtures = await db.fixture.findMany({
     where: {
       kickoffAt: {
-        gte: todayStart,
+        gte: yesterdayStart,
         lte: todayEnd,
       },
     },
@@ -60,8 +72,16 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
       resultInfo: true,
       homeScore: true,
       awayScore: true,
+      _count: { select: { playerStats: true } },
     },
   });
+
+  // Skip finished fixtures (stateId=5) that already have player stats.
+  // Keep finished-without-stats so the next run fills them.
+  const FINISHED_STATE_ID = 5;
+  const todayFixtures = recentFixtures.filter(
+    (fixture) => fixture.stateId !== FINISHED_STATE_ID || fixture._count.playerStats === 0,
+  );
 
   if (todayFixtures.length === 0) {
     const elapsedMilliseconds = Date.now() - startTime;
@@ -97,6 +117,18 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
 
   const fixturesFromApi = extractArray(apiFixtures as FixtureDto[] | { data: FixtureDto[] });
   log.info(`📥 Fixtures fetched from API: ${fixturesFromApi.length}`);
+
+  // Fix 1 + Fix 3: Validate API response before proceeding
+  if (fixturesFromApi.length === 0 && todayFixtures.length > 0) {
+    log.warn(`⚠️ API returned 0 fixtures but DB has ${todayFixtures.length} scheduled. Possible API failure.`);
+    const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
+    log.info(`=== LIVE SYNC END (${elapsedSeconds}s) ===`);
+    return;
+  }
+
+  if (fixturesFromApi.length < todayFixtures.length) {
+    log.warn(`⚠️ API returned ${fixturesFromApi.length}/${todayFixtures.length} fixtures. Some may be missing from API response.`);
+  }
 
   let updatedFixtures = 0;
   let createdChangeLogs = 0;
@@ -277,25 +309,35 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
       });
     }
 
-    await db.$transaction(async (transaction) => {
-      await transaction.event.deleteMany({ where: { fixtureId } });
-      await transaction.lineup.deleteMany({ where: { fixtureId } });
-      await transaction.fixturePlayerStatistic.deleteMany({ where: { fixtureId } });
-      await transaction.fixtureTeamStatistic.deleteMany({ where: { fixtureId } });
+    const hasReplacementData =
+      eventRows.length > 0 ||
+      lineupRows.length > 0 ||
+      playerStatRows.length > 0 ||
+      teamStatRows.length > 0;
 
-      if (eventRows.length > 0) {
-        await transaction.event.createMany({ data: eventRows });
-      }
-      if (lineupRows.length > 0) {
-        await transaction.lineup.createMany({ data: lineupRows });
-      }
-      if (playerStatRows.length > 0) {
-        await transaction.fixturePlayerStatistic.createMany({ data: playerStatRows as never });
-      }
-      if (teamStatRows.length > 0) {
-        await transaction.fixtureTeamStatistic.createMany({ data: teamStatRows as never });
-      }
-    });
+    if (!hasReplacementData) {
+      log.warn(`⚠️ No detail data returned for fixture ${fixtureId} (SM: ${fixtureDto.id}). Skipping delete to preserve existing data.`);
+    } else {
+      await db.$transaction(async (transaction) => {
+        await transaction.event.deleteMany({ where: { fixtureId } });
+        await transaction.lineup.deleteMany({ where: { fixtureId } });
+        await transaction.fixturePlayerStatistic.deleteMany({ where: { fixtureId } });
+        await transaction.fixtureTeamStatistic.deleteMany({ where: { fixtureId } });
+
+        if (eventRows.length > 0) {
+          await transaction.event.createMany({ data: eventRows });
+        }
+        if (lineupRows.length > 0) {
+          await transaction.lineup.createMany({ data: lineupRows });
+        }
+        if (playerStatRows.length > 0) {
+          await transaction.fixturePlayerStatistic.createMany({ data: playerStatRows as never });
+        }
+        if (teamStatRows.length > 0) {
+          await transaction.fixtureTeamStatistic.createMany({ data: teamStatRows as never });
+        }
+      });
+    }
 
     savedEvents += eventRows.length;
     savedLineups += lineupRows.length;
