@@ -35,7 +35,9 @@ import {
 } from "./fixture-details.repository.js";
 import { getPrisma } from "../../database/index.js";
 
-async function resolveStatTypes(typeIds: (number | null)[]): Promise<Map<number, import("db").StatType>> {
+async function resolveStatTypes(
+  typeIds: (number | null)[]
+): Promise<Map<number, import("db").StatType>> {
   const validIds = typeIds.filter((id): id is number => id !== null);
   if (validIds.length === 0) return new Map();
 
@@ -47,12 +49,12 @@ async function resolveStatTypes(typeIds: (number | null)[]): Promise<Map<number,
 }
 
 export async function listChangeLogs(
-  query: ChangeLogsQuery,
+  query: ChangeLogsQuery
 ): Promise<PaginatedResponse<ChangeLogContract>> {
   const { changeLogs, totalItems } = await findChangeLogs(query);
 
   const stateIds = changeLogs.flatMap((log) =>
-    [log.previousStateId, log.nextStateId].filter((id): id is number => id !== null),
+    [log.previousStateId, log.nextStateId].filter((id): id is number => id !== null)
   );
   const statesMap = await findFixtureStatesByIds([...new Set(stateIds)]);
 
@@ -60,9 +62,9 @@ export async function listChangeLogs(
     data: changeLogs.map((log) =>
       toChangeLogContract(
         log,
-        log.previousStateId ? statesMap.get(log.previousStateId) ?? null : null,
-        log.nextStateId ? statesMap.get(log.nextStateId) ?? null : null,
-      ),
+        log.previousStateId ? (statesMap.get(log.previousStateId) ?? null) : null,
+        log.nextStateId ? (statesMap.get(log.nextStateId) ?? null) : null
+      )
     ),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
@@ -70,12 +72,12 @@ export async function listChangeLogs(
 
 export async function listFixtureChangeLogs(
   fixtureId: number,
-  query: ChangeLogsQuery,
+  query: ChangeLogsQuery
 ): Promise<PaginatedResponse<ChangeLogContract>> {
   const { changeLogs, totalItems } = await findChangeLogsByFixtureId(fixtureId, query);
 
   const stateIds = changeLogs.flatMap((log) =>
-    [log.previousStateId, log.nextStateId].filter((id): id is number => id !== null),
+    [log.previousStateId, log.nextStateId].filter((id): id is number => id !== null)
   );
   const statesMap = await findFixtureStatesByIds([...new Set(stateIds)]);
 
@@ -83,17 +85,15 @@ export async function listFixtureChangeLogs(
     data: changeLogs.map((log) =>
       toChangeLogContract(
         log,
-        log.previousStateId ? statesMap.get(log.previousStateId) ?? null : null,
-        log.nextStateId ? statesMap.get(log.nextStateId) ?? null : null,
-      ),
+        log.previousStateId ? (statesMap.get(log.previousStateId) ?? null) : null,
+        log.nextStateId ? (statesMap.get(log.nextStateId) ?? null) : null
+      )
     ),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
 }
 
-export async function listEvents(
-  query: EventsQuery,
-): Promise<PaginatedResponse<EventContract>> {
+export async function listEvents(query: EventsQuery): Promise<PaginatedResponse<EventContract>> {
   const { events, totalItems } = await findEvents(query);
   return {
     data: events.map(toEventContract),
@@ -103,7 +103,7 @@ export async function listEvents(
 
 export async function listFixtureEvents(
   fixtureId: number,
-  query: EventsQuery,
+  query: EventsQuery
 ): Promise<PaginatedResponse<EventContract>> {
   const { events, totalItems } = await findEventsByFixtureId(fixtureId, query);
   return {
@@ -112,37 +112,31 @@ export async function listFixtureEvents(
   };
 }
 
-export async function listLineups(
-  query: LineupsQuery,
-): Promise<PaginatedResponse<LineupContract>> {
+export async function listLineups(query: LineupsQuery): Promise<PaginatedResponse<LineupContract>> {
   const { lineups, totalItems } = await findLineups(query);
   const teamMap = await resolveLineupTeams(lineups);
 
   return {
-    data: lineups.map((lineup) =>
-      toLineupContract(lineup, teamMap.get(lineup.id) ?? null),
-    ),
+    data: lineups.map((lineup) => toLineupContract(lineup, teamMap.get(lineup.id) ?? null)),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
 }
 
 export async function listFixtureLineups(
   fixtureId: number,
-  query: LineupsQuery,
+  query: LineupsQuery
 ): Promise<PaginatedResponse<LineupContract>> {
   const { lineups, totalItems } = await findLineupsByFixtureId(fixtureId, query);
   const teamMap = await resolveLineupTeams(lineups);
 
   return {
-    data: lineups.map((lineup) =>
-      toLineupContract(lineup, teamMap.get(lineup.id) ?? null),
-    ),
+    data: lineups.map((lineup) => toLineupContract(lineup, teamMap.get(lineup.id) ?? null)),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
 }
 
 export async function listFixturePlayerStats(
-  query: FixturePlayerStatsQuery,
+  query: FixturePlayerStatsQuery
 ): Promise<PaginatedResponse<FixturePlayerStatContract>> {
   const { stats, totalItems } = await findFixturePlayerStats(query);
   const statTypesMap = await resolveStatTypes(stats.map((stat) => stat.typeId));
@@ -151,8 +145,8 @@ export async function listFixturePlayerStats(
     data: stats.map((stat) =>
       toFixturePlayerStatContract(
         stat,
-        stat.typeId ? statTypesMap.get(stat.typeId) ?? null : null,
-      ),
+        stat.typeId ? (statTypesMap.get(stat.typeId) ?? null) : null
+      )
     ),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
@@ -160,7 +154,7 @@ export async function listFixturePlayerStats(
 
 export async function listFixturePlayerStatsByFixture(
   fixtureId: number,
-  query: FixturePlayerStatsQuery,
+  query: FixturePlayerStatsQuery
 ): Promise<PaginatedResponse<FixturePlayerStatContract>> {
   const { stats, totalItems } = await findFixturePlayerStatsByFixtureId(fixtureId, query);
   const statTypesMap = await resolveStatTypes(stats.map((stat) => stat.typeId));
@@ -169,25 +163,22 @@ export async function listFixturePlayerStatsByFixture(
     data: stats.map((stat) =>
       toFixturePlayerStatContract(
         stat,
-        stat.typeId ? statTypesMap.get(stat.typeId) ?? null : null,
-      ),
+        stat.typeId ? (statTypesMap.get(stat.typeId) ?? null) : null
+      )
     ),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
 }
 
 export async function listFixtureTeamStats(
-  query: FixtureTeamStatsQuery,
+  query: FixtureTeamStatsQuery
 ): Promise<PaginatedResponse<FixtureTeamStatContract>> {
   const { stats, totalItems } = await findFixtureTeamStats(query);
   const statTypesMap = await resolveStatTypes(stats.map((stat) => stat.typeId));
 
   return {
     data: stats.map((stat) =>
-      toFixtureTeamStatContract(
-        stat,
-        stat.typeId ? statTypesMap.get(stat.typeId) ?? null : null,
-      ),
+      toFixtureTeamStatContract(stat, stat.typeId ? (statTypesMap.get(stat.typeId) ?? null) : null)
     ),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
@@ -195,17 +186,14 @@ export async function listFixtureTeamStats(
 
 export async function listFixtureTeamStatsByFixture(
   fixtureId: number,
-  query: FixtureTeamStatsQuery,
+  query: FixtureTeamStatsQuery
 ): Promise<PaginatedResponse<FixtureTeamStatContract>> {
   const { stats, totalItems } = await findFixtureTeamStatsByFixtureId(fixtureId, query);
   const statTypesMap = await resolveStatTypes(stats.map((stat) => stat.typeId));
 
   return {
     data: stats.map((stat) =>
-      toFixtureTeamStatContract(
-        stat,
-        stat.typeId ? statTypesMap.get(stat.typeId) ?? null : null,
-      ),
+      toFixtureTeamStatContract(stat, stat.typeId ? (statTypesMap.get(stat.typeId) ?? null) : null)
     ),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };

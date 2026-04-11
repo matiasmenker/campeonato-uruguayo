@@ -6,7 +6,7 @@ import { toRefereeContract } from "./referees.mapper.js";
 import { findReferees, findRefereeById } from "./referees.repository.js";
 
 export async function listReferees(
-  query: RefereesQuery,
+  query: RefereesQuery
 ): Promise<PaginatedResponse<RefereeContract>> {
   const { referees, totalItems } = await findReferees(query);
   return {
@@ -15,9 +15,7 @@ export async function listReferees(
   };
 }
 
-export async function getReferee(
-  id: number,
-): Promise<DetailResponse<RefereeContract>> {
+export async function getReferee(id: number): Promise<DetailResponse<RefereeContract>> {
   const referee = await findRefereeById(id);
   if (!referee) throw new NotFoundError("Referee");
   return { data: toRefereeContract(referee) };

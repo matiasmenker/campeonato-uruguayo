@@ -7,7 +7,7 @@ export function errorHandler(
   error: unknown,
   _request: Request,
   response: Response<ErrorResponse>,
-  _next: NextFunction,
+  _next: NextFunction
 ): void {
   if (error instanceof AppError) {
     response.status(error.statusCode).json({

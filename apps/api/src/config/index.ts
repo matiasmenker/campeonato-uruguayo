@@ -2,9 +2,7 @@ import { z } from "zod";
 
 const configSchema = z.object({
   port: z.coerce.number().int().positive().default(3000),
-  nodeEnv: z
-    .enum(["development", "production", "test"])
-    .default("development"),
+  nodeEnv: z.enum(["development", "production", "test"]).default("development"),
   corsOrigin: z.string().default("*"),
   databaseUrl: z.string().min(1, "DATABASE_URL is required"),
   apiKey: z.string().optional(),

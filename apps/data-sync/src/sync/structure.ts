@@ -3,10 +3,13 @@ import type { SyncDependencies, SyncOptions } from "./shared.js";
 
 const extractArray = <T>(raw: { data: T[] } | T[] | undefined): T[] => {
   if (!raw) return [];
-  return Array.isArray(raw) ? raw : raw.data ?? [];
+  return Array.isArray(raw) ? raw : (raw.data ?? []);
 };
 
-const syncStructure = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
+const syncStructure = async (
+  { client, db, log }: SyncDependencies,
+  options?: SyncOptions
+): Promise<void> => {
   log.info("=== STRUCTURE START ===");
   log.info("🚀 Syncing Structure...");
   const currentYear = new Date().getUTCFullYear();

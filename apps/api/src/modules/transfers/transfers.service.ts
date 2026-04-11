@@ -6,7 +6,7 @@ import { toTransferContract } from "./transfers.mapper.js";
 import { findTransfers, findTransferById } from "./transfers.repository.js";
 
 export async function listTransfers(
-  query: TransfersQuery,
+  query: TransfersQuery
 ): Promise<PaginatedResponse<TransferContract>> {
   const { transfers, totalItems } = await findTransfers(query);
   return {
@@ -15,9 +15,7 @@ export async function listTransfers(
   };
 }
 
-export async function getTransfer(
-  id: number,
-): Promise<DetailResponse<TransferContract>> {
+export async function getTransfer(id: number): Promise<DetailResponse<TransferContract>> {
   const transfer = await findTransferById(id);
   if (!transfer) throw new NotFoundError("Transfer");
   return { data: toTransferContract(transfer) };

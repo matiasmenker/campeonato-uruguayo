@@ -26,7 +26,7 @@ export interface DetailResponse<T> {
 export function buildPaginationMeta(
   page: number,
   pageSize: number,
-  totalItems: number,
+  totalItems: number
 ): PaginationMeta {
   return {
     page,

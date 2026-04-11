@@ -34,7 +34,10 @@ const asString = (value: unknown): string | null => {
   return null;
 };
 
-const syncTransfers = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
+const syncTransfers = async (
+  { client, db, log }: SyncDependencies,
+  options?: SyncOptions
+): Promise<void> => {
   log.info("=== TRANSFERS START ===");
   log.info("🚀 Syncing Transfers...");
 
@@ -97,7 +100,9 @@ const syncTransfers = async ({ client, db, log }: SyncDependencies, options?: Sy
     .filter((value): value is number => value != null);
 
   if (trackedTeamSportmonksIds.length === 0) {
-    log.warn("⚠️  Transfer sync skipped: no league teams found in SquadMembership. Run sync:squad-memberships first.");
+    log.warn(
+      "⚠️  Transfer sync skipped: no league teams found in SquadMembership. Run sync:squad-memberships first."
+    );
     return;
   }
 
@@ -151,7 +156,9 @@ const syncTransfers = async ({ client, db, log }: SyncDependencies, options?: Sy
   const playerRows = await db.player.findMany({ select: { id: true, sportmonksId: true } });
   const teamIdBySportmonksId = new Map(teamRows.map((team) => [team.sportmonksId, team.id]));
   const playerIdBySportmonksId = new Map(
-    playerRows.filter((p) => p.sportmonksId != null).map((player) => [player.sportmonksId as number, player.id])
+    playerRows
+      .filter((p) => p.sportmonksId != null)
+      .map((player) => [player.sportmonksId as number, player.id])
   );
 
   let skippedTransfers = 0;
@@ -200,7 +207,16 @@ const syncTransfers = async ({ client, db, log }: SyncDependencies, options?: Sy
       shortCode: team?.short_code?.trim() || null,
       imagePath: team?.image_path?.trim() || null,
     }))
-    .filter((row): row is { sportmonksId: number; name: string; shortCode: string | null; imagePath: string | null } => row.name != null);
+    .filter(
+      (
+        row
+      ): row is {
+        sportmonksId: number;
+        name: string;
+        shortCode: string | null;
+        imagePath: string | null;
+      } => row.name != null
+    );
 
   for (let i = 0; i < playerCreateRows.length; i += CREATE_BATCH_SIZE) {
     const chunk = playerCreateRows.slice(i, i + CREATE_BATCH_SIZE);
@@ -242,7 +258,8 @@ const syncTransfers = async ({ client, db, log }: SyncDependencies, options?: Sy
   for (let i = 0; i < scopedTransfers.length; i++) {
     const transfer = scopedTransfers[i];
     const playerSportmonksId = transfer.player?.id ?? transfer.player_id ?? null;
-    const playerId = playerSportmonksId != null ? (playerIdBySportmonksId.get(playerSportmonksId) ?? null) : null;
+    const playerId =
+      playerSportmonksId != null ? (playerIdBySportmonksId.get(playerSportmonksId) ?? null) : null;
 
     if (playerId == null) {
       skippedTransfers += 1;
@@ -258,8 +275,12 @@ const syncTransfers = async ({ client, db, log }: SyncDependencies, options?: Sy
     transferRows.push({
       sportmonksId: transfer.id,
       playerId,
-      fromTeamId: fromTeamSportmonksId != null ? (teamIdBySportmonksId.get(fromTeamSportmonksId) ?? null) : null,
-      toTeamId: toTeamSportmonksId != null ? (teamIdBySportmonksId.get(toTeamSportmonksId) ?? null) : null,
+      fromTeamId:
+        fromTeamSportmonksId != null
+          ? (teamIdBySportmonksId.get(fromTeamSportmonksId) ?? null)
+          : null,
+      toTeamId:
+        toTeamSportmonksId != null ? (teamIdBySportmonksId.get(toTeamSportmonksId) ?? null) : null,
       type: asString(transfer.transfer_type) ?? asString(transfer.type),
       date: toDate(transfer.date ?? null),
       amount: asString(transfer.amount),
@@ -288,7 +309,9 @@ const syncTransfers = async ({ client, db, log }: SyncDependencies, options?: Sy
   let updatedTransfers = 0;
   if (!isInitialLoad) {
     const recentThreshold = new Date(Date.now() - RECENT_UPDATE_DAYS * 24 * 60 * 60 * 1000);
-    const recentRows = transferRows.filter((row) => row.date != null && row.date >= recentThreshold);
+    const recentRows = transferRows.filter(
+      (row) => row.date != null && row.date >= recentThreshold
+    );
     for (let i = 0; i < recentRows.length; i += UPSERT_BATCH_SIZE) {
       const chunk = recentRows.slice(i, i + UPSERT_BATCH_SIZE);
       await Promise.all(

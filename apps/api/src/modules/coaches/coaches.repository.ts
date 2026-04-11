@@ -14,7 +14,7 @@ const assignmentsInclude = {
 };
 
 export async function findCoaches(
-  query: CoachesQuery,
+  query: CoachesQuery
 ): Promise<{ coaches: CoachWithAssignments[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.CoachWhereInput = {};

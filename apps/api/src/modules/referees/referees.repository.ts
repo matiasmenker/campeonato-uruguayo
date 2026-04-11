@@ -3,7 +3,7 @@ import { getPrisma } from "../../database/index.js";
 import type { RefereesQuery } from "./referees.contracts.js";
 
 export async function findReferees(
-  query: RefereesQuery,
+  query: RefereesQuery
 ): Promise<{ referees: Referee[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.RefereeWhereInput = {};

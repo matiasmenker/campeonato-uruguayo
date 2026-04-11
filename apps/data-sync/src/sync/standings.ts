@@ -3,7 +3,7 @@ import type { SyncDependencies, SyncOptions } from "./shared.js";
 
 const extractArray = <T>(raw: { data: T[] } | T[] | undefined): T[] => {
   if (!raw) return [];
-  return Array.isArray(raw) ? raw : raw.data ?? [];
+  return Array.isArray(raw) ? raw : (raw.data ?? []);
 };
 
 const toNumber = (value: unknown): number | null => {
@@ -72,7 +72,10 @@ const DETAIL_TYPE_IDS = {
   goalsAgainst: [134] as const,
 };
 
-const syncStandings = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
+const syncStandings = async (
+  { client, db, log }: SyncDependencies,
+  options?: SyncOptions
+): Promise<void> => {
   log.info("=== STANDINGS START ===");
   log.info("🚀 Syncing Standings...");
 
@@ -93,7 +96,9 @@ const syncStandings = async ({ client, db, log }: SyncDependencies, options?: Sy
   const seasons = await db.season.findMany({
     where: {
       leagueId: uruguayLeague.id,
-      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+      ...(options?.seasonSportmonksIds
+        ? { sportmonksId: { in: options.seasonSportmonksIds } }
+        : {}),
     },
     select: { id: true, sportmonksId: true },
     orderBy: { endingAt: "desc" },
@@ -177,12 +182,17 @@ const syncStandings = async ({ client, db, log }: SyncDependencies, options?: Sy
 
       const stageId =
         standingDto.stage_id != null
-          ? stageIdBySportmonksId.get(standingDto.stage_id) ?? null
+          ? (stageIdBySportmonksId.get(standingDto.stage_id) ?? null)
           : null;
 
       const position = resolveMetric(standingDto, details, ["position"], []);
       const points = resolveMetric(standingDto, details, ["points"], []);
-      const played = resolveMetric(standingDto, details, ["played", "games_played"], DETAIL_TYPE_IDS.played);
+      const played = resolveMetric(
+        standingDto,
+        details,
+        ["played", "games_played"],
+        DETAIL_TYPE_IDS.played
+      );
       const won = resolveMetric(standingDto, details, ["won", "wins"], DETAIL_TYPE_IDS.won);
       const draw = resolveMetric(standingDto, details, ["draw", "drawn"], DETAIL_TYPE_IDS.draw);
       const lost = resolveMetric(standingDto, details, ["lost", "losses"], DETAIL_TYPE_IDS.lost);
@@ -257,11 +267,15 @@ const syncStandings = async ({ client, db, log }: SyncDependencies, options?: Sy
   log.info(`🟡 Duplicate rows merged: ${duplicateRowsMerged}`);
   log.info(`🟡 Rows skipped (team not found): ${rowsWithoutTeam}`);
   if (sampleMissingTeamParticipantIds.length > 0) {
-    log.warn(`⚠️  Sample missing team participant IDs: ${sampleMissingTeamParticipantIds.join(", ")}`);
+    log.warn(
+      `⚠️  Sample missing team participant IDs: ${sampleMissingTeamParticipantIds.join(", ")}`
+    );
   }
   log.info(`🟡 Rows skipped (missing metrics): ${rowsWithoutMetrics}`);
   if (sampleMissingMetricStandingIds.length > 0) {
-    log.warn(`⚠️  Sample standing IDs with missing metrics: ${sampleMissingMetricStandingIds.join(", ")}`);
+    log.warn(
+      `⚠️  Sample standing IDs with missing metrics: ${sampleMissingMetricStandingIds.join(", ")}`
+    );
   }
   log.info(`📦 Total rows in Standing table: ${totalRows}`);
   log.info("=== STANDINGS END ===");

@@ -5,9 +5,7 @@ import { disconnectDatabase } from "./database/index.js";
 const config = loadConfig();
 
 const server = app.listen(config.port, () => {
-  console.log(
-    `API running on port ${config.port} [${config.nodeEnv}]`,
-  );
+  console.log(`API running on port ${config.port} [${config.nodeEnv}]`);
 });
 
 function shutdown(): void {

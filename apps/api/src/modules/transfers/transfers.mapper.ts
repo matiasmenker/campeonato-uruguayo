@@ -9,9 +9,7 @@ type TransferWithRelations = Transfer & {
   toTeam: Team | null;
 };
 
-export function toTransferContract(
-  transfer: TransferWithRelations,
-): TransferContract {
+export function toTransferContract(transfer: TransferWithRelations): TransferContract {
   return {
     id: transfer.id,
     sportmonksId: transfer.sportmonksId,

@@ -1,13 +1,12 @@
 const BASE_URL = "https://api.sportmonks.com/v3/football";
 
 export interface FetchOptions {
-  
   perPage?: number;
-  
+
   page?: number;
-  
+
   include?: string;
-  
+
   filters?: string;
 }
 
@@ -19,14 +18,9 @@ export interface SportMonksClientConfig {
 export function createSportMonksClient(config: SportMonksClientConfig) {
   const { apiToken, baseUrl = BASE_URL } = config;
 
-  function buildUrl(
-    path: string,
-    options: FetchOptions = {}
-  ): string {
+  function buildUrl(path: string, options: FetchOptions = {}): string {
     const url = new URL(
-      path.startsWith("http")
-        ? path
-        : `${baseUrl}${path.startsWith("/") ? "" : "/"}${path}`
+      path.startsWith("http") ? path : `${baseUrl}${path.startsWith("/") ? "" : "/"}${path}`
     );
     url.searchParams.set("api_token", apiToken);
 
@@ -46,7 +40,6 @@ export function createSportMonksClient(config: SportMonksClientConfig) {
     return url.toString();
   }
 
-  
   async function get<T>(path: string, options: FetchOptions = {}): Promise<T> {
     const url = buildUrl(path, options);
     const res = await fetch(url);
@@ -60,7 +53,6 @@ export function createSportMonksClient(config: SportMonksClientConfig) {
     return (json.data ?? json) as T;
   }
 
-  
   async function getAllPages<T>(
     path: string,
     options: Omit<FetchOptions, "page"> & {
@@ -86,11 +78,7 @@ export function createSportMonksClient(config: SportMonksClientConfig) {
         pagination?: { has_more?: boolean };
       };
 
-      const data = Array.isArray(json.data)
-        ? json.data
-        : json.data
-          ? [json.data]
-          : [];
+      const data = Array.isArray(json.data) ? json.data : json.data ? [json.data] : [];
       results.push(...data);
 
       if (onPage) {

@@ -1,4 +1,9 @@
-import type { LeagueSummary, SeasonSummary, StageSummary, RoundSummary } from "../competition/competition.contracts.js";
+import type {
+  LeagueSummary,
+  SeasonSummary,
+  StageSummary,
+  RoundSummary,
+} from "../competition/competition.contracts.js";
 import type { TeamSummary } from "../teams/teams.contracts.js";
 import type { StandingContract } from "../standings/standings.contracts.js";
 

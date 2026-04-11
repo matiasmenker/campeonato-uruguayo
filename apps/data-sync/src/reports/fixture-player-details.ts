@@ -140,7 +140,13 @@ type TeamPlayerRow = {
   role: string;
 };
 
-type DenseStatCategory = "overall" | "offensive" | "defensive" | "discipline" | "goalkeeper" | "other";
+type DenseStatCategory =
+  | "overall"
+  | "offensive"
+  | "defensive"
+  | "discipline"
+  | "goalkeeper"
+  | "other";
 
 type FixtureQuality = {
   playersTotal: number;
@@ -315,14 +321,9 @@ const COMPLETE_MATCH_STAT_KEYS = new Set([
   "GOOD_HIGH_CLAIM",
 ]);
 
-const COMPACT_HIDDEN_META_KEYS = new Set([
-  "CAPTAIN",
-]);
+const COMPACT_HIDDEN_META_KEYS = new Set(["CAPTAIN"]);
 
-const PARTIAL_STATS_NOISE_KEYS = new Set([
-  "GOALS_CONCEDED",
-  "GOALKEEPER_GOALS_CONCEDED",
-]);
+const PARTIAL_STATS_NOISE_KEYS = new Set(["GOALS_CONCEDED", "GOALKEEPER_GOALS_CONCEDED"]);
 
 const DENSE_STAT_CATEGORY_META: Record<DenseStatCategory, { title: string; accent: string }> = {
   overall: { title: "🎮 Gen", accent: ANSI.cyan },
@@ -540,11 +541,7 @@ function printRule(char = "─", width = REPORT_WIDTH): void {
 function printBox(title: string, lines: string[], accent = ANSI.blue): void {
   const width = Math.min(
     120,
-    Math.max(
-      title.length + 6,
-      ...lines.map((line) => visibleLength(line) + 4),
-      40,
-    ),
+    Math.max(title.length + 6, ...lines.map((line) => visibleLength(line) + 4), 40)
   );
 
   console.log(color(`┌${"─".repeat(width - 2)}┐`, accent));
@@ -552,7 +549,7 @@ function printBox(title: string, lines: string[], accent = ANSI.blue): void {
     color("│ ", accent) +
       color(truncateVisible(title, width - 4), ANSI.bold, ANSI.white) +
       " ".repeat(Math.max(0, width - 4 - visibleLength(truncateVisible(title, width - 4)))) +
-      color(" │", accent),
+      color(" │", accent)
   );
   console.log(color(`├${"─".repeat(width - 2)}┤`, accent));
 
@@ -562,14 +559,18 @@ function printBox(title: string, lines: string[], accent = ANSI.blue): void {
       color("│ ", accent) +
         renderedLine +
         " ".repeat(Math.max(0, width - 4 - visibleLength(renderedLine))) +
-        color(" │", accent),
+        color(" │", accent)
     );
   }
 
   console.log(color(`└${"─".repeat(width - 2)}┘`, accent));
 }
 
-function packInlineItems(items: string[], width: number, separator = color(" • ", ANSI.gray)): string[] {
+function packInlineItems(
+  items: string[],
+  width: number,
+  separator = color(" • ", ANSI.gray)
+): string[] {
   const filtered = items.filter((item) => stripAnsi(item).trim().length > 0);
   if (filtered.length === 0) return [];
 
@@ -604,8 +605,9 @@ function buildLabeledItemLines(label: string, items: string[], width: number): s
 
   if (lines.length === 0) return [];
 
-  return lines.map((line, index) =>
-    `${index === 0 ? color(labelPrefix, ANSI.bold, ANSI.white) : " ".repeat(labelWidth)}${line}`
+  return lines.map(
+    (line, index) =>
+      `${index === 0 ? color(labelPrefix, ANSI.bold, ANSI.white) : " ".repeat(labelWidth)}${line}`
   );
 }
 
@@ -615,8 +617,9 @@ function buildLabeledTextLines(label: string, value: string, width: number): str
   const availableWidth = Math.max(24, width - labelWidth);
   const wrapped = wrapText(value, availableWidth);
 
-  return wrapped.map((line, index) =>
-    `${index === 0 ? color(labelPrefix, ANSI.bold, ANSI.white) : " ".repeat(labelWidth)}${line}`
+  return wrapped.map(
+    (line, index) =>
+      `${index === 0 ? color(labelPrefix, ANSI.bold, ANSI.white) : " ".repeat(labelWidth)}${line}`
   );
 }
 
@@ -629,7 +632,7 @@ function printCard(lines: string[], accent: string): void {
   for (const line of lines) {
     const rendered = truncateVisible(line, contentWidth);
     console.log(
-      `${indent}${color("│ ", accent)}${rendered}${" ".repeat(Math.max(0, contentWidth - visibleLength(rendered)))}${color(" │", accent)}`,
+      `${indent}${color("│ ", accent)}${rendered}${" ".repeat(Math.max(0, contentWidth - visibleLength(rendered)))}${color(" │", accent)}`
     );
   }
 
@@ -647,29 +650,34 @@ type TableOptions = {
   indent?: string;
 };
 
-function printTable(columns: TableColumn[], rows: string[][], accent: string, options?: TableOptions): void {
+function printTable(
+  columns: TableColumn[],
+  rows: string[][],
+  accent: string,
+  options?: TableOptions
+): void {
   const indent = options?.indent ?? "  ";
   const cellPadding = options?.cellPadding ?? 1;
-  const paddedWidth = (column: TableColumn) => column.width + (cellPadding * 2);
+  const paddedWidth = (column: TableColumn) => column.width + cellPadding * 2;
   const renderBorder = (left: string, middle: string, right: string): string =>
     `${indent}${color(left, accent)}${columns
-      .map((column, index) =>
-        `${color("─".repeat(paddedWidth(column)), accent)}${index < columns.length - 1 ? color(middle, accent) : ""}`
+      .map(
+        (column, index) =>
+          `${color("─".repeat(paddedWidth(column)), accent)}${index < columns.length - 1 ? color(middle, accent) : ""}`
       )
       .join("")}${color(right, accent)}`;
 
   const renderRow = (cells: string[]): string => {
-    const formatted = columns.map((column, index) =>
-      `${" ".repeat(cellPadding)}${padAlign(truncateVisible(cells[index] ?? "", column.width), column.width, column.align ?? "left")}${" ".repeat(cellPadding)}`
+    const formatted = columns.map(
+      (column, index) =>
+        `${" ".repeat(cellPadding)}${padAlign(truncateVisible(cells[index] ?? "", column.width), column.width, column.align ?? "left")}${" ".repeat(cellPadding)}`
     );
 
     return `${indent}${color("│", accent)}${formatted.join(color("│", accent))}${color("│", accent)}`;
   };
 
   console.log(renderBorder("┌", "┬", "┐"));
-  console.log(
-    renderRow(columns.map((column) => color(column.header, ANSI.bold, ANSI.white))),
-  );
+  console.log(renderRow(columns.map((column) => color(column.header, ANSI.bold, ANSI.white))));
   console.log(renderBorder("├", "┼", "┤"));
 
   rows.forEach((row, index) => {
@@ -748,7 +756,11 @@ function rankCandidate(query: string, entity: MatchableEntity): number {
   let score = 0;
 
   if (String(entity.id) === query) score += 1000;
-  if (entity.sportmonksId !== null && entity.sportmonksId !== undefined && String(entity.sportmonksId) === query) {
+  if (
+    entity.sportmonksId !== null &&
+    entity.sportmonksId !== undefined &&
+    String(entity.sportmonksId) === query
+  ) {
     score += 900;
   }
 
@@ -761,18 +773,17 @@ function rankCandidate(query: string, entity: MatchableEntity): number {
   }
 
   const candidateNumbers = [...extractNumbers(entity.name), ...extractNumbers(entity.slug)];
-  if (queryNumbers.length > 0 && candidateNumbers.some((candidate) => queryNumbers.includes(candidate))) {
+  if (
+    queryNumbers.length > 0 &&
+    candidateNumbers.some((candidate) => queryNumbers.includes(candidate))
+  ) {
     score += 700;
   }
 
   return score;
 }
 
-function pickBestCandidate<T extends MatchableEntity>(
-  items: T[],
-  query: string,
-  label: string,
-): T {
+function pickBestCandidate<T extends MatchableEntity>(items: T[], query: string, label: string): T {
   if (items.length === 0) {
     throw new Error(`No ${label}s loaded to resolve "${query}".`);
   }
@@ -812,7 +823,7 @@ function parseArgs(argv: string[]): ReportOptions {
 
   if (!season || !group || !jornada) {
     throw new Error(
-      'Missing arguments. Usage: pnpm report:fixture-players --season="2026" --group="Apertura" --jornada="1" [--view="compact|full"]',
+      'Missing arguments. Usage: pnpm report:fixture-players --season="2026" --group="Apertura" --jornada="1" [--view="compact|full"]'
     );
   }
 
@@ -864,14 +875,14 @@ function toStatBoolean(value: Prisma.JsonValue | null): boolean {
   return false;
 }
 
-function resolveStatLabel(key: string, fallbackName: string | null | undefined): { label: string; short: string } {
+function resolveStatLabel(
+  key: string,
+  fallbackName: string | null | undefined
+): { label: string; short: string } {
   const known = STAT_LABELS[key];
   if (known) return known;
 
-  const base = (fallbackName ?? key)
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const base = (fallbackName ?? key).replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
 
   const title = base
     .split(" ")
@@ -882,7 +893,10 @@ function resolveStatLabel(key: string, fallbackName: string | null | undefined):
   return { label: title || key, short: title.slice(0, 4) || key.slice(0, 4) };
 }
 
-function resolveStatCategory(key: string, statGroup: string | null | undefined): PreparedStat["category"] {
+function resolveStatCategory(
+  key: string,
+  statGroup: string | null | undefined
+): PreparedStat["category"] {
   if (HEADLINE_KEYS.includes(key)) return "headline";
   if (["YELLOWCARDS", "REDCARDS", "FOULS", "FOULS_DRAWN"].includes(key)) return "discipline";
 
@@ -926,7 +940,11 @@ function buildSyntheticPreparedStat(key: string, numericValue: number): Prepared
   };
 }
 
-function buildEventFallbackTotals(events: EventWithPlayer[]): { goals: number; yellow: number; red: number } {
+function buildEventFallbackTotals(events: EventWithPlayer[]): {
+  goals: number;
+  yellow: number;
+  red: number;
+} {
   return events.reduce(
     (acc, event) => {
       if (event.typeId && GOAL_EVENT_TYPE_IDS.has(event.typeId)) acc.goals += 1;
@@ -939,7 +957,7 @@ function buildEventFallbackTotals(events: EventWithPlayer[]): { goals: number; y
 
       return acc;
     },
-    { goals: 0, yellow: 0, red: 0 },
+    { goals: 0, yellow: 0, red: 0 }
   );
 }
 
@@ -967,12 +985,14 @@ function applyEventFallbackStats(stats: PreparedStat[], events: EventWithPlayer[
 
 function prepareStats(
   stats: PlayerStatWithPlayer[],
-  statTypeMap: Map<number, StatTypeInfo>,
+  statTypeMap: Map<number, StatTypeInfo>
 ): PreparedStat[] {
   return stats
     .map((stat) => {
       const typeInfo = stat.typeId ? statTypeMap.get(stat.typeId) : null;
-      const key = normalizeStatKey(typeInfo?.developerName ?? typeInfo?.name ?? `TYPE_${stat.typeId ?? "N_A"}`);
+      const key = normalizeStatKey(
+        typeInfo?.developerName ?? typeInfo?.name ?? `TYPE_${stat.typeId ?? "N_A"}`
+      );
       const labels = resolveStatLabel(key, typeInfo?.name);
       return {
         key,
@@ -1002,7 +1022,7 @@ function buildComboStat(
   stats: Map<string, PreparedStat>,
   madeKey: string,
   totalKey: string,
-  label: string,
+  label: string
 ): string | null {
   const made = getStatValue(stats, madeKey);
   const total = getStatValue(stats, totalKey);
@@ -1014,11 +1034,13 @@ function buildComboStat(
 function findRawStatValue(
   stats: PlayerStatWithPlayer[],
   statTypeMap: Map<number, StatTypeInfo>,
-  targetKey: string,
+  targetKey: string
 ): Prisma.JsonValue | null {
   const match = stats.find((stat) => {
     const typeInfo = stat.typeId ? statTypeMap.get(stat.typeId) : null;
-    const key = normalizeStatKey(typeInfo?.developerName ?? typeInfo?.name ?? `TYPE_${stat.typeId ?? "N_A"}`);
+    const key = normalizeStatKey(
+      typeInfo?.developerName ?? typeInfo?.name ?? `TYPE_${stat.typeId ?? "N_A"}`
+    );
     return key === targetKey;
   });
 
@@ -1029,11 +1051,15 @@ function hasCompleteMatchStats(statMap: Map<string, PreparedStat>): boolean {
   return [...COMPLETE_MATCH_STAT_KEYS].some((key) => getStatValue(statMap, key) !== "-");
 }
 
-function buildPlayerSummary(entry: ResolvedPlayerEntry, statTypeMap: Map<number, StatTypeInfo>): PlayerSummaryData {
+function buildPlayerSummary(
+  entry: ResolvedPlayerEntry,
+  statTypeMap: Map<number, StatTypeInfo>
+): PlayerSummaryData {
   const stats = applyEventFallbackStats(
-    prepareStats(entry.stats, statTypeMap)
-      .filter((stat) => !COMPACT_HIDDEN_META_KEYS.has(stat.key)),
-    entry.events,
+    prepareStats(entry.stats, statTypeMap).filter(
+      (stat) => !COMPACT_HIDDEN_META_KEYS.has(stat.key)
+    ),
+    entry.events
   );
   const statMap = buildStatMap(stats);
 
@@ -1050,12 +1076,17 @@ function buildPlayerSummary(entry: ResolvedPlayerEntry, statTypeMap: Map<number,
   };
 }
 
-function resolvePositionLabel(entry: ResolvedPlayerEntry): { label: string; usedFallback: boolean } {
+function resolvePositionLabel(entry: ResolvedPlayerEntry): {
+  label: string;
+  usedFallback: boolean;
+} {
   if (entry.lineup?.position) {
     return { label: entry.lineup.position, usedFallback: false };
   }
 
-  const detailed = entry.player.detailedPositionId ? POSITION_LABELS[entry.player.detailedPositionId] : null;
+  const detailed = entry.player.detailedPositionId
+    ? POSITION_LABELS[entry.player.detailedPositionId]
+    : null;
   if (detailed) return { label: detailed, usedFallback: true };
 
   const general = entry.player.positionId ? POSITION_LABELS[entry.player.positionId] : null;
@@ -1065,7 +1096,8 @@ function resolvePositionLabel(entry: ResolvedPlayerEntry): { label: string; used
 }
 
 function resolveRole(entry: ResolvedPlayerEntry, statMap: Map<string, PreparedStat>): string {
-  if (entry.lineup?.formationPosition !== null && entry.lineup?.formationPosition !== undefined) return "STR";
+  if (entry.lineup?.formationPosition !== null && entry.lineup?.formationPosition !== undefined)
+    return "STR";
 
   const minutes = getStatNumber(statMap, "MINUTES_PLAYED");
   if ((minutes ?? 0) > 0 || entry.stats.length > 0 || entry.events.length > 0) return "SUB";
@@ -1078,9 +1110,10 @@ function summarizeEvents(events: EventWithPlayer[]): string {
 
   return events
     .map((event) => {
-      const minute = event.minute !== null
-        ? `${event.minute}${event.extraMinute ? `+${event.extraMinute}` : ""}'`
-        : "n/a";
+      const minute =
+        event.minute !== null
+          ? `${event.minute}${event.extraMinute ? `+${event.extraMinute}` : ""}'`
+          : "n/a";
 
       switch (event.typeId) {
         case 14:
@@ -1096,7 +1129,9 @@ function summarizeEvents(events: EventWithPlayer[]): string {
         case 21:
           return `🟥 ${minute}`;
         default: {
-          const parts = [event.info, event.addition].filter((value): value is string => Boolean(value));
+          const parts = [event.info, event.addition].filter((value): value is string =>
+            Boolean(value)
+          );
           return `📝 ${minute} ${parts.join(" ").trim()}`.trim();
         }
       }
@@ -1116,10 +1151,15 @@ function buildProfileItems(entry: ResolvedPlayerEntry): string[] {
   ].filter((value): value is string => Boolean(value));
 }
 
-function buildContextItems(entry: ResolvedPlayerEntry, position: { label: string; usedFallback: boolean }): string[] {
+function buildContextItems(
+  entry: ResolvedPlayerEntry,
+  position: { label: string; usedFallback: boolean }
+): string[] {
   return [
     entry.teamName ? `🏟 ${entry.teamName}` : null,
-    entry.player.commonName && entry.player.commonName !== entry.player.displayName ? `🪪 ${entry.player.commonName}` : null,
+    entry.player.commonName && entry.player.commonName !== entry.player.displayName
+      ? `🪪 ${entry.player.commonName}`
+      : null,
     `🆔 Player ${entry.player.id}`,
     entry.player.sportmonksId ? `🧩 SM ${entry.player.sportmonksId}` : null,
     entry.lineup ? `📋 Lineup ${entry.lineup.id}` : "📋 No lineup",
@@ -1133,22 +1173,36 @@ function buildContextItems(entry: ResolvedPlayerEntry, position: { label: string
 
 function buildSummaryMetricItems(statMap: Map<string, PreparedStat>): string[] {
   const items = [
-    getStatValue(statMap, "MINUTES_PLAYED") !== "-" ? `⏱ ${getStatValue(statMap, "MINUTES_PLAYED")} min` : null,
+    getStatValue(statMap, "MINUTES_PLAYED") !== "-"
+      ? `⏱ ${getStatValue(statMap, "MINUTES_PLAYED")} min`
+      : null,
     getStatValue(statMap, "RATING") !== "-" ? `⭐ Rating ${getStatValue(statMap, "RATING")}` : null,
     getStatValue(statMap, "GOALS") !== "-" ? `⚽ Goals ${getStatValue(statMap, "GOALS")}` : null,
-    getStatValue(statMap, "ASSISTS") !== "-" ? `🅰 Assists ${getStatValue(statMap, "ASSISTS")}` : null,
-    getStatValue(statMap, "YELLOWCARDS") !== "-" ? `🟨 Yellows ${getStatValue(statMap, "YELLOWCARDS")}` : null,
-    getStatValue(statMap, "REDCARDS") !== "-" ? `🟥 Reds ${getStatValue(statMap, "REDCARDS")}` : null,
+    getStatValue(statMap, "ASSISTS") !== "-"
+      ? `🅰 Assists ${getStatValue(statMap, "ASSISTS")}`
+      : null,
+    getStatValue(statMap, "YELLOWCARDS") !== "-"
+      ? `🟨 Yellows ${getStatValue(statMap, "YELLOWCARDS")}`
+      : null,
+    getStatValue(statMap, "REDCARDS") !== "-"
+      ? `🟥 Reds ${getStatValue(statMap, "REDCARDS")}`
+      : null,
     buildComboStat(statMap, "ACCURATE_PASSES", "PASSES", "🎯 Passes"),
     buildComboStat(statMap, "DUELS_WON", "TOTAL_DUELS", "🤺 Duels"),
     buildComboStat(statMap, "SHOTS_ON_TARGET", "SHOTS_TOTAL", "🥅 Shots"),
     buildComboStat(statMap, "SUCCESSFUL_DRIBBLES", "DRIBBLED_ATTEMPTS", "🪄 Dribbles"),
     buildComboStat(statMap, "ACCURATE_CROSSES", "TOTAL_CROSSES", "📨 Crosses"),
     buildComboStat(statMap, "LONG_BALLS_WON", "LONG_BALLS", "🚀 Long balls"),
-    getStatValue(statMap, "TOUCHES") !== "-" ? `👟 Touches ${getStatValue(statMap, "TOUCHES")}` : null,
-    getStatValue(statMap, "POSSESSION_LOST") !== "-" ? `📉 Lost ${getStatValue(statMap, "POSSESSION_LOST")}` : null,
+    getStatValue(statMap, "TOUCHES") !== "-"
+      ? `👟 Touches ${getStatValue(statMap, "TOUCHES")}`
+      : null,
+    getStatValue(statMap, "POSSESSION_LOST") !== "-"
+      ? `📉 Lost ${getStatValue(statMap, "POSSESSION_LOST")}`
+      : null,
     getStatValue(statMap, "SAVES") !== "-" ? `🧤 Saves ${getStatValue(statMap, "SAVES")}` : null,
-    getStatValue(statMap, "GOALS_CONCEDED") !== "-" ? `🥅 Goals Conceded ${getStatValue(statMap, "GOALS_CONCEDED")}` : null,
+    getStatValue(statMap, "GOALS_CONCEDED") !== "-"
+      ? `🥅 Goals Conceded ${getStatValue(statMap, "GOALS_CONCEDED")}`
+      : null,
   ].filter((value): value is string => Boolean(value));
 
   return items.length > 0 ? items : ["No statistical summary"];
@@ -1157,7 +1211,7 @@ function buildSummaryMetricItems(statMap: Map<string, PreparedStat>): string[] {
 function formatStatComboCell(
   stats: Map<string, PreparedStat>,
   madeKey: string,
-  totalKey: string,
+  totalKey: string
 ): string {
   const made = getStatValue(stats, madeKey);
   const total = getStatValue(stats, totalKey);
@@ -1285,7 +1339,7 @@ function printDenseStatTables(rows: TeamPlayerRow[], kind: "home" | "away" | "un
         const width = Math.max(
           visibleLength(header),
           ...rows.map((row) => visibleLength(getStatValue(row.summary.statMap, key))),
-          1,
+          1
         );
         return {
           header,
@@ -1300,11 +1354,15 @@ function printDenseStatTables(rows: TeamPlayerRow[], kind: "home" | "away" | "un
       columns,
       rows.map((row, index) => [
         color(String(index + 1).padStart(2, "0"), ANSI.gray),
-        color(truncate(row.entry.player.displayName ?? row.entry.player.name, 14), ANSI.bold, ANSI.white),
+        color(
+          truncate(row.entry.player.displayName ?? row.entry.player.name, 14),
+          ANSI.bold,
+          ANSI.white
+        ),
         ...statKeys.map((key) => getStatValue(row.summary.statMap, key)),
       ]),
       accentForTeamKind(kind),
-      { cellPadding: 0 },
+      { cellPadding: 0 }
     );
     console.log("");
   }
@@ -1337,12 +1395,14 @@ function buildStatSections(stats: PreparedStat[]): StatSection[] {
       title: "🚨 Discipline",
       accent: ANSI.red,
       items: buildItems(
-        stats.filter((stat) => stat.category === "discipline" || ["FOULS", "FOULS_DRAWN"].includes(stat.key)),
-        new Set(["FOULS", "FOULS_DRAWN"]),
+        stats.filter(
+          (stat) => stat.category === "discipline" || ["FOULS", "FOULS_DRAWN"].includes(stat.key)
+        ),
+        new Set(["FOULS", "FOULS_DRAWN"])
       ).concat(
         stats
           .filter((stat) => ["FOULS", "FOULS_DRAWN"].includes(stat.key))
-          .map((stat) => `${stat.label}: ${stat.value}`),
+          .map((stat) => `${stat.label}: ${stat.value}`)
       ),
     },
     {
@@ -1366,13 +1426,13 @@ function comparePlayerEntries(left: ResolvedPlayerEntry, right: ResolvedPlayerEn
 
   return (left.player.displayName ?? left.player.name).localeCompare(
     right.player.displayName ?? right.player.name,
-    "en",
+    "en"
   );
 }
 
 function resolveTeamBucket(
   fixture: FixtureWithDetails,
-  teamId: number | null,
+  teamId: number | null
 ): { teamBucket: "home" | "away" | "unknown"; teamName: string | null } {
   if (teamId !== null && fixture.homeTeamId === teamId) {
     return { teamBucket: "home", teamName: fixture.homeTeam?.name ?? "Home" };
@@ -1386,15 +1446,16 @@ function resolveTeamBucket(
 function resolveMembershipTeamId(
   memberships: SquadMembershipLite[],
   fixture: FixtureWithDetails,
-  playerId: number,
+  playerId: number
 ): number | null {
   const fixtureDate = fixture.kickoffAt ?? new Date();
-  const membership = memberships.find((item) =>
-    item.playerId === playerId &&
-    item.seasonId === fixture.seasonId &&
-    (item.teamId === fixture.homeTeamId || item.teamId === fixture.awayTeamId) &&
-    item.from <= fixtureDate &&
-    (item.to === null || item.to >= fixtureDate),
+  const membership = memberships.find(
+    (item) =>
+      item.playerId === playerId &&
+      item.seasonId === fixture.seasonId &&
+      (item.teamId === fixture.homeTeamId || item.teamId === fixture.awayTeamId) &&
+      item.from <= fixtureDate &&
+      (item.to === null || item.to >= fixtureDate)
   );
 
   return membership?.teamId ?? null;
@@ -1404,10 +1465,10 @@ function prepareFixture(
   fixture: FixtureWithDetails,
   statTypeMap: Map<number, StatTypeInfo>,
   squadMemberships: SquadMembershipLite[],
-  stateMap: Map<number, FixtureStateInfo>,
+  stateMap: Map<number, FixtureStateInfo>
 ): PreparedFixtureReport {
   const lineupByPlayerId = new Map<number, LineupWithPlayer>(
-    fixture.lineups.map((lineup) => [lineup.playerId, lineup]),
+    fixture.lineups.map((lineup) => [lineup.playerId, lineup])
   );
   const statsByPlayerId = new Map<number, PlayerStatWithPlayer[]>();
   const eventsByPlayerId = new Map<number, EventWithPlayer[]>();
@@ -1464,7 +1525,11 @@ function prepareFixture(
       if (role === "BCH") acc.benchOnly += 1;
       if (position.usedFallback) acc.fallbackPositionCount += 1;
       if (position.label === "No position") acc.unresolvedPositionCount += 1;
-      if (!playerEntry.player.country || !playerEntry.player.dateOfBirth || !playerEntry.player.displayName) {
+      if (
+        !playerEntry.player.country ||
+        !playerEntry.player.dateOfBirth ||
+        !playerEntry.player.displayName
+      ) {
         acc.missingBioCount += 1;
       }
       if (playerEntry.stats.length === 0) acc.withoutStatsCount += 1;
@@ -1482,10 +1547,10 @@ function prepareFixture(
       missingBioCount: 0,
       withoutStatsCount: 0,
       unresolvedTeamCount: 0,
-    },
+    }
   );
 
-  const resolvedState = fixture.stateId ? stateMap.get(fixture.stateId) ?? null : null;
+  const resolvedState = fixture.stateId ? (stateMap.get(fixture.stateId) ?? null) : null;
   const stateLabel = resolvedState?.state ?? resolvedState?.name ?? "No state";
 
   return {
@@ -1523,17 +1588,21 @@ function buildGlobalQuality(reports: PreparedFixtureReport[]): GlobalQuality {
       withoutStatsCount: 0,
       unresolvedTeamCount: 0,
       fixturesWithoutGroup: 0,
-    },
+    }
   );
 }
 
 function printQualityBox(globalQuality: GlobalQuality): void {
-  printBox("📊 Quick Overview", [
-    `👥 Players ${globalQuality.playersTotal} | 🧱 Starters ${globalQuality.starters} | 🔁 Substitutes ${globalQuality.substitutes} | 🪑 Bench ${globalQuality.benchOnly}`,
-    `🧭 Position inferred ${globalQuality.fallbackPositionCount} | ❓ Position missing ${globalQuality.unresolvedPositionCount}`,
-    `🧬 Incomplete profiles ${globalQuality.missingBioCount} | 📉 No stats ${globalQuality.withoutStatsCount} | 🚫 Unresolved teams ${globalQuality.unresolvedTeamCount}`,
-    `🗂 Fixtures without groupId ${globalQuality.fixturesWithoutGroup} (may be normal if competition uses stage only)`,
-  ], ANSI.purple);
+  printBox(
+    "📊 Quick Overview",
+    [
+      `👥 Players ${globalQuality.playersTotal} | 🧱 Starters ${globalQuality.starters} | 🔁 Substitutes ${globalQuality.substitutes} | 🪑 Bench ${globalQuality.benchOnly}`,
+      `🧭 Position inferred ${globalQuality.fallbackPositionCount} | ❓ Position missing ${globalQuality.unresolvedPositionCount}`,
+      `🧬 Incomplete profiles ${globalQuality.missingBioCount} | 📉 No stats ${globalQuality.withoutStatsCount} | 🚫 Unresolved teams ${globalQuality.unresolvedTeamCount}`,
+      `🗂 Fixtures without groupId ${globalQuality.fixturesWithoutGroup} (may be normal if competition uses stage only)`,
+    ],
+    ANSI.purple
+  );
   console.log("");
 }
 
@@ -1559,7 +1628,10 @@ function teamNameColor(kind: "home" | "away" | "unknown"): string {
   }
 }
 
-function formatAverageRating(players: ResolvedPlayerEntry[], statTypeMap: Map<number, StatTypeInfo>): string {
+function formatAverageRating(
+  players: ResolvedPlayerEntry[],
+  statTypeMap: Map<number, StatTypeInfo>
+): string {
   const ratings = players
     .map((player) => Number(buildPlayerSummary(player, statTypeMap).rating))
     .filter((value) => Number.isFinite(value));
@@ -1573,7 +1645,7 @@ function printPlayerCard(
   entry: ResolvedPlayerEntry,
   index: number,
   statTypeMap: Map<number, StatTypeInfo>,
-  kind: "home" | "away" | "unknown",
+  kind: "home" | "away" | "unknown"
 ): void {
   const accent = accentForTeamKind(kind);
   const contentWidth = Math.max(72, REPORT_WIDTH - 8);
@@ -1581,20 +1653,31 @@ function printPlayerCard(
   const position = resolvePositionLabel(entry);
   const role = resolveRole(entry, summary.statMap);
   const name = truncate(entry.player.displayName ?? entry.player.name, 34);
-  const positionColor = position.label === "Goalkeeper"
-    ? ANSI.cyan
-    : position.label.includes("Back") || position.label === "Centre-Back" || position.label === "Defender"
-      ? ANSI.blue
-      : position.label.includes("Midfield") || position.label === "Midfielder" || position.label === "Central Mid." || position.label === "Playmaker" || position.label === "Second Str."
-        ? ANSI.yellow
-        : position.label === "No position"
-          ? ANSI.red
-          : ANSI.magenta;
+  const positionColor =
+    position.label === "Goalkeeper"
+      ? ANSI.cyan
+      : position.label.includes("Back") ||
+          position.label === "Centre-Back" ||
+          position.label === "Defender"
+        ? ANSI.blue
+        : position.label.includes("Midfield") ||
+            position.label === "Midfielder" ||
+            position.label === "Central Mid." ||
+            position.label === "Playmaker" ||
+            position.label === "Second Str."
+          ? ANSI.yellow
+          : position.label === "No position"
+            ? ANSI.red
+            : ANSI.magenta;
 
   const headerLines = packInlineItems(
     [
       color(`${String(index + 1).padStart(2, "0")}.`, ANSI.gray),
-      color(entry.lineup?.jerseyNumber ? `#${entry.lineup.jerseyNumber}` : "#-", ANSI.bold, ANSI.white),
+      color(
+        entry.lineup?.jerseyNumber ? `#${entry.lineup.jerseyNumber}` : "#-",
+        ANSI.bold,
+        ANSI.white
+      ),
       color(name, ANSI.bold, ANSI.white),
       summary.captain ? badge("C", ANSI.black, ANSI.bgYellow) : null,
       roleBadge(role),
@@ -1602,13 +1685,17 @@ function printPlayerCard(
       ratingBadge(summary.rating),
     ].filter((value): value is string => Boolean(value)),
     contentWidth,
-    color("  ", ANSI.gray),
+    color("  ", ANSI.gray)
   );
 
   const lines: string[] = [
     ...headerLines,
     ...buildLabeledItemLines("👤 Profile", buildProfileItems(entry), contentWidth),
-    ...buildLabeledItemLines("📌 Highlights", buildSummaryMetricItems(summary.statMap), contentWidth),
+    ...buildLabeledItemLines(
+      "📌 Highlights",
+      buildSummaryMetricItems(summary.statMap),
+      contentWidth
+    ),
     ...buildLabeledItemLines("🧭 Context", buildContextItems(entry, position), contentWidth),
     ...buildLabeledTextLines("🎬 Events", summarizeEvents(entry.events), contentWidth),
   ];
@@ -1628,7 +1715,7 @@ function printTeamSection(
   title: string,
   players: ResolvedPlayerEntry[],
   statTypeMap: Map<number, StatTypeInfo>,
-  view: ReportView,
+  view: ReportView
 ): void {
   const accent = accentForTeamKind(kind);
   const highlight = teamNameColor(kind);
@@ -1653,7 +1740,7 @@ function printTeamSection(
       `🪑 ${bench} solo banco`,
       `⭐ Rating medio ${averageRating}`,
     ],
-    REPORT_WIDTH - 4,
+    REPORT_WIDTH - 4
   );
   summaryLines.forEach((line) => console.log(`  ${line}`));
   console.log("");
@@ -1678,21 +1765,31 @@ function printTeamSection(
   });
 
   const teamHasCompleteStats = teamRows.some((row) => hasCompleteMatchStats(row.summary.statMap));
-  const teamHasPartialOnlyStats = !teamHasCompleteStats && teamRows.some((row) => row.summary.stats.length > 0);
+  const teamHasPartialOnlyStats =
+    !teamHasCompleteStats && teamRows.some((row) => row.summary.stats.length > 0);
 
-  const statKeys = [...new Set(
-    teamRows.flatMap((row) =>
-      row.summary.stats
-        .filter((stat) => !BASE_TABLE_STAT_KEYS.has(stat.key))
-        .filter((stat) => !COMPACT_HIDDEN_META_KEYS.has(stat.key))
-        .filter((stat) => teamHasCompleteStats || !PARTIAL_STATS_NOISE_KEYS.has(stat.key))
-        .map((stat) => stat.key)
+  const statKeys = [
+    ...new Set(
+      teamRows.flatMap((row) =>
+        row.summary.stats
+          .filter((stat) => !BASE_TABLE_STAT_KEYS.has(stat.key))
+          .filter((stat) => !COMPACT_HIDDEN_META_KEYS.has(stat.key))
+          .filter((stat) => teamHasCompleteStats || !PARTIAL_STATS_NOISE_KEYS.has(stat.key))
+          .map((stat) => stat.key)
+      )
     ),
-  )].sort(sortStatKeys);
+  ].sort(sortStatKeys);
 
-  console.log(color(`  📋 ${view === "full" ? "Player Summary" : "Players"}`, ANSI.bold, highlight));
+  console.log(
+    color(`  📋 ${view === "full" ? "Player Summary" : "Players"}`, ANSI.bold, highlight)
+  );
   if (teamHasPartialOnlyStats) {
-    console.log(color("  ⚠️ Partial stats: only ratings/basic data available; hiding detailed columns until full stats arrive.", ANSI.yellow));
+    console.log(
+      color(
+        "  ⚠️ Partial stats: only ratings/basic data available; hiding detailed columns until full stats arrive.",
+        ANSI.yellow
+      )
+    );
   }
   const legendLines = packInlineItems(buildColumnLegend(statKeys), REPORT_WIDTH - 4);
   legendLines.forEach((line) => console.log(color(`  ℹ ${line}`, ANSI.dim)));
@@ -1717,7 +1814,7 @@ function printTeamSection(
         const width = Math.max(
           visibleLength(header),
           ...teamRows.map((row) => visibleLength(getStatValue(row.summary.statMap, key))),
-          1,
+          1
         );
 
         return {
@@ -1730,7 +1827,14 @@ function printTeamSection(
     teamRows.map((row, index) => [
       color(String(index + 1).padStart(2, "0"), ANSI.gray),
       row.entry.lineup?.jerseyNumber ? `#${row.entry.lineup.jerseyNumber}` : "-",
-      color(truncate(`${row.entry.player.displayName ?? row.entry.player.name}${row.summary.captain ? " (C)" : ""}`, 17), ANSI.bold, ANSI.white),
+      color(
+        truncate(
+          `${row.entry.player.displayName ?? row.entry.player.name}${row.summary.captain ? " (C)" : ""}`,
+          17
+        ),
+        ANSI.bold,
+        ANSI.white
+      ),
       roleBadge(row.role),
       color(truncate(formatCompactPositionLabel(row.position.label), 10), ANSI.white),
       row.summary.minutes,
@@ -1742,7 +1846,7 @@ function printTeamSection(
       ...statKeys.map((key) => getStatValue(row.summary.statMap, key)),
     ]),
     accent,
-    { cellPadding: 0 },
+    { cellPadding: 0 }
   );
 
   if (view === "full") {
@@ -1762,12 +1866,7 @@ function printTeamSection(
 }
 
 function normalizeFixtureStateText(state: FixtureStateInfo | null): string {
-  return [
-    state?.state,
-    state?.name,
-    state?.shortName,
-    state?.developerName,
-  ]
+  return [state?.state, state?.name, state?.shortName, state?.developerName]
     .filter((value): value is string => Boolean(value))
     .join(" ")
     .toLowerCase();
@@ -1780,14 +1879,35 @@ function fixtureHasKeyword(text: string, keywords: string[]): boolean {
 function buildFixtureDataNotice(
   fixture: FixtureWithDetails,
   stateLabel: string,
-  resolvedState: FixtureStateInfo | null,
+  resolvedState: FixtureStateInfo | null
 ): string[] {
-  const hasAnyDetailFeed = fixture.lineups.length > 0 || fixture.playerStats.length > 0 || fixture.events.length > 0 || fixture.teamStats.length > 0;
-  const hasMatchBasics = fixture.homeScore !== null || fixture.awayScore !== null || (fixture.stateId !== null && fixture.stateId !== 1);
+  const hasAnyDetailFeed =
+    fixture.lineups.length > 0 ||
+    fixture.playerStats.length > 0 ||
+    fixture.events.length > 0 ||
+    fixture.teamStats.length > 0;
+  const hasMatchBasics =
+    fixture.homeScore !== null ||
+    fixture.awayScore !== null ||
+    (fixture.stateId !== null && fixture.stateId !== 1);
   const stateText = normalizeFixtureStateText(resolvedState);
   const kickoffInFuture = fixture.kickoffAt ? fixture.kickoffAt.getTime() > Date.now() : false;
-  const isNotStartedLike = fixtureHasKeyword(stateText, ["not started", "pending", "tba", "to be announced", "ns"]);
-  const isDelayedLike = fixtureHasKeyword(stateText, ["postponed", "suspended", "delayed", "cancelled", "abandoned", "walk over", "awarded"]);
+  const isNotStartedLike = fixtureHasKeyword(stateText, [
+    "not started",
+    "pending",
+    "tba",
+    "to be announced",
+    "ns",
+  ]);
+  const isDelayedLike = fixtureHasKeyword(stateText, [
+    "postponed",
+    "suspended",
+    "delayed",
+    "cancelled",
+    "abandoned",
+    "walk over",
+    "awarded",
+  ]);
 
   if (isNotStartedLike) {
     if (kickoffInFuture) {
@@ -1828,7 +1948,7 @@ function printFixtureReport(
   statTypeMap: Map<number, StatTypeInfo>,
   fixtureIndex: number,
   totalFixtures: number,
-  view: ReportView,
+  view: ReportView
 ): void {
   const { fixture, players, stateLabel, resolvedState, quality } = report;
   const homePlayers = players.filter((player) => player.teamBucket === "home");
@@ -1846,7 +1966,7 @@ function printFixtureReport(
         `🧱 ${fixture.stage?.name ?? "No stage"}`,
       ],
       REPORT_WIDTH - 4,
-      color("  |  ", ANSI.gray),
+      color("  |  ", ANSI.gray)
     ),
     ...packInlineItems(
       [
@@ -1855,7 +1975,7 @@ function printFixtureReport(
         `🆔 ${fixture.id} / ${fixture.sportmonksId}`,
       ],
       REPORT_WIDTH - 4,
-      color("  |  ", ANSI.gray),
+      color("  |  ", ANSI.gray)
     ),
     ...packInlineItems(
       [
@@ -1866,7 +1986,7 @@ function printFixtureReport(
         `🧬 Incomplete bio ${quality.missingBioCount}`,
       ],
       REPORT_WIDTH - 4,
-      color("  |  ", ANSI.gray),
+      color("  |  ", ANSI.gray)
     ),
     ...packInlineItems(
       [
@@ -1876,7 +1996,7 @@ function printFixtureReport(
         `📊 T.Stats ${fixture.teamStats.length}`,
       ],
       REPORT_WIDTH - 4,
-      color("  |  ", ANSI.gray),
+      color("  |  ", ANSI.gray)
     ),
   ];
 
@@ -1919,16 +2039,17 @@ function printFixtureReport(
 
 export async function reportFixturePlayerDetails(
   deps: ReportDependencies,
-  rawOptions?: Partial<ReportOptions>,
+  rawOptions?: Partial<ReportOptions>
 ): Promise<void> {
-  const options: ReportOptions = rawOptions?.season && rawOptions?.group && rawOptions?.jornada
-    ? {
-        season: rawOptions.season,
-        group: rawOptions.group,
-        jornada: rawOptions.jornada,
-        view: rawOptions.view === "full" ? "full" : "compact",
-      }
-    : parseArgs(process.argv.slice(3));
+  const options: ReportOptions =
+    rawOptions?.season && rawOptions?.group && rawOptions?.jornada
+      ? {
+          season: rawOptions.season,
+          group: rawOptions.group,
+          jornada: rawOptions.jornada,
+          view: rawOptions.view === "full" ? "full" : "compact",
+        }
+      : parseArgs(process.argv.slice(3));
 
   const { db } = deps;
 
@@ -1951,7 +2072,7 @@ export async function reportFixturePlayerDetails(
       name: `${item.name} ${item.league.name}`,
     })),
     options.season,
-    "season",
+    "season"
   );
 
   const seasonRecord = seasons.find((item) => item.id === season.id);
@@ -1959,30 +2080,36 @@ export async function reportFixturePlayerDetails(
     throw new Error(`Could not load resolved season with ID ${season.id}.`);
   }
 
-  const groups: GroupScopeCandidate[] = seasonRecord.stages.flatMap((stage): GroupScopeCandidate[] => {
-    if (stage.groups.length === 0) {
-      return [{
-        id: stage.id,
-        sportmonksId: stage.sportmonksId,
-        name: stage.name,
+  const groups: GroupScopeCandidate[] = seasonRecord.stages.flatMap(
+    (stage): GroupScopeCandidate[] => {
+      if (stage.groups.length === 0) {
+        return [
+          {
+            id: stage.id,
+            sportmonksId: stage.sportmonksId,
+            name: stage.name,
+            stageId: stage.id,
+            stageName: stage.name,
+            actualGroupId: null,
+          },
+        ];
+      }
+
+      return stage.groups.map((group) => ({
+        id: group.id,
+        sportmonksId: group.sportmonksId,
+        name: group.name ?? stage.name,
         stageId: stage.id,
         stageName: stage.name,
-        actualGroupId: null,
-      }];
+        actualGroupId: group.id,
+      }));
     }
-
-    return stage.groups.map((group) => ({
-      id: group.id,
-      sportmonksId: group.sportmonksId,
-      name: group.name ?? stage.name,
-      stageId: stage.id,
-      stageName: stage.name,
-      actualGroupId: group.id,
-    }));
-  });
+  );
 
   const matchedGroup = pickBestCandidate(groups, options.group, "group");
-  const matchedStage = seasonRecord.stages.find((stage) => stage.id === (matchedGroup as GroupScopeCandidate).stageId);
+  const matchedStage = seasonRecord.stages.find(
+    (stage) => stage.id === (matchedGroup as GroupScopeCandidate).stageId
+  );
   if (!matchedStage) {
     throw new Error(`Could not resolve stage for group ${matchedGroup.name ?? matchedGroup.id}.`);
   }
@@ -2046,57 +2173,75 @@ export async function reportFixturePlayerDetails(
 
   if (fixtures.length === 0) {
     throw new Error(
-      `No matches found for season="${seasonRecord.name}", group="${matchedGroup.name ?? matchedStage.name}" and round="${matchedRound.name}".`,
+      `No matches found for season="${seasonRecord.name}", group="${matchedGroup.name ?? matchedStage.name}" and round="${matchedRound.name}".`
     );
   }
 
-  const statTypeIds = [...new Set(
-    fixtures.flatMap((fixture) => fixture.playerStats.map((stat) => stat.typeId)).filter(
-      (id): id is number => id !== null,
+  const statTypeIds = [
+    ...new Set(
+      fixtures
+        .flatMap((fixture) => fixture.playerStats.map((stat) => stat.typeId))
+        .filter((id): id is number => id !== null)
     ),
-  )];
-  const fixtureStateIds = [...new Set(
-    fixtures.map((fixture) => fixture.stateId).filter((id): id is number => id !== null),
-  )];
-  const playerIds = [...new Set(fixtures.flatMap((fixture) => [
-    ...fixture.lineups.map((lineup) => lineup.playerId),
-    ...fixture.playerStats.map((stat) => stat.playerId),
-    ...fixture.events.map((event) => event.playerId).filter((id): id is number => id !== null),
-  ]))];
-  const teamIds = [...new Set(fixtures.flatMap((fixture) => [fixture.homeTeamId, fixture.awayTeamId]).filter(
-    (id): id is number => id !== null,
-  ))];
+  ];
+  const fixtureStateIds = [
+    ...new Set(
+      fixtures.map((fixture) => fixture.stateId).filter((id): id is number => id !== null)
+    ),
+  ];
+  const playerIds = [
+    ...new Set(
+      fixtures.flatMap((fixture) => [
+        ...fixture.lineups.map((lineup) => lineup.playerId),
+        ...fixture.playerStats.map((stat) => stat.playerId),
+        ...fixture.events.map((event) => event.playerId).filter((id): id is number => id !== null),
+      ])
+    ),
+  ];
+  const teamIds = [
+    ...new Set(
+      fixtures
+        .flatMap((fixture) => [fixture.homeTeamId, fixture.awayTeamId])
+        .filter((id): id is number => id !== null)
+    ),
+  ];
 
-  const statTypes = statTypeIds.length > 0
-    ? await db.statType.findMany({ where: { id: { in: statTypeIds } } })
-    : [];
-  const states = fixtureStateIds.length > 0
-    ? await db.fixtureState.findMany({ where: { id: { in: fixtureStateIds } } })
-    : [];
-  const squadMemberships = playerIds.length > 0 && teamIds.length > 0
-    ? await db.squadMembership.findMany({
-        where: {
-          seasonId: seasonRecord.id,
-          playerId: { in: playerIds },
-          teamId: { in: teamIds },
-        },
-        select: {
-          playerId: true,
-          teamId: true,
-          seasonId: true,
-          from: true,
-          to: true,
-        },
-        orderBy: { from: "desc" },
-      })
-    : [];
+  const statTypes =
+    statTypeIds.length > 0
+      ? await db.statType.findMany({ where: { id: { in: statTypeIds } } })
+      : [];
+  const states =
+    fixtureStateIds.length > 0
+      ? await db.fixtureState.findMany({ where: { id: { in: fixtureStateIds } } })
+      : [];
+  const squadMemberships =
+    playerIds.length > 0 && teamIds.length > 0
+      ? await db.squadMembership.findMany({
+          where: {
+            seasonId: seasonRecord.id,
+            playerId: { in: playerIds },
+            teamId: { in: teamIds },
+          },
+          select: {
+            playerId: true,
+            teamId: true,
+            seasonId: true,
+            from: true,
+            to: true,
+          },
+          orderBy: { from: "desc" },
+        })
+      : [];
 
   const statTypeMap = new Map<number, StatTypeInfo>(
-    statTypes.map((type) => [type.id, {
-      name: type.name,
-      developerName: type.developerName,
-      statGroup: type.statGroup,
-    }]),
+    statTypes.map((type) => [
+      type.id,
+      {
+        name: type.name,
+        developerName: type.developerName,
+        statGroup: type.statGroup,
+      },
+    ])
   );
   const stateMap = new Map(states.map((state) => [state.id, state]));
 
@@ -2105,11 +2250,15 @@ export async function reportFixturePlayerDetails(
   );
   const globalQuality = buildGlobalQuality(preparedReports);
 
-  printBox("⚽ Professional Matchday Report", [
-    `🏆 Season ${seasonRecord.name} (${seasonRecord.league.name})`,
-    `🧱 Group/Stage ${matchedGroup.name ?? "No name"}  |  Real stage ${matchedStage.name}  |  🏁 Round ${matchedRound.name}`,
-    `📦 Fixtures ${preparedReports.length}  |  👁 View ${options.view.toUpperCase()}  |  🔎 --season="${options.season}" --group="${options.group}" --jornada="${options.jornada}"`,
-  ], ANSI.orange);
+  printBox(
+    "⚽ Professional Matchday Report",
+    [
+      `🏆 Season ${seasonRecord.name} (${seasonRecord.league.name})`,
+      `🧱 Group/Stage ${matchedGroup.name ?? "No name"}  |  Real stage ${matchedStage.name}  |  🏁 Round ${matchedRound.name}`,
+      `📦 Fixtures ${preparedReports.length}  |  👁 View ${options.view.toUpperCase()}  |  🔎 --season="${options.season}" --group="${options.group}" --jornada="${options.jornada}"`,
+    ],
+    ANSI.orange
+  );
   console.log("");
 
   printQualityBox(globalQuality);

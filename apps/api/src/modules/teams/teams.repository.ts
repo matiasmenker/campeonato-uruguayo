@@ -2,9 +2,7 @@ import type { Team, Prisma } from "db";
 import { getPrisma } from "../../database/index.js";
 import type { TeamsQuery } from "./teams.contracts.js";
 
-export async function findTeams(
-  query: TeamsQuery,
-): Promise<{ teams: Team[]; totalItems: number }> {
+export async function findTeams(query: TeamsQuery): Promise<{ teams: Team[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.TeamWhereInput = {};
 

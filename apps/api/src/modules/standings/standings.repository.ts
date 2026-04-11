@@ -15,7 +15,7 @@ const includeRelations = {
 } as const;
 
 export async function findStandings(
-  query: StandingsQuery,
+  query: StandingsQuery
 ): Promise<{ standings: StandingWithRelations[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.StandingWhereInput = {};
@@ -38,9 +38,7 @@ export async function findStandings(
   return { standings, totalItems };
 }
 
-export async function findStandingById(
-  id: number,
-): Promise<StandingWithRelations | null> {
+export async function findStandingById(id: number): Promise<StandingWithRelations | null> {
   const prisma = getPrisma();
   return prisma.standing.findUnique({
     where: { id },

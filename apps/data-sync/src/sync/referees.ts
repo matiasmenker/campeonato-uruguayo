@@ -1,7 +1,10 @@
 import type { RefereeDto } from "sportmonks-client";
 import type { SyncDependencies, SyncOptions } from "./shared.js";
 
-const syncReferees = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
+const syncReferees = async (
+  { client, db, log }: SyncDependencies,
+  options?: SyncOptions
+): Promise<void> => {
   log.info("=== REFEREES START ===");
   log.info("🚀 Syncing Referees...");
 
@@ -18,7 +21,9 @@ const syncReferees = async ({ client, db, log }: SyncDependencies, options?: Syn
   const seasons = await db.season.findMany({
     where: {
       leagueId: uruguayLeague.id,
-      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+      ...(options?.seasonSportmonksIds
+        ? { sportmonksId: { in: options.seasonSportmonksIds } }
+        : {}),
     },
     select: { sportmonksId: true },
     orderBy: { endingAt: "desc" },
@@ -41,9 +46,12 @@ const syncReferees = async ({ client, db, log }: SyncDependencies, options?: Syn
     const seasonProgress = i + 1;
     log.info(`🔎 Processing season ${seasonProgress}/${seasons.length}: ${season.sportmonksId}`);
 
-    const referees = await client.getAllPages<RefereeDto>(`/referees/seasons/${season.sportmonksId}`, {
-      perPage: 50,
-    });
+    const referees = await client.getAllPages<RefereeDto>(
+      `/referees/seasons/${season.sportmonksId}`,
+      {
+        perPage: 50,
+      }
+    );
     log.info(`📥 Referees fetched from API (${season.sportmonksId}): ${referees.length}`);
 
     for (let j = 0; j < referees.length; j++) {
@@ -76,7 +84,9 @@ const syncReferees = async ({ client, db, log }: SyncDependencies, options?: Syn
 
       const refereeProgress = j + 1;
       if (refereeProgress % 25 === 0 || refereeProgress === referees.length) {
-        log.info(`💾 Season progress (${season.sportmonksId}): ${refereeProgress}/${referees.length} referees`);
+        log.info(
+          `💾 Season progress (${season.sportmonksId}): ${refereeProgress}/${referees.length} referees`
+        );
       }
     }
 
@@ -93,4 +103,3 @@ const syncReferees = async ({ client, db, log }: SyncDependencies, options?: Syn
 };
 
 export { syncReferees };
-

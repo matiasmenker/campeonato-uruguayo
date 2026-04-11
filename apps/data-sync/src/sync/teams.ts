@@ -89,7 +89,9 @@ const syncTeams = async ({ client, db, log }: SyncDependencies): Promise<void> =
 
       const teamProgress = j + 1;
       if (teamProgress % 25 === 0 || teamProgress === seasonTeams.length) {
-        log.info(`💾 Season progress (${season.sportmonksId}): ${teamProgress}/${seasonTeams.length} teams`);
+        log.info(
+          `💾 Season progress (${season.sportmonksId}): ${teamProgress}/${seasonTeams.length} teams`
+        );
       }
     }
 

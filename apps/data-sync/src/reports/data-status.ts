@@ -32,7 +32,10 @@ interface ExternalLineups {
 }
 
 const normalize = (name: string): string =>
-  name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 
 function delayMs(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -78,8 +81,14 @@ function badge(text: string, bg: string): string {
   return `${BOLD}${bg}${WHITE} ${text} ${RESET}`;
 }
 
-function printTable(headers: string[], rows: string[][], colorFn?: (cell: string, col: number) => string): void {
-  const colWidths = headers.map((h, i) => Math.max(h.length, ...rows.map((r) => r[i]?.length ?? 0)));
+function printTable(
+  headers: string[],
+  rows: string[][],
+  colorFn?: (cell: string, col: number) => string
+): void {
+  const colWidths = headers.map((h, i) =>
+    Math.max(h.length, ...rows.map((r) => r[i]?.length ?? 0))
+  );
   const sep = colWidths.map((w) => "─".repeat(w + 2)).join("┼");
 
   console.log(`┌${sep.replace(/┼/g, "┬")}┐`);
@@ -108,9 +117,15 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
   }
 
   console.log();
-  console.log(`${BOLD}${CYAN}╔═══════════════════════════════════════════════════════════════════════════╗${RESET}`);
-  console.log(`${BOLD}${CYAN}║  📊 DATA STATUS — Season ${seasonArg}, ${groupArg}, Jornada ${jornadaArg.padEnd(25)}║${RESET}`);
-  console.log(`${BOLD}${CYAN}╚═══════════════════════════════════════════════════════════════════════════╝${RESET}`);
+  console.log(
+    `${BOLD}${CYAN}╔═══════════════════════════════════════════════════════════════════════════╗${RESET}`
+  );
+  console.log(
+    `${BOLD}${CYAN}║  📊 DATA STATUS — Season ${seasonArg}, ${groupArg}, Jornada ${jornadaArg.padEnd(25)}║${RESET}`
+  );
+  console.log(
+    `${BOLD}${CYAN}╚═══════════════════════════════════════════════════════════════════════════╝${RESET}`
+  );
   console.log();
 
   const season = await db.season.findFirst({
@@ -151,18 +166,26 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
   });
 
   if (fixtures.length === 0) {
-    console.log(`${RED}No finished fixtures found for ${seasonArg}, ${groupArg}, jornada ${jornadaArg}${RESET}`);
+    console.log(
+      `${RED}No finished fixtures found for ${seasonArg}, ${groupArg}, jornada ${jornadaArg}${RESET}`
+    );
     return;
   }
 
-  console.log(`${BOLD}${WHITE}📋 Finished fixtures in DB: ${fixtures.length} (${stage.name})${RESET}`);
+  console.log(
+    `${BOLD}${WHITE}📋 Finished fixtures in DB: ${fixtures.length} (${stage.name})${RESET}`
+  );
   console.log();
 
   console.log(`${DIM}🔵 Fetching from SportMonks API...${RESET}`);
   const sportmonksIds = fixtures.map((f) => f.sportmonksId);
 
   type ApiFixture = FixtureDto & {
-    lineups?: Array<{ player_id?: number; player?: { id: number }; details?: Array<{ type_id?: number }> }>;
+    lineups?: Array<{
+      player_id?: number;
+      player?: { id: number };
+      details?: Array<{ type_id?: number }>;
+    }>;
     statistics?: Array<{ type_id?: number; player_id?: number; player?: { id: number } }>;
     events?: Array<{ id?: number }>;
   };
@@ -171,11 +194,12 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
   let sportMonksError: string | null = null;
 
   try {
-    const raw = await client.get<ApiFixture[]>(
-      `/fixtures/multi/${sportmonksIds.join(",")}`,
-      { include: "events;lineups;lineups.details;statistics" },
-    );
-    const asArray = Array.isArray(raw) ? raw : (raw as unknown as { data: ApiFixture[] })?.data ?? [];
+    const raw = await client.get<ApiFixture[]>(`/fixtures/multi/${sportmonksIds.join(",")}`, {
+      include: "events;lineups;lineups.details;statistics",
+    });
+    const asArray = Array.isArray(raw)
+      ? raw
+      : ((raw as unknown as { data: ApiFixture[] })?.data ?? []);
     apiFixtures = asArray;
     console.log(`${GREEN}   ✅ SportMonks returned ${apiFixtures.length} fixtures${RESET}`);
   } catch (error) {
@@ -194,14 +218,15 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
   try {
     browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({
-      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
     });
     page = await context.newPage();
     await page.goto(`${EXTERNAL_BASE_URL}/`, { waitUntil: "domcontentloaded", timeout: 60000 });
 
     const seasonData = await fetchJson<{ seasons: { id: number; year: string }[] }>(
       page,
-      `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/seasons`,
+      `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/seasons`
     );
     const externalSeasonId = seasonData?.seasons?.find((s) => s.year === seasonArg)?.id ?? null;
 
@@ -209,13 +234,16 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
       const lower = (stage.name ?? "").toLowerCase();
       let prefix: string | null = null;
       for (const [key, val] of Object.entries(STAGE_TO_PREFIX)) {
-        if (lower.includes(key)) { prefix = val; break; }
+        if (lower.includes(key)) {
+          prefix = val;
+          break;
+        }
       }
 
       if (prefix) {
         const data = await fetchJson<{ events: ExternalEvent[] }>(
           page,
-          `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/season/${externalSeasonId}/events/round/${jornadaArg}/prefix/${prefix}`,
+          `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/season/${externalSeasonId}/events/round/${jornadaArg}/prefix/${prefix}`
         );
         externalEvents = data?.events ?? [];
         console.log(`${GREEN}   ✅ SoFaScore returned ${externalEvents.length} events${RESET}`);
@@ -237,7 +265,13 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
   interface FixtureStatus {
     label: string;
     db: { totalStats: number; source: string; complete: boolean; events: number; lineups: number };
-    sportMonks: { playerStats: number; events: number; lineups: number; hasDetailedStats: boolean; error: string | null };
+    sportMonks: {
+      playerStats: number;
+      events: number;
+      lineups: number;
+      hasDetailedStats: boolean;
+      error: string | null;
+    };
     sofaScore: { status: string; playersWithStats: number; error: string | null };
     verdict: string;
   }
@@ -252,12 +286,16 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
     const fromSportMonks = fixture.playerStats.filter((s) => s.sportmonksId !== null).length;
     const fromSoFaScore = fixture.playerStats.filter((s) => s.sportmonksId === null).length;
     const hasCompleteStats = COMPLETE_STAT_INDICATORS.every((id) =>
-      fixture.playerStats.some((s) => s.typeId === id),
+      fixture.playerStats.some((s) => s.typeId === id)
     );
     const source =
-      fromSoFaScore > 0 && fromSportMonks === 0 ? "SoFaScore" :
-      fromSportMonks > 0 && fromSoFaScore === 0 ? "SportMonks" :
-      fromSportMonks > 0 && fromSoFaScore > 0 ? "Mixed" : "None";
+      fromSoFaScore > 0 && fromSportMonks === 0
+        ? "SoFaScore"
+        : fromSportMonks > 0 && fromSoFaScore === 0
+          ? "SportMonks"
+          : fromSportMonks > 0 && fromSoFaScore > 0
+            ? "Mixed"
+            : "None";
 
     const apiFixture = apiFixtureById.get(fixture.sportmonksId);
     let smPlayerStats = 0;
@@ -269,7 +307,7 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
     if (apiFixture) {
       const allLineupDetails = (apiFixture.lineups ?? []).flatMap((l) => l.details ?? []);
       const playerStatistics = (apiFixture.statistics ?? []).filter(
-        (s) => s.player_id != null || s.player?.id != null,
+        (s) => s.player_id != null || s.player?.id != null
       );
       smPlayerStats = allLineupDetails.length + playerStatistics.length;
       smEvents = (apiFixture.events ?? []).length;
@@ -295,16 +333,22 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
         const evtHome = normalize(evt.homeTeam.name);
         const evtAway = normalize(evt.awayTeam.name);
         return (
-          (evtHome.includes(normHome.substring(0, 5)) || normHome.includes(evtHome.substring(0, 5))) &&
+          (evtHome.includes(normHome.substring(0, 5)) ||
+            normHome.includes(evtHome.substring(0, 5))) &&
           (evtAway.includes(normAway.substring(0, 5)) || normAway.includes(evtAway.substring(0, 5)))
         );
       });
 
       if (matched) {
-        const lineups = await fetchJson<ExternalLineups>(page, `/api/v1/event/${matched.id}/lineups`);
+        const lineups = await fetchJson<ExternalLineups>(
+          page,
+          `/api/v1/event/${matched.id}/lineups`
+        );
         if (lineups?.home?.players?.length && lineups?.away?.players?.length) {
           const allPlayers = [...lineups.home.players, ...lineups.away.players];
-          const withStats = allPlayers.filter((p) => p.statistics && Object.keys(p.statistics).length > 5);
+          const withStats = allPlayers.filter(
+            (p) => p.statistics && Object.keys(p.statistics).length > 5
+          );
           sfsPlayersWithStats = withStats.length;
           sfsStatus = sfsPlayersWithStats > 0 ? "DETAILED" : "BASIC_ONLY";
         } else {
@@ -330,8 +374,20 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
 
     statuses.push({
       label,
-      db: { totalStats: fixture.playerStats.length, source, complete: hasCompleteStats, events: fixture.events.length, lineups: fixture.lineups.length },
-      sportMonks: { playerStats: smPlayerStats, events: smEvents, lineups: smLineups, hasDetailedStats: smHasDetailed, error: smError },
+      db: {
+        totalStats: fixture.playerStats.length,
+        source,
+        complete: hasCompleteStats,
+        events: fixture.events.length,
+        lineups: fixture.lineups.length,
+      },
+      sportMonks: {
+        playerStats: smPlayerStats,
+        events: smEvents,
+        lineups: smLineups,
+        hasDetailedStats: smHasDetailed,
+        error: smError,
+      },
       sofaScore: { status: sfsStatus, playersWithStats: sfsPlayersWithStats, error: sfsError },
       verdict,
     });
@@ -340,7 +396,17 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
   console.log(`${BOLD}${WHITE}📊 DB vs External Sources Comparison:${RESET}`);
   console.log();
 
-  const headers = ["Match", "DB Stats", "DB Source", "DB OK?", "SM Stats", "SM Detail?", "SFS Stats", "SFS Players", "Verdict"];
+  const headers = [
+    "Match",
+    "DB Stats",
+    "DB Source",
+    "DB OK?",
+    "SM Stats",
+    "SM Detail?",
+    "SFS Stats",
+    "SFS Players",
+    "Verdict",
+  ];
   const rows = statuses.map((s) => [
     s.label,
     String(s.db.totalStats),
@@ -358,7 +424,8 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
   printTable(headers, rows, (cell, col) => {
     const padded = cell.padEnd(colWidths[col]);
     if (col === 3) return cell === "YES" ? `${GREEN}${padded}${RESET}` : `${RED}${padded}${RESET}`;
-    if (col === 5) return cell === "YES" ? `${GREEN}${padded}${RESET}` : `${YELLOW}${padded}${RESET}`;
+    if (col === 5)
+      return cell === "YES" ? `${GREEN}${padded}${RESET}` : `${YELLOW}${padded}${RESET}`;
     if (col === 6) {
       if (cell === "DETAILED") return `${GREEN}${padded}${RESET}`;
       if (cell === "BASIC_ONLY" || cell === "NO_EVENTS") return `${YELLOW}${padded}${RESET}`;
@@ -380,18 +447,30 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
     const icon = s.db.complete ? GREEN + "✅" : RED + "❌";
     console.log();
     console.log(`${icon} ${BOLD}${s.label}${RESET}`);
-    console.log(`   ${CYAN}DB:${RESET}         ${s.db.totalStats} stats (${s.db.source}) | ${s.db.events} events | ${s.db.lineups} lineups | Complete: ${s.db.complete ? "YES" : "NO"}`);
-    console.log(`   ${CYAN}SportMonks:${RESET} ${s.sportMonks.playerStats} stats | ${s.sportMonks.events} events | ${s.sportMonks.lineups} lineups | Detailed: ${s.sportMonks.hasDetailedStats ? "YES" : "NO"}${s.sportMonks.error ? ` | ⚠️ ${s.sportMonks.error}` : ""}`);
-    console.log(`   ${CYAN}SoFaScore:${RESET}  ${s.sofaScore.status} | ${s.sofaScore.playersWithStats} players with stats${s.sofaScore.error ? ` | ⚠️ ${s.sofaScore.error}` : ""}`);
+    console.log(
+      `   ${CYAN}DB:${RESET}         ${s.db.totalStats} stats (${s.db.source}) | ${s.db.events} events | ${s.db.lineups} lineups | Complete: ${s.db.complete ? "YES" : "NO"}`
+    );
+    console.log(
+      `   ${CYAN}SportMonks:${RESET} ${s.sportMonks.playerStats} stats | ${s.sportMonks.events} events | ${s.sportMonks.lineups} lineups | Detailed: ${s.sportMonks.hasDetailedStats ? "YES" : "NO"}${s.sportMonks.error ? ` | ⚠️ ${s.sportMonks.error}` : ""}`
+    );
+    console.log(
+      `   ${CYAN}SoFaScore:${RESET}  ${s.sofaScore.status} | ${s.sofaScore.playersWithStats} players with stats${s.sofaScore.error ? ` | ⚠️ ${s.sofaScore.error}` : ""}`
+    );
 
     if (s.db.complete) {
       console.log(`   ${GREEN}→ No action needed${RESET}`);
     } else if (s.sportMonks.hasDetailedStats && !s.db.complete) {
-      console.log(`   ${YELLOW}→ SportMonks has detailed data. Running sync:daily or sync:fixture-details would fetch it.${RESET}`);
+      console.log(
+        `   ${YELLOW}→ SportMonks has detailed data. Running sync:daily or sync:fixture-details would fetch it.${RESET}`
+      );
     } else if (s.sofaScore.playersWithStats > 0 && !s.db.complete) {
-      console.log(`   ${YELLOW}→ SoFaScore has data. Running sync:fill-stats -- --season=${seasonArg} would fetch it.${RESET}`);
+      console.log(
+        `   ${YELLOW}→ SoFaScore has data. Running sync:fill-stats -- --season=${seasonArg} would fetch it.${RESET}`
+      );
     } else {
-      console.log(`   ${RED}→ No source has detailed data right now. They may not be available yet.${RESET}`);
+      console.log(
+        `   ${RED}→ No source has detailed data right now. They may not be available yet.${RESET}`
+      );
     }
   }
 
@@ -409,7 +488,9 @@ export async function reportDataStatus({ db, client }: ReportDependencies): Prom
   }
   if (sfsReadyCount > 0) {
     console.log(`  ${YELLOW}🔄 Recoverable from SoFaScore:${RESET}    ${sfsReadyCount}`);
-    console.log(`     ${DIM}→ pnpm --filter data-sync sync:fill-stats -- --season=${seasonArg}${RESET}`);
+    console.log(
+      `     ${DIM}→ pnpm --filter data-sync sync:fill-stats -- --season=${seasonArg}${RESET}`
+    );
   }
   if (noDataCount > 0) {
     console.log(`  ${RED}❌ No data in any source:${RESET}  ${noDataCount}`);

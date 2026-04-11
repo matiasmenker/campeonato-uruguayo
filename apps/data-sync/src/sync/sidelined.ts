@@ -47,7 +47,10 @@ const upsertPlayer = async (
   return persistedPlayer.id;
 };
 
-const syncSidelined = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
+const syncSidelined = async (
+  { client, db, log }: SyncDependencies,
+  options?: SyncOptions
+): Promise<void> => {
   log.info("=== SIDELINED START ===");
   log.info("🚀 Syncing Sidelined (Injuries & Suspensions)...");
 
@@ -64,7 +67,9 @@ const syncSidelined = async ({ client, db, log }: SyncDependencies, options?: Sy
   const seasons = await db.season.findMany({
     where: {
       leagueId: uruguayLeague.id,
-      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+      ...(options?.seasonSportmonksIds
+        ? { sportmonksId: { in: options.seasonSportmonksIds } }
+        : {}),
     },
     select: { sportmonksId: true },
     orderBy: { endingAt: "desc" },
@@ -79,7 +84,9 @@ const syncSidelined = async ({ client, db, log }: SyncDependencies, options?: Sy
 
   const playerRows = await db.player.findMany({ select: { id: true, sportmonksId: true } });
   const playerIdBySportmonksId = new Map(
-    playerRows.filter((p) => p.sportmonksId != null).map((player) => [player.sportmonksId as number, player.id])
+    playerRows
+      .filter((p) => p.sportmonksId != null)
+      .map((player) => [player.sportmonksId as number, player.id])
   );
 
   let savedInjuries = 0;
@@ -93,10 +100,13 @@ const syncSidelined = async ({ client, db, log }: SyncDependencies, options?: Sy
     const seasonProgress = i + 1;
     log.info(`🔎 Processing season ${seasonProgress}/${seasons.length}: ${season.sportmonksId}`);
 
-    const teams = await client.getAllPages<TeamWithSidelinedDto>(`/teams/seasons/${season.sportmonksId}`, {
-      perPage: 50,
-      include: "sidelined.player;sidelinedHistory.player",
-    });
+    const teams = await client.getAllPages<TeamWithSidelinedDto>(
+      `/teams/seasons/${season.sportmonksId}`,
+      {
+        perPage: 50,
+        include: "sidelined.player;sidelinedHistory.player",
+      }
+    );
     log.info(`📥 Teams fetched from API (${season.sportmonksId}): ${teams.length}`);
 
     for (let j = 0; j < teams.length; j++) {
@@ -129,7 +139,12 @@ const syncSidelined = async ({ client, db, log }: SyncDependencies, options?: Sy
           continue;
         }
 
-        const localPlayerId = await upsertPlayer(db, playerIdBySportmonksId, row.player, playerSportmonksId);
+        const localPlayerId = await upsertPlayer(
+          db,
+          playerIdBySportmonksId,
+          row.player,
+          playerSportmonksId
+        );
 
         const startDate = toDate(row.start_date ?? null);
         const endDate = toDate(row.end_date ?? null);
@@ -181,7 +196,9 @@ const syncSidelined = async ({ client, db, log }: SyncDependencies, options?: Sy
       }
 
       if (teamProgress % 10 === 0 || teamProgress === teams.length) {
-        log.info(`💾 Season progress (${season.sportmonksId}): ${teamProgress}/${teams.length} teams`);
+        log.info(
+          `💾 Season progress (${season.sportmonksId}): ${teamProgress}/${teams.length} teams`
+        );
       }
     }
 
@@ -191,7 +208,9 @@ const syncSidelined = async ({ client, db, log }: SyncDependencies, options?: Sy
   const totalInjuries = await db.injury.count();
   const totalSuspensions = await db.suspension.count();
   log.info("✅ Sidelined sync summary");
-  log.info(`🟢 Saved (inserted/updated): injuries=${savedInjuries}, suspensions=${savedSuspensions}`);
+  log.info(
+    `🟢 Saved (inserted/updated): injuries=${savedInjuries}, suspensions=${savedSuspensions}`
+  );
   log.info(`🟡 Skipped: ${skippedRows}`);
   log.info(`🟡 Duplicate rows merged: ${duplicateRowsMerged}`);
   if (sampleSkippedRowIds.length > 0) {
@@ -202,4 +221,3 @@ const syncSidelined = async ({ client, db, log }: SyncDependencies, options?: Sy
 };
 
 export { syncSidelined };
-

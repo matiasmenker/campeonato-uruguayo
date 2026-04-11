@@ -6,7 +6,7 @@ import { toStandingContract } from "./standings.mapper.js";
 import { findStandings, findStandingById } from "./standings.repository.js";
 
 export async function listStandings(
-  query: StandingsQuery,
+  query: StandingsQuery
 ): Promise<PaginatedResponse<StandingContract>> {
   const { standings, totalItems } = await findStandings(query);
   return {
@@ -15,9 +15,7 @@ export async function listStandings(
   };
 }
 
-export async function getStanding(
-  id: number,
-): Promise<DetailResponse<StandingContract>> {
+export async function getStanding(id: number): Promise<DetailResponse<StandingContract>> {
   const standing = await findStandingById(id);
   if (!standing) throw new NotFoundError("Standing");
   return { data: toStandingContract(standing) };

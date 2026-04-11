@@ -10,7 +10,10 @@ const firstDate = (...values: Array<string | null | undefined>): Date | null => 
   return null;
 };
 
-const syncSquadMemberships = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
+const syncSquadMemberships = async (
+  { client, db, log }: SyncDependencies,
+  options?: SyncOptions
+): Promise<void> => {
   log.info("=== SQUAD MEMBERSHIPS START ===");
   log.info("🚀 Syncing Squad Memberships...");
 
@@ -24,14 +27,18 @@ const syncSquadMemberships = async ({ client, db, log }: SyncDependencies, optio
   });
 
   if (!uruguayLeague) {
-    log.warn("⚠️  Squad memberships sync skipped: Uruguay league not found. Run sync:leagues first.");
+    log.warn(
+      "⚠️  Squad memberships sync skipped: Uruguay league not found. Run sync:leagues first."
+    );
     return;
   }
 
   const seasons = await db.season.findMany({
     where: {
       leagueId: uruguayLeague.id,
-      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+      ...(options?.seasonSportmonksIds
+        ? { sportmonksId: { in: options.seasonSportmonksIds } }
+        : {}),
     },
     select: { id: true, sportmonksId: true, startingAt: true },
     orderBy: { endingAt: "desc" },
@@ -60,7 +67,9 @@ const syncSquadMemberships = async ({ client, db, log }: SyncDependencies, optio
     for (let j = 0; j < seasonTeams.length; j++) {
       const teamDto = seasonTeams[j];
       const teamProgress = j + 1;
-      log.info(`🔎 Processing team ${teamProgress}/${seasonTeams.length} (season ${season.sportmonksId}): ${teamDto.id}`);
+      log.info(
+        `🔎 Processing team ${teamProgress}/${seasonTeams.length} (season ${season.sportmonksId}): ${teamDto.id}`
+      );
 
       const localTeam = await db.team.upsert({
         where: { sportmonksId: teamDto.id },
@@ -117,11 +126,8 @@ const syncSquadMemberships = async ({ client, db, log }: SyncDependencies, optio
         });
 
         const fromDate =
-          firstDate(
-            squadEntry.from,
-            squadEntry.starting_at,
-            squadEntry.start_date
-          ) ?? season.startingAt;
+          firstDate(squadEntry.from, squadEntry.starting_at, squadEntry.start_date) ??
+          season.startingAt;
         const toDate = firstDate(squadEntry.to, squadEntry.ending_at, squadEntry.end_date);
 
         const isLoan = squadEntry.is_loan ?? false;
@@ -161,7 +167,9 @@ const syncSquadMemberships = async ({ client, db, log }: SyncDependencies, optio
       }
 
       if (teamProgress % 10 === 0 || teamProgress === seasonTeams.length) {
-        log.info(`💾 Season progress (${season.sportmonksId}): ${teamProgress}/${seasonTeams.length} teams`);
+        log.info(
+          `💾 Season progress (${season.sportmonksId}): ${teamProgress}/${seasonTeams.length} teams`
+        );
       }
     }
 

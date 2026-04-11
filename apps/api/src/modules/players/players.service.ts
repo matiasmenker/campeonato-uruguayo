@@ -5,9 +5,7 @@ import type { PlayersQuery, PlayerContract } from "./players.contracts.js";
 import { toPlayerContract } from "./players.mapper.js";
 import { findPlayers, findPlayerById } from "./players.repository.js";
 
-export async function listPlayers(
-  query: PlayersQuery,
-): Promise<PaginatedResponse<PlayerContract>> {
+export async function listPlayers(query: PlayersQuery): Promise<PaginatedResponse<PlayerContract>> {
   const { players, totalItems } = await findPlayers(query);
   return {
     data: players.map(toPlayerContract),
@@ -15,9 +13,7 @@ export async function listPlayers(
   };
 }
 
-export async function getPlayer(
-  id: number,
-): Promise<DetailResponse<PlayerContract>> {
+export async function getPlayer(id: number): Promise<DetailResponse<PlayerContract>> {
   const player = await findPlayerById(id);
   if (!player) throw new NotFoundError("Player");
   return { data: toPlayerContract(player) };

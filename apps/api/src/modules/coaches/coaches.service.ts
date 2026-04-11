@@ -5,9 +5,7 @@ import type { CoachesQuery, CoachContract } from "./coaches.contracts.js";
 import { toCoachContract } from "./coaches.mapper.js";
 import { findCoaches, findCoachById, findCoachesByTeamId } from "./coaches.repository.js";
 
-export async function listCoaches(
-  query: CoachesQuery,
-): Promise<PaginatedResponse<CoachContract>> {
+export async function listCoaches(query: CoachesQuery): Promise<PaginatedResponse<CoachContract>> {
   const { coaches, totalItems } = await findCoaches(query);
 
   return {
@@ -16,18 +14,14 @@ export async function listCoaches(
   };
 }
 
-export async function getCoach(
-  id: number,
-): Promise<DetailResponse<CoachContract>> {
+export async function getCoach(id: number): Promise<DetailResponse<CoachContract>> {
   const coach = await findCoachById(id);
   if (!coach) throw new NotFoundError("Coach");
 
   return { data: toCoachContract(coach) };
 }
 
-export async function listTeamCoaches(
-  teamId: number,
-): Promise<DetailResponse<CoachContract[]>> {
+export async function listTeamCoaches(teamId: number): Promise<DetailResponse<CoachContract[]>> {
   const coaches = await findCoachesByTeamId(teamId);
 
   return {

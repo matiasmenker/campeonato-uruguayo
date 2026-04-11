@@ -1,11 +1,6 @@
 import type { City, Venue, Country } from "db";
 import { toCountrySummary } from "../countries/countries.mapper.js";
-import type {
-  CityContract,
-  CitySummary,
-  VenueContract,
-  VenueSummary,
-} from "./venues.contracts.js";
+import type { CityContract, CitySummary, VenueContract, VenueSummary } from "./venues.contracts.js";
 
 type CityWithCountry = City & { country: Country };
 

@@ -9,9 +9,7 @@ type StandingWithRelations = Standing & {
   team: Team;
 };
 
-export function toStandingContract(
-  standing: StandingWithRelations,
-): StandingContract {
+export function toStandingContract(standing: StandingWithRelations): StandingContract {
   return {
     id: standing.id,
     position: standing.position,

@@ -3,7 +3,7 @@ import { getPrisma } from "../../database/index.js";
 import type { CountriesQuery } from "./countries.contracts.js";
 
 export async function findCountries(
-  query: CountriesQuery,
+  query: CountriesQuery
 ): Promise<{ countries: Country[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.CountryWhereInput = {};
@@ -32,9 +32,7 @@ export async function findCountries(
   return { countries, totalItems };
 }
 
-export async function findCountryById(
-  id: number,
-): Promise<Country | null> {
+export async function findCountryById(id: number): Promise<Country | null> {
   const prisma = getPrisma();
   return prisma.country.findUnique({ where: { id } });
 }

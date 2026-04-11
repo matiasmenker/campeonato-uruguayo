@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { paginationQuerySchema } from "../../contracts/pagination.js";
-import type { SeasonSummary, StageSummary, RoundSummary, GroupSummary } from "../competition/competition.contracts.js";
+import type {
+  SeasonSummary,
+  StageSummary,
+  RoundSummary,
+  GroupSummary,
+} from "../competition/competition.contracts.js";
 import type { VenueSummary } from "../venues/venues.contracts.js";
 import type { TeamSummary } from "../teams/teams.contracts.js";
 import type { RefereeSummary } from "../referees/referees.contracts.js";

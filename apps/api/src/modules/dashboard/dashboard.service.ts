@@ -1,16 +1,16 @@
 import type { DetailResponse } from "../../contracts/pagination.js";
 import { getPrisma } from "../../database/index.js";
-import { toLeagueSummary, toSeasonSummary, toStageSummary, toRoundSummary } from "../competition/competition.mapper.js";
+import {
+  toLeagueSummary,
+  toSeasonSummary,
+  toStageSummary,
+  toRoundSummary,
+} from "../competition/competition.mapper.js";
 import { toTeamSummary } from "../teams/teams.mapper.js";
 import { toStandingContract } from "../standings/standings.mapper.js";
-import type {
-  DashboardOverviewContract,
-  DashboardFixtureSummary,
-} from "./dashboard.contracts.js";
+import type { DashboardOverviewContract, DashboardFixtureSummary } from "./dashboard.contracts.js";
 
-export async function getDashboardOverview(): Promise<
-  DetailResponse<DashboardOverviewContract>
-> {
+export async function getDashboardOverview(): Promise<DetailResponse<DashboardOverviewContract>> {
   const prisma = getPrisma();
 
   const currentSeason = await prisma.season.findFirst({
@@ -57,16 +57,20 @@ export async function getDashboardOverview(): Promise<
     recentResultsRaw,
     standingsRaw,
   ] = await Promise.all([
-    prisma.squadMembership.findMany({
-      where: { seasonId: currentSeason.id },
-      select: { teamId: true },
-      distinct: ["teamId"],
-    }).then((rows) => rows.length),
-    prisma.squadMembership.findMany({
-      where: { seasonId: currentSeason.id },
-      select: { playerId: true },
-      distinct: ["playerId"],
-    }).then((rows) => rows.length),
+    prisma.squadMembership
+      .findMany({
+        where: { seasonId: currentSeason.id },
+        select: { teamId: true },
+        distinct: ["teamId"],
+      })
+      .then((rows) => rows.length),
+    prisma.squadMembership
+      .findMany({
+        where: { seasonId: currentSeason.id },
+        select: { playerId: true },
+        distinct: ["playerId"],
+      })
+      .then((rows) => rows.length),
     prisma.fixture.count({ where: { seasonId: currentSeason.id } }),
     prisma.fixture.count({
       where: {
@@ -104,7 +108,9 @@ export async function getDashboardOverview(): Promise<
     }),
   ]);
 
-  const mapFixtureSummary = (fixture: typeof upcomingFixturesRaw[number]): DashboardFixtureSummary => ({
+  const mapFixtureSummary = (
+    fixture: (typeof upcomingFixturesRaw)[number]
+  ): DashboardFixtureSummary => ({
     id: fixture.id,
     kickoffAt: fixture.kickoffAt?.toISOString() ?? null,
     homeTeam: fixture.homeTeam ? toTeamSummary(fixture.homeTeam) : null,

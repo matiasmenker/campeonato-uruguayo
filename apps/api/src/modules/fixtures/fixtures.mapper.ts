@@ -1,5 +1,10 @@
 import type { Fixture, Season, Stage, Round, Group, Venue, Referee, Team, FixtureState } from "db";
-import { toSeasonSummary, toStageSummary, toRoundSummary, toGroupSummary } from "../competition/competition.mapper.js";
+import {
+  toSeasonSummary,
+  toStageSummary,
+  toRoundSummary,
+  toGroupSummary,
+} from "../competition/competition.mapper.js";
 import { toVenueSummary } from "../venues/venues.mapper.js";
 import { toTeamSummary } from "../teams/teams.mapper.js";
 import { toRefereeSummary } from "../referees/referees.mapper.js";
@@ -19,7 +24,7 @@ type FixtureWithRelations = Fixture & {
 
 export function toFixtureContract(
   fixture: FixtureWithRelations,
-  resolvedState: FixtureState | null,
+  resolvedState: FixtureState | null
 ): FixtureContract {
   return {
     id: fixture.id,

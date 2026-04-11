@@ -3,7 +3,7 @@ import { getPrisma } from "../../database/index.js";
 import type { FixtureStatesQuery } from "./fixture-states.contracts.js";
 
 export async function findFixtureStates(
-  query: FixtureStatesQuery,
+  query: FixtureStatesQuery
 ): Promise<{ fixtureStates: FixtureState[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.FixtureStateWhereInput = {};
@@ -31,16 +31,12 @@ export async function findFixtureStates(
   return { fixtureStates, totalItems };
 }
 
-export async function findFixtureStateById(
-  id: number,
-): Promise<FixtureState | null> {
+export async function findFixtureStateById(id: number): Promise<FixtureState | null> {
   const prisma = getPrisma();
   return prisma.fixtureState.findUnique({ where: { id } });
 }
 
-export async function findFixtureStatesByIds(
-  ids: number[],
-): Promise<Map<number, FixtureState>> {
+export async function findFixtureStatesByIds(ids: number[]): Promise<Map<number, FixtureState>> {
   if (ids.length === 0) return new Map();
   const prisma = getPrisma();
   const states = await prisma.fixtureState.findMany({

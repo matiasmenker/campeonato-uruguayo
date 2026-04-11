@@ -1,4 +1,3 @@
-
 export interface PaginationMeta {
   current_page: number;
   first_page_url: string;
@@ -36,18 +35,18 @@ export interface CountryDto {
   fifa_name: string | null;
   iso2?: string;
   iso3?: string;
-  latitude: string;   
+  latitude: string;
   longitude: string;
   borders: string[];
   image_path: string;
 }
 
 export interface LeagueDto {
-    id: number;
-    name: string;
-    short_code: string;
-    image_path: string;
-    country_id: number;
+  id: number;
+  name: string;
+  short_code: string;
+  image_path: string;
+  country_id: number;
 }
 
 export interface TypeDto {

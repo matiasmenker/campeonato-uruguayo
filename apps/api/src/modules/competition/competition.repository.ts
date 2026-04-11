@@ -11,7 +11,7 @@ import type {
 type LeagueWithCountry = League & { country: Country | null };
 
 export async function findLeagues(
-  query: LeaguesQuery,
+  query: LeaguesQuery
 ): Promise<{ leagues: LeagueWithCountry[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.LeagueWhereInput = {};
@@ -43,9 +43,7 @@ export async function findLeagues(
   return { leagues, totalItems };
 }
 
-export async function findLeagueById(
-  id: number,
-): Promise<LeagueWithCountry | null> {
+export async function findLeagueById(id: number): Promise<LeagueWithCountry | null> {
   const prisma = getPrisma();
   return prisma.league.findUnique({
     where: { id },
@@ -56,7 +54,7 @@ export async function findLeagueById(
 type SeasonWithLeague = Season & { league: League };
 
 export async function findSeasons(
-  query: SeasonsQuery,
+  query: SeasonsQuery
 ): Promise<{ seasons: SeasonWithLeague[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.SeasonWhereInput = {};
@@ -83,9 +81,7 @@ export async function findSeasons(
   return { seasons, totalItems };
 }
 
-export async function findSeasonById(
-  id: number,
-): Promise<SeasonWithLeague | null> {
+export async function findSeasonById(id: number): Promise<SeasonWithLeague | null> {
   const prisma = getPrisma();
   return prisma.season.findUnique({
     where: { id },
@@ -96,7 +92,7 @@ export async function findSeasonById(
 type StageWithSeason = Stage & { season: Season };
 
 export async function findStages(
-  query: StagesQuery,
+  query: StagesQuery
 ): Promise<{ stages: StageWithSeason[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.StageWhereInput = {};
@@ -119,9 +115,7 @@ export async function findStages(
   return { stages, totalItems };
 }
 
-export async function findStageById(
-  id: number,
-): Promise<StageWithSeason | null> {
+export async function findStageById(id: number): Promise<StageWithSeason | null> {
   const prisma = getPrisma();
   return prisma.stage.findUnique({
     where: { id },
@@ -132,7 +126,7 @@ export async function findStageById(
 type RoundWithStage = Round & { stage: Stage };
 
 export async function findRounds(
-  query: RoundsQuery,
+  query: RoundsQuery
 ): Promise<{ rounds: RoundWithStage[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.RoundWhereInput = {};
@@ -155,9 +149,7 @@ export async function findRounds(
   return { rounds, totalItems };
 }
 
-export async function findRoundById(
-  id: number,
-): Promise<RoundWithStage | null> {
+export async function findRoundById(id: number): Promise<RoundWithStage | null> {
   const prisma = getPrisma();
   return prisma.round.findUnique({
     where: { id },
@@ -168,7 +160,7 @@ export async function findRoundById(
 type GroupWithStage = Group & { stage: Stage };
 
 export async function findGroups(
-  query: GroupsQuery,
+  query: GroupsQuery
 ): Promise<{ groups: GroupWithStage[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.GroupWhereInput = {};
@@ -191,9 +183,7 @@ export async function findGroups(
   return { groups, totalItems };
 }
 
-export async function findGroupById(
-  id: number,
-): Promise<GroupWithStage | null> {
+export async function findGroupById(id: number): Promise<GroupWithStage | null> {
   const prisma = getPrisma();
   return prisma.group.findUnique({
     where: { id },

@@ -17,7 +17,7 @@ interface FixtureIssue {
 
 const extractArray = <T>(raw: { data: T[] } | T[] | undefined): T[] => {
   if (!raw) return [];
-  return Array.isArray(raw) ? raw : raw.data ?? [];
+  return Array.isArray(raw) ? raw : (raw.data ?? []);
 };
 
 const resolveGoals = (
@@ -178,9 +178,7 @@ export async function syncHealth(dependencies: SyncDependencies): Promise<void> 
 
   // Finished fixtures — compare state_id=5
   const finishedStateId = 5;
-  const apiFinishedFixtures = apiFixtures.filter(
-    (fixture) => fixture.state_id === finishedStateId
-  );
+  const apiFinishedFixtures = apiFixtures.filter((fixture) => fixture.state_id === finishedStateId);
 
   const databaseFinishedFixtures = await db.fixture.findMany({
     where: {
@@ -314,9 +312,9 @@ export async function syncHealth(dependencies: SyncDependencies): Promise<void> 
 
   // ── Standings & Coaches ────────────────────────────────────────────
 
-  const apiStandings = await client.get<
-    Array<{ id: number }> | { data: Array<{ id: number }> }
-  >(`/standings/seasons/${currentSeason.sportmonksId}`);
+  const apiStandings = await client.get<Array<{ id: number }> | { data: Array<{ id: number }> }>(
+    `/standings/seasons/${currentSeason.sportmonksId}`
+  );
   const apiStandingCount = extractArray(
     apiStandings as Array<{ id: number }> | { data: Array<{ id: number }> }
   ).length;
@@ -377,7 +375,9 @@ export async function syncHealth(dependencies: SyncDependencies): Promise<void> 
     log.warn("Teams with missing players:");
     for (const mismatch of teamPlayerMismatches) {
       const missing = mismatch.api - mismatch.database;
-      log.warn(`  - ${mismatch.team}: ${mismatch.database} in DB, ${mismatch.api} in API (${missing} missing)`);
+      log.warn(
+        `  - ${mismatch.team}: ${mismatch.database} in DB, ${mismatch.api} in API (${missing} missing)`
+      );
     }
   }
 

@@ -26,7 +26,10 @@ const resolveCoachImagePath = (entry: CoachDto): string | null => {
   return directCoach.image_path?.trim() || null;
 };
 
-const syncCoaches = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
+const syncCoaches = async (
+  { client, db, log }: SyncDependencies,
+  options?: SyncOptions
+): Promise<void> => {
   log.info("=== COACHES START ===");
   log.info("🚀 Syncing Coaches...");
 
@@ -43,7 +46,9 @@ const syncCoaches = async ({ client, db, log }: SyncDependencies, options?: Sync
   const seasons = await db.season.findMany({
     where: {
       leagueId: uruguayLeague.id,
-      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+      ...(options?.seasonSportmonksIds
+        ? { sportmonksId: { in: options.seasonSportmonksIds } }
+        : {}),
     },
     select: { id: true, sportmonksId: true },
     orderBy: { endingAt: "desc" },
@@ -73,10 +78,13 @@ const syncCoaches = async ({ client, db, log }: SyncDependencies, options?: Sync
     const localSeasonId = seasonMap.get(season.sportmonksId)!;
     log.info(`🔎 Processing season ${i + 1}/${seasons.length}: ${season.sportmonksId}`);
 
-    const teams = await client.getAllPages<TeamWithCoachesDto>(`/teams/seasons/${season.sportmonksId}`, {
-      perPage: 50,
-      include: "coaches.coach",
-    });
+    const teams = await client.getAllPages<TeamWithCoachesDto>(
+      `/teams/seasons/${season.sportmonksId}`,
+      {
+        perPage: 50,
+        include: "coaches.coach",
+      }
+    );
     log.info(`📥 Teams fetched from API (${season.sportmonksId}): ${teams.length}`);
 
     for (let j = 0; j < teams.length; j++) {

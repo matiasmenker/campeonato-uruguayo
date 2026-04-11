@@ -15,7 +15,7 @@ import {
 } from "./squad-memberships.repository.js";
 
 export async function listSquadMemberships(
-  query: SquadMembershipsQuery,
+  query: SquadMembershipsQuery
 ): Promise<PaginatedResponse<SquadMembershipContract>> {
   const { memberships, totalItems } = await findSquadMemberships(query);
   return {
@@ -25,7 +25,7 @@ export async function listSquadMemberships(
 }
 
 export async function getSquadMembership(
-  id: number,
+  id: number
 ): Promise<DetailResponse<SquadMembershipContract>> {
   const membership = await findSquadMembershipById(id);
   if (!membership) throw new NotFoundError("Squad membership");
@@ -34,7 +34,7 @@ export async function getSquadMembership(
 
 export async function getTeamSquad(
   teamId: number,
-  query: TeamSquadQuery,
+  query: TeamSquadQuery
 ): Promise<DetailResponse<SquadMembershipContract[]>> {
   let seasonId = query.seasonId ?? null;
 

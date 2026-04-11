@@ -11,7 +11,7 @@ type SquadMembershipWithRelations = SquadMembership & {
 };
 
 export function toSquadMembershipContract(
-  membership: SquadMembershipWithRelations,
+  membership: SquadMembershipWithRelations
 ): SquadMembershipContract {
   return {
     id: membership.id,

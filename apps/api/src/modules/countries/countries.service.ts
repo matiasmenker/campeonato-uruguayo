@@ -6,7 +6,7 @@ import { toCountryContract } from "./countries.mapper.js";
 import { findCountries, findCountryById } from "./countries.repository.js";
 
 export async function listCountries(
-  query: CountriesQuery,
+  query: CountriesQuery
 ): Promise<PaginatedResponse<CountryContract>> {
   const { countries, totalItems } = await findCountries(query);
 
@@ -16,9 +16,7 @@ export async function listCountries(
   };
 }
 
-export async function getCountry(
-  id: number,
-): Promise<DetailResponse<CountryContract>> {
+export async function getCountry(id: number): Promise<DetailResponse<CountryContract>> {
   const country = await findCountryById(id);
 
   if (!country) {

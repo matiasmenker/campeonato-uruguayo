@@ -1,19 +1,12 @@
 import type { Request, Response, NextFunction } from "express";
 import type { AppConfig } from "../config/index.js";
 
-export function securityHeaders(
-  _request: Request,
-  response: Response,
-  next: NextFunction,
-): void {
+export function securityHeaders(_request: Request, response: Response, next: NextFunction): void {
   response.setHeader("X-Content-Type-Options", "nosniff");
   response.setHeader("X-Frame-Options", "DENY");
   response.setHeader("X-XSS-Protection", "0");
   response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  response.setHeader(
-    "Strict-Transport-Security",
-    "max-age=31536000; includeSubDomains",
-  );
+  response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   response.removeHeader("X-Powered-By");
   next();
 }
@@ -77,9 +70,7 @@ export function rateLimiter(config: AppConfig) {
 
     if (valid.length >= maxRequests) {
       const oldestValid = valid[0];
-      const retryAfterSeconds = Math.ceil(
-        (windowMs - (now - oldestValid)) / 1000,
-      );
+      const retryAfterSeconds = Math.ceil((windowMs - (now - oldestValid)) / 1000);
 
       response.setHeader("Retry-After", String(retryAfterSeconds));
       response.setHeader("X-RateLimit-Limit", String(maxRequests));
@@ -99,10 +90,7 @@ export function rateLimiter(config: AppConfig) {
     store.set(ip, valid);
 
     response.setHeader("X-RateLimit-Limit", String(maxRequests));
-    response.setHeader(
-      "X-RateLimit-Remaining",
-      String(maxRequests - valid.length),
-    );
+    response.setHeader("X-RateLimit-Remaining", String(maxRequests - valid.length));
 
     next();
   };

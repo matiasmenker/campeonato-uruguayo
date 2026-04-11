@@ -15,7 +15,7 @@ const includeRelations = {
 } as const;
 
 export async function findSquadMemberships(
-  query: SquadMembershipsQuery,
+  query: SquadMembershipsQuery
 ): Promise<{ memberships: SquadMembershipWithRelations[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.SquadMembershipWhereInput = {};
@@ -39,7 +39,7 @@ export async function findSquadMemberships(
 }
 
 export async function findSquadMembershipById(
-  id: number,
+  id: number
 ): Promise<SquadMembershipWithRelations | null> {
   const prisma = getPrisma();
   return prisma.squadMembership.findUnique({
@@ -50,7 +50,7 @@ export async function findSquadMembershipById(
 
 export async function findTeamSquad(
   teamId: number,
-  seasonId: number,
+  seasonId: number
 ): Promise<SquadMembershipWithRelations[]> {
   const prisma = getPrisma();
   return prisma.squadMembership.findMany({

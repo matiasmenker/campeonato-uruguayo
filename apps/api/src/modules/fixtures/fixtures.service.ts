@@ -7,7 +7,7 @@ import { toFixtureContract } from "./fixtures.mapper.js";
 import { findFixtures, findFixtureById } from "./fixtures.repository.js";
 
 export async function listFixtures(
-  query: FixturesQuery,
+  query: FixturesQuery
 ): Promise<PaginatedResponse<FixtureContract>> {
   const { fixtures, totalItems } = await findFixtures(query);
 
@@ -18,27 +18,18 @@ export async function listFixtures(
 
   return {
     data: fixtures.map((fixture) =>
-      toFixtureContract(
-        fixture,
-        fixture.stateId ? statesMap.get(fixture.stateId) ?? null : null,
-      ),
+      toFixtureContract(fixture, fixture.stateId ? (statesMap.get(fixture.stateId) ?? null) : null)
     ),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
 }
 
-export async function getFixture(
-  id: number,
-): Promise<DetailResponse<FixtureContract>> {
+export async function getFixture(id: number): Promise<DetailResponse<FixtureContract>> {
   const fixture = await findFixtureById(id);
   if (!fixture) throw new NotFoundError("Fixture");
 
-  const statesMap = fixture.stateId
-    ? await findFixtureStatesByIds([fixture.stateId])
-    : new Map();
-  const resolvedState = fixture.stateId
-    ? statesMap.get(fixture.stateId) ?? null
-    : null;
+  const statesMap = fixture.stateId ? await findFixtureStatesByIds([fixture.stateId]) : new Map();
+  const resolvedState = fixture.stateId ? (statesMap.get(fixture.stateId) ?? null) : null;
 
   return { data: toFixtureContract(fixture, resolvedState) };
 }

@@ -3,7 +3,7 @@ import { getPrisma } from "../../database/index.js";
 import type { StatTypesQuery } from "./stat-types.contracts.js";
 
 export async function findStatTypes(
-  query: StatTypesQuery,
+  query: StatTypesQuery
 ): Promise<{ statTypes: StatType[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.StatTypeWhereInput = {};
@@ -39,9 +39,7 @@ export async function findStatTypes(
   return { statTypes, totalItems };
 }
 
-export async function findStatTypeById(
-  id: number,
-): Promise<StatType | null> {
+export async function findStatTypeById(id: number): Promise<StatType | null> {
   const prisma = getPrisma();
   return prisma.statType.findUnique({ where: { id } });
 }

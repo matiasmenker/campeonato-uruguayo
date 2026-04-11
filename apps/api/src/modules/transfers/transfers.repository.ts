@@ -15,7 +15,7 @@ const includeRelations = {
 } as const;
 
 export async function findTransfers(
-  query: TransfersQuery,
+  query: TransfersQuery
 ): Promise<{ transfers: TransferWithRelations[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.TransferWhereInput = {};
@@ -24,10 +24,7 @@ export async function findTransfers(
   if (query.type) where.type = query.type;
 
   if (query.teamId) {
-    where.OR = [
-      { fromTeamId: query.teamId },
-      { toTeamId: query.teamId },
-    ];
+    where.OR = [{ fromTeamId: query.teamId }, { toTeamId: query.teamId }];
   }
 
   const [transfers, totalItems] = await Promise.all([
@@ -44,9 +41,7 @@ export async function findTransfers(
   return { transfers, totalItems };
 }
 
-export async function findTransferById(
-  id: number,
-): Promise<TransferWithRelations | null> {
+export async function findTransferById(id: number): Promise<TransferWithRelations | null> {
   const prisma = getPrisma();
   return prisma.transfer.findUnique({
     where: { id },

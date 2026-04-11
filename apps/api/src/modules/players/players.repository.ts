@@ -5,7 +5,7 @@ import type { PlayersQuery } from "./players.contracts.js";
 type PlayerWithCountry = Player & { country: Country | null };
 
 export async function findPlayers(
-  query: PlayersQuery,
+  query: PlayersQuery
 ): Promise<{ players: PlayerWithCountry[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.PlayerWhereInput = {};

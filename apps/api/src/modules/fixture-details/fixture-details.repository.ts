@@ -18,7 +18,7 @@ import type {
 } from "./fixture-details.contracts.js";
 
 export async function findChangeLogs(
-  query: ChangeLogsQuery,
+  query: ChangeLogsQuery
 ): Promise<{ changeLogs: FixtureChangeLog[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.FixtureChangeLogWhereInput = {};
@@ -40,7 +40,7 @@ export async function findChangeLogs(
 
 export async function findChangeLogsByFixtureId(
   fixtureId: number,
-  query: ChangeLogsQuery,
+  query: ChangeLogsQuery
 ): Promise<{ changeLogs: FixtureChangeLog[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.FixtureChangeLogWhereInput = { fixtureId };
@@ -61,7 +61,7 @@ export async function findChangeLogsByFixtureId(
 type EventWithPlayer = Event & { player: Player | null };
 
 export async function findEvents(
-  query: EventsQuery,
+  query: EventsQuery
 ): Promise<{ events: EventWithPlayer[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.EventWhereInput = {};
@@ -86,7 +86,7 @@ export async function findEvents(
 
 export async function findEventsByFixtureId(
   fixtureId: number,
-  query: EventsQuery,
+  query: EventsQuery
 ): Promise<{ events: EventWithPlayer[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.EventWhereInput = { fixtureId };
@@ -111,7 +111,7 @@ export async function findEventsByFixtureId(
 type LineupWithPlayer = Lineup & { player: Player };
 
 export async function findLineups(
-  query: LineupsQuery,
+  query: LineupsQuery
 ): Promise<{ lineups: LineupWithPlayer[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.LineupWhereInput = {};
@@ -135,7 +135,7 @@ export async function findLineups(
 
 export async function findLineupsByFixtureId(
   fixtureId: number,
-  query: LineupsQuery,
+  query: LineupsQuery
 ): Promise<{ lineups: LineupWithPlayer[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.LineupWhereInput = { fixtureId };
@@ -156,9 +156,7 @@ export async function findLineupsByFixtureId(
   return { lineups, totalItems };
 }
 
-export async function resolveLineupTeams(
-  lineups: LineupWithPlayer[],
-): Promise<Map<number, Team>> {
+export async function resolveLineupTeams(lineups: LineupWithPlayer[]): Promise<Map<number, Team>> {
   if (lineups.length === 0) return new Map();
 
   const prisma = getPrisma();
@@ -174,7 +172,7 @@ export async function resolveLineupTeams(
 
   const seasonIds = [...new Set(fixtures.map((fixture) => fixture.seasonId))];
   const teamIds = fixtures.flatMap((fixture) =>
-    [fixture.homeTeamId, fixture.awayTeamId].filter((id): id is number => id !== null),
+    [fixture.homeTeamId, fixture.awayTeamId].filter((id): id is number => id !== null)
   );
 
   const [squads, teams] = await Promise.all([
@@ -203,9 +201,7 @@ export async function resolveLineupTeams(
     const fixture = fixtureMap.get(lineup.fixtureId);
     if (!fixture) continue;
 
-    const resolvedTeamId = squadTeamMap.get(
-      squadKey(lineup.playerId, fixture.seasonId),
-    );
+    const resolvedTeamId = squadTeamMap.get(squadKey(lineup.playerId, fixture.seasonId));
     if (resolvedTeamId) {
       const team = teamsMap.get(resolvedTeamId);
       if (team) result.set(lineup.id, team);
@@ -218,7 +214,7 @@ export async function resolveLineupTeams(
 type PlayerStatWithPlayer = FixturePlayerStatistic & { player: Player };
 
 export async function findFixturePlayerStats(
-  query: FixturePlayerStatsQuery,
+  query: FixturePlayerStatsQuery
 ): Promise<{ stats: PlayerStatWithPlayer[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.FixturePlayerStatisticWhereInput = {};
@@ -243,7 +239,7 @@ export async function findFixturePlayerStats(
 
 export async function findFixturePlayerStatsByFixtureId(
   fixtureId: number,
-  query: FixturePlayerStatsQuery,
+  query: FixturePlayerStatsQuery
 ): Promise<{ stats: PlayerStatWithPlayer[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.FixturePlayerStatisticWhereInput = { fixtureId };
@@ -268,7 +264,7 @@ export async function findFixturePlayerStatsByFixtureId(
 type TeamStatWithTeam = FixtureTeamStatistic & { team: Team | null };
 
 export async function findFixtureTeamStats(
-  query: FixtureTeamStatsQuery,
+  query: FixtureTeamStatsQuery
 ): Promise<{ stats: TeamStatWithTeam[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.FixtureTeamStatisticWhereInput = {};
@@ -293,7 +289,7 @@ export async function findFixtureTeamStats(
 
 export async function findFixtureTeamStatsByFixtureId(
   fixtureId: number,
-  query: FixtureTeamStatsQuery,
+  query: FixtureTeamStatsQuery
 ): Promise<{ stats: TeamStatWithTeam[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.FixtureTeamStatisticWhereInput = { fixtureId };

@@ -39,7 +39,10 @@ const dedupeByKey = <T>(items: T[], keyOf: (item: T) => string): T[] => {
   return Array.from(map.values());
 };
 
-const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
+const syncFixtureDetails = async (
+  { client, db, log }: SyncDependencies,
+  options?: SyncOptions
+): Promise<void> => {
   log.info("=== FIXTURE DETAILS START ===");
   log.info("🚀 Syncing Fixture Details...");
 
@@ -57,7 +60,9 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
     where: {
       season: {
         leagueId: uruguayLeague.id,
-        ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+        ...(options?.seasonSportmonksIds
+          ? { sportmonksId: { in: options.seasonSportmonksIds } }
+          : {}),
       },
       homeTeamId: { not: null },
       awayTeamId: { not: null },
@@ -122,7 +127,12 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
   });
 
   const normalizePlayerName = (name: string): string =>
-    name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+    name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
 
   const squadByShirt = new Map<string, number[]>();
   const squadByName = new Map<string, number[]>();
@@ -208,7 +218,7 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
 
   const seasonEntries = Array.from(fixturesBySeason.entries());
   for (let seasonIndex = 0; seasonIndex < seasonEntries.length; seasonIndex++) {
-    const [seasonSportmonksId, seasonFixtureSportmonksIds] = seasonEntries[seasonIndex]!
+    const [seasonSportmonksId, seasonFixtureSportmonksIds] = seasonEntries[seasonIndex]!;
     log.info(
       `🔎 Processing season ${seasonIndex + 1}/${seasonEntries.length}: ${seasonSportmonksId} (${seasonFixtureSportmonksIds.length} fixtures)`
     );
@@ -257,7 +267,8 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
 
           if (eventPlayerSportmonksId != null && !eventPlayerId) {
             missingPlayerRefs += 1;
-            if (missingPlayerSamples.length < 20) missingPlayerSamples.push(eventPlayerSportmonksId);
+            if (missingPlayerSamples.length < 20)
+              missingPlayerSamples.push(eventPlayerSportmonksId);
           }
 
           eventsBatch.push({
@@ -283,9 +294,15 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
             lineupPlayerId = playerIdBySportmonksId.get(lineupPlayerSportmonksId) ?? null;
             if (!lineupPlayerId) {
               try {
-                const smPlayer = await client.get<{ id: number; name: string; firstname: string; lastname: string; position_id: number | null; country_id: number | null; date_of_birth: string | null }>(
-                  `/players/${lineupPlayerSportmonksId}`
-                );
+                const smPlayer = await client.get<{
+                  id: number;
+                  name: string;
+                  firstname: string;
+                  lastname: string;
+                  position_id: number | null;
+                  country_id: number | null;
+                  date_of_birth: string | null;
+                }>(`/players/${lineupPlayerSportmonksId}`);
                 lineupPlayerId = await createPlayerWithSquad({
                   sportmonksId: smPlayer.id,
                   name: smPlayer.name,
@@ -298,10 +315,13 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
                   seasonSmId: seasonSportmonksId,
                   jerseyNumber: lineup.jersey_number ?? null,
                 });
-                log.info(`✅ Player fetched by ID and created: ${smPlayer.name} (SM: ${smPlayer.id})`);
+                log.info(
+                  `✅ Player fetched by ID and created: ${smPlayer.name} (SM: ${smPlayer.id})`
+                );
               } catch {
                 missingPlayerRefs += 1;
-                if (missingPlayerSamples.length < 20) missingPlayerSamples.push(lineupPlayerSportmonksId);
+                if (missingPlayerSamples.length < 20)
+                  missingPlayerSamples.push(lineupPlayerSportmonksId);
                 continue;
               }
             }
@@ -340,7 +360,17 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
 
               if (playerName) {
                 try {
-                  const searchResults = await client.get<{ id: number; name: string; firstname: string; lastname: string; position_id: number | null; country_id: number | null; date_of_birth: string | null }[]>(
+                  const searchResults = await client.get<
+                    {
+                      id: number;
+                      name: string;
+                      firstname: string;
+                      lastname: string;
+                      position_id: number | null;
+                      country_id: number | null;
+                      date_of_birth: string | null;
+                    }[]
+                  >(
                     `/players/search/${encodeURIComponent(playerName.trim().replace(/\s+/g, " "))}`
                   );
 
@@ -356,13 +386,17 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
                         firstName: smPlayer.firstname ?? null,
                         lastName: smPlayer.lastname ?? null,
                         positionId: smPlayer.position_id ?? null,
-                        dateOfBirth: smPlayer.date_of_birth ? new Date(smPlayer.date_of_birth) : null,
+                        dateOfBirth: smPlayer.date_of_birth
+                          ? new Date(smPlayer.date_of_birth)
+                          : null,
                         countryId: smPlayer.country_id ?? null,
                         teamSmId: teamSmId!,
                         seasonSmId: seasonSportmonksId,
                         jerseyNumber,
                       });
-                      log.info(`✅ Player resolved via search and created: "${playerName}" → ${smPlayer.name} (SM: ${smPlayer.id})`);
+                      log.info(
+                        `✅ Player resolved via search and created: "${playerName}" → ${smPlayer.name} (SM: ${smPlayer.id})`
+                      );
                     }
                   }
                 } catch {
@@ -385,11 +419,15 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
                   seasonSmId: seasonSportmonksId,
                   jerseyNumber,
                 });
-                log.warn(`⚠️  Player created from lineup (no SportMonks ID): "${playerName}" jersey=${jerseyNumber} team=${teamSmId} fixture=${fixtureDto.id}`);
+                log.warn(
+                  `⚠️  Player created from lineup (no SportMonks ID): "${playerName}" jersey=${jerseyNumber} team=${teamSmId} fixture=${fixtureDto.id}`
+                );
               }
 
               if (lineupPlayerId == null) {
-                log.error(`❌ Unresolved player in lineup — fixture=${fixtureDto.id} team=${teamSmId} name="${playerName}" jersey=${jerseyNumber} details=${detailCount}`);
+                log.error(
+                  `❌ Unresolved player in lineup — fixture=${fixtureDto.id} team=${teamSmId} name="${playerName}" jersey=${jerseyNumber} details=${detailCount}`
+                );
                 continue;
               }
             }
@@ -397,10 +435,13 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
 
           lineupsBatch.push({
             fixtureId,
-            teamId: lineup.team_id != null ? (teamIdBySportmonksId.get(lineup.team_id) ?? null) : null,
+            teamId:
+              lineup.team_id != null ? (teamIdBySportmonksId.get(lineup.team_id) ?? null) : null,
             playerId: lineupPlayerId,
             position:
-              typeof lineup.position === "string" ? lineup.position : (lineup.position?.name ?? null),
+              typeof lineup.position === "string"
+                ? lineup.position
+                : (lineup.position?.name ?? null),
             formationPosition: lineup.formation_position ?? null,
             jerseyNumber: lineup.jersey_number ?? null,
           });
@@ -420,10 +461,12 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
         for (const statistic of statistics) {
           const statisticPlayerSportmonksId = statistic.player?.id ?? statistic.player_id ?? null;
           if (statisticPlayerSportmonksId != null) {
-            const statisticPlayerId = playerIdBySportmonksId.get(statisticPlayerSportmonksId) ?? null;
+            const statisticPlayerId =
+              playerIdBySportmonksId.get(statisticPlayerSportmonksId) ?? null;
             if (!statisticPlayerId) {
               missingPlayerRefs += 1;
-              if (missingPlayerSamples.length < 20) missingPlayerSamples.push(statisticPlayerSportmonksId);
+              if (missingPlayerSamples.length < 20)
+                missingPlayerSamples.push(statisticPlayerSportmonksId);
               continue;
             }
 
@@ -443,9 +486,9 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
             teamId:
               statistic.participant_id != null
                 ? (teamIdBySportmonksId.get(statistic.participant_id) ?? null)
-                : (statistic.participant?.id != null
+                : statistic.participant?.id != null
                   ? (teamIdBySportmonksId.get(statistic.participant.id) ?? null)
-                  : null),
+                  : null,
             typeId: statistic.type_id ?? null,
             value: toJsonValue(extractStatValue(statistic.value, statistic.data)),
             location: statistic.location ?? statistic.participant?.meta?.location ?? null,
@@ -486,35 +529,44 @@ const syncFixtureDetails = async ({ client, db, log }: SyncDependencies, options
 
       const dbStart = Date.now();
       if (!hasReplacementData && uniqueFixtureIds.length > 0) {
-        log.warn(`⚠️ No detail data returned for chunk ${chunkProgress}/${chunks.length} (season ${seasonSportmonksId}, ${uniqueFixtureIds.length} fixtures). Skipping delete to preserve existing data.`);
+        log.warn(
+          `⚠️ No detail data returned for chunk ${chunkProgress}/${chunks.length} (season ${seasonSportmonksId}, ${uniqueFixtureIds.length} fixtures). Skipping delete to preserve existing data.`
+        );
       } else {
-        await db.$transaction(async (tx) => {
-          if (uniqueFixtureIds.length > 0) {
-            await tx.event.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
-            await tx.lineup.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
-            await tx.fixturePlayerStatistic.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
-            await tx.fixtureTeamStatistic.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
-          }
+        await db.$transaction(
+          async (tx) => {
+            if (uniqueFixtureIds.length > 0) {
+              await tx.event.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
+              await tx.lineup.deleteMany({ where: { fixtureId: { in: uniqueFixtureIds } } });
+              await tx.fixturePlayerStatistic.deleteMany({
+                where: { fixtureId: { in: uniqueFixtureIds } },
+              });
+              await tx.fixtureTeamStatistic.deleteMany({
+                where: { fixtureId: { in: uniqueFixtureIds } },
+              });
+            }
 
-          if (uniqueEvents.length > 0) {
-            await tx.event.createMany({ data: uniqueEvents });
-          }
-          if (uniqueLineups.length > 0) {
-            await tx.lineup.createMany({ data: uniqueLineups });
-          }
-          if (playerStatsWithId.length > 0) {
-            await tx.fixturePlayerStatistic.createMany({ data: playerStatsWithId });
-          }
-          if (playerStatsWithoutId.length > 0) {
-            await tx.fixturePlayerStatistic.createMany({ data: playerStatsWithoutId });
-          }
-          if (teamStatsWithId.length > 0) {
-            await tx.fixtureTeamStatistic.createMany({ data: teamStatsWithId });
-          }
-          if (teamStatsWithoutId.length > 0) {
-            await tx.fixtureTeamStatistic.createMany({ data: teamStatsWithoutId });
-          }
-        }, { maxWait: 20_000, timeout: 120_000 });
+            if (uniqueEvents.length > 0) {
+              await tx.event.createMany({ data: uniqueEvents });
+            }
+            if (uniqueLineups.length > 0) {
+              await tx.lineup.createMany({ data: uniqueLineups });
+            }
+            if (playerStatsWithId.length > 0) {
+              await tx.fixturePlayerStatistic.createMany({ data: playerStatsWithId });
+            }
+            if (playerStatsWithoutId.length > 0) {
+              await tx.fixturePlayerStatistic.createMany({ data: playerStatsWithoutId });
+            }
+            if (teamStatsWithId.length > 0) {
+              await tx.fixtureTeamStatistic.createMany({ data: teamStatsWithId });
+            }
+            if (teamStatsWithoutId.length > 0) {
+              await tx.fixtureTeamStatistic.createMany({ data: teamStatsWithoutId });
+            }
+          },
+          { maxWait: 20_000, timeout: 120_000 }
+        );
       }
       const dbMs = Date.now() - dbStart;
 

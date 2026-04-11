@@ -15,7 +15,7 @@ const sameDate = (left: Date | null, right: Date | null): boolean => {
 
 const extractArray = <T>(raw: { data: T[] } | T[] | undefined): T[] => {
   if (!raw) return [];
-  return Array.isArray(raw) ? raw : raw.data ?? [];
+  return Array.isArray(raw) ? raw : (raw.data ?? []);
 };
 
 const resolveGoal = (
@@ -29,7 +29,10 @@ const resolveGoal = (
 
 const DELAYED_STATE_KEYWORDS = ["postponed", "suspended"];
 
-const syncFixtures = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
+const syncFixtures = async (
+  { client, db, log }: SyncDependencies,
+  options?: SyncOptions
+): Promise<void> => {
   log.info("=== FIXTURES START ===");
   log.info("🚀 Syncing Fixtures...");
 
@@ -50,7 +53,9 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies, options?: Syn
   const seasons = await db.season.findMany({
     where: {
       leagueId: uruguayLeague.id,
-      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+      ...(options?.seasonSportmonksIds
+        ? { sportmonksId: { in: options.seasonSportmonksIds } }
+        : {}),
     },
     select: { id: true, sportmonksId: true },
     orderBy: { endingAt: "desc" },
@@ -84,9 +89,13 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies, options?: Syn
   });
   const delayedStateIds = delayedStates.map((state) => state.id);
   if (delayedStates.length === 0) {
-    log.warn("⚠️  No postponed/suspended states found in FixtureState. Run sync:states and review state naming.");
+    log.warn(
+      "⚠️  No postponed/suspended states found in FixtureState. Run sync:states and review state naming."
+    );
   } else {
-    const delayedStateSummary = delayedStates.map((state) => `${state.id}:${state.name}`).join(", ");
+    const delayedStateSummary = delayedStates
+      .map((state) => `${state.id}:${state.name}`)
+      .join(", ");
     log.info(`📌 Delayed state IDs (postponed/suspended): ${delayedStateSummary}`);
   }
 
@@ -125,7 +134,9 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies, options?: Syn
         filters: `fixtureSeasons:${season.sportmonksId};fixtureStates:${delayedStateIds.join(",")}`,
       });
       delayedFixturesFetched += delayedFixtures.length;
-      log.info(`📥 Delayed fixtures fetched from API (${season.sportmonksId}): ${delayedFixtures.length}`);
+      log.info(
+        `📥 Delayed fixtures fetched from API (${season.sportmonksId}): ${delayedFixtures.length}`
+      );
     }
 
     const fixtureBySportmonksId = new Map<number, FixtureDto>();
@@ -159,7 +170,9 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies, options?: Syn
     const referees = await db.referee.findMany({
       select: { sportmonksId: true, id: true },
     });
-    const refereeIdBySportmonksId = new Map(referees.map((referee) => [referee.sportmonksId, referee.id]));
+    const refereeIdBySportmonksId = new Map(
+      referees.map((referee) => [referee.sportmonksId, referee.id])
+    );
     const groupIdBySportmonksId = new Map(groups.map((group) => [group.sportmonksId, group.id]));
     const existingFixtures = await db.fixture.findMany({
       where: { seasonId: season.id },
@@ -189,24 +202,24 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies, options?: Syn
 
       const stageId =
         fixtureDto.stage_id != null
-          ? stageIdBySportmonksId.get(fixtureDto.stage_id) ?? null
+          ? (stageIdBySportmonksId.get(fixtureDto.stage_id) ?? null)
           : null;
       const roundId =
         fixtureDto.round_id != null
-          ? roundIdBySportmonksId.get(fixtureDto.round_id) ?? null
+          ? (roundIdBySportmonksId.get(fixtureDto.round_id) ?? null)
           : null;
       const groupId =
         fixtureDto.group_id != null
-          ? groupIdBySportmonksId.get(fixtureDto.group_id) ?? null
+          ? (groupIdBySportmonksId.get(fixtureDto.group_id) ?? null)
           : null;
       const venueId =
         fixtureDto.venue_id != null
-          ? venueIdBySportmonksId.get(fixtureDto.venue_id) ?? null
+          ? (venueIdBySportmonksId.get(fixtureDto.venue_id) ?? null)
           : null;
       const refereeSportmonksId = fixtureDto.referees?.[0]?.id ?? fixtureDto.referee_id ?? null;
       const refereeId =
         refereeSportmonksId != null
-          ? refereeIdBySportmonksId.get(refereeSportmonksId) ?? null
+          ? (refereeIdBySportmonksId.get(refereeSportmonksId) ?? null)
           : null;
 
       const participants = fixtureDto.participants ?? [];
@@ -220,13 +233,9 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies, options?: Syn
         null;
 
       const homeTeamId =
-        homeSportmonksId != null
-          ? teamIdBySportmonksId.get(homeSportmonksId) ?? null
-          : null;
+        homeSportmonksId != null ? (teamIdBySportmonksId.get(homeSportmonksId) ?? null) : null;
       const awayTeamId =
-        awaySportmonksId != null
-          ? teamIdBySportmonksId.get(awaySportmonksId) ?? null
-          : null;
+        awaySportmonksId != null ? (teamIdBySportmonksId.get(awaySportmonksId) ?? null) : null;
       const stateId = fixtureDto.state_id ?? null;
       const isIncomplete = homeTeamId == null || awayTeamId == null || stateId == null;
 
@@ -341,7 +350,9 @@ const syncFixtures = async ({ client, db, log }: SyncDependencies, options?: Syn
   }
   log.info(`🟡 Missing team reference from API: ${fixturesWithMissingTeams}`);
   if (missingTeamFixtureIds.length > 0) {
-    log.warn(`⚠️  Sample fixtures with missing team reference: ${missingTeamFixtureIds.join(", ")}`);
+    log.warn(
+      `⚠️  Sample fixtures with missing team reference: ${missingTeamFixtureIds.join(", ")}`
+    );
   }
   log.info(`🟡 Incomplete fixtures saved (missing teams/state): ${incompleteFixtures}`);
   if (incompleteFixtureIds.length > 0) {

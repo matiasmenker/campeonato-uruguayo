@@ -9,7 +9,7 @@ import type {
 type MarketValueWithPlayer = PlayerMarketValue & { player: Player };
 
 export function toMarketValueContract(
-  marketValue: MarketValueWithPlayer,
+  marketValue: MarketValueWithPlayer
 ): PlayerMarketValueContract {
   return {
     id: marketValue.id,
@@ -41,9 +41,7 @@ export function toInjuryContract(injury: InjuryWithPlayer): InjuryContract {
 
 type SuspensionWithPlayer = Suspension & { player: Player };
 
-export function toSuspensionContract(
-  suspension: SuspensionWithPlayer,
-): SuspensionContract {
+export function toSuspensionContract(suspension: SuspensionWithPlayer): SuspensionContract {
   return {
     id: suspension.id,
     sportmonksId: suspension.sportmonksId,

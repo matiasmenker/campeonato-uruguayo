@@ -5,7 +5,7 @@ import type { CitiesQuery, VenuesQuery } from "./venues.contracts.js";
 type CityWithCountry = City & { country: Country };
 
 export async function findCities(
-  query: CitiesQuery,
+  query: CitiesQuery
 ): Promise<{ cities: CityWithCountry[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.CityWhereInput = {};
@@ -37,9 +37,7 @@ export async function findCities(
   return { cities, totalItems };
 }
 
-export async function findCityById(
-  id: number,
-): Promise<CityWithCountry | null> {
+export async function findCityById(id: number): Promise<CityWithCountry | null> {
   const prisma = getPrisma();
   return prisma.city.findUnique({
     where: { id },
@@ -53,7 +51,7 @@ type VenueWithRelations = Venue & {
 };
 
 export async function findVenues(
-  query: VenuesQuery,
+  query: VenuesQuery
 ): Promise<{ venues: VenueWithRelations[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.VenueWhereInput = {};
@@ -89,9 +87,7 @@ export async function findVenues(
   return { venues, totalItems };
 }
 
-export async function findVenueById(
-  id: number,
-): Promise<VenueWithRelations | null> {
+export async function findVenueById(id: number): Promise<VenueWithRelations | null> {
   const prisma = getPrisma();
   return prisma.venue.findUnique({
     where: { id },

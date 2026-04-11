@@ -45,11 +45,11 @@ const EXTERNAL_TO_STAT_TYPE: Record<string, number> = {
 };
 
 const COMPLETE_STAT_INDICATORS = [
-  80,   // Total passes
-  78,   // Total tackles
-  116,  // Accurate passes
-  42,   // Total shots
-  122,  // Total long balls
+  80, // Total passes
+  78, // Total tackles
+  116, // Accurate passes
+  42, // Total shots
+  122, // Total long balls
 ];
 
 const normalize = (name: string): string =>
@@ -96,7 +96,11 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchJson<T>(page: Page, endpoint: string, log?: SyncDependencies["log"]): Promise<T | null> {
+async function fetchJson<T>(
+  page: Page,
+  endpoint: string,
+  log?: SyncDependencies["log"]
+): Promise<T | null> {
   for (let attempt = 1; attempt <= FETCH_MAX_RETRIES; attempt++) {
     try {
       const result = await page.evaluate(async (url: string) => {
@@ -114,7 +118,9 @@ async function fetchJson<T>(page: Page, endpoint: string, log?: SyncDependencies
       if (result && typeof result === "object" && "__error" in result) {
         const status = (result as { status: number }).status;
         if (status === 403 || status === 429) {
-          log?.warn(`⚠️  Fetch ${endpoint} → HTTP ${status}, retry ${attempt}/${FETCH_MAX_RETRIES}...`);
+          log?.warn(
+            `⚠️  Fetch ${endpoint} → HTTP ${status}, retry ${attempt}/${FETCH_MAX_RETRIES}...`
+          );
           await delay(FETCH_RETRY_DELAY_MS * attempt);
           continue;
         }
@@ -127,7 +133,9 @@ async function fetchJson<T>(page: Page, endpoint: string, log?: SyncDependencies
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (attempt < FETCH_MAX_RETRIES) {
-        log?.warn(`⚠️  Fetch ${endpoint} failed (attempt ${attempt}/${FETCH_MAX_RETRIES}): ${message}`);
+        log?.warn(
+          `⚠️  Fetch ${endpoint} failed (attempt ${attempt}/${FETCH_MAX_RETRIES}): ${message}`
+        );
         await delay(FETCH_RETRY_DELAY_MS * attempt);
         continue;
       }
@@ -138,11 +146,15 @@ async function fetchJson<T>(page: Page, endpoint: string, log?: SyncDependencies
   return null;
 }
 
-async function findExternalSeasonId(page: Page, year: string, log?: SyncDependencies["log"]): Promise<number | null> {
+async function findExternalSeasonId(
+  page: Page,
+  year: string,
+  log?: SyncDependencies["log"]
+): Promise<number | null> {
   const data = await fetchJson<{ seasons: { id: number; year: string }[] }>(
     page,
     `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/seasons`,
-    log,
+    log
   );
   if (!data?.seasons) return null;
   return data.seasons.find((s) => s.year === year)?.id ?? null;
@@ -167,14 +179,14 @@ async function findExternalEvents(
   seasonId: number,
   roundName: string,
   stageName: string,
-  log?: SyncDependencies["log"],
+  log?: SyncDependencies["log"]
 ): Promise<ExternalEvent[]> {
   const prefix = stageToExternalPrefix(stageName);
-  if (!prefix) return []; 
+  if (!prefix) return [];
   const data = await fetchJson<{ events: ExternalEvent[] }>(
     page,
     `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/season/${seasonId}/events/round/${roundName}/prefix/${prefix}`,
-    log,
+    log
   );
   return data?.events ?? [];
 }
@@ -250,7 +262,9 @@ function matchPlayer(
   const candidates: PlayerCandidate[] = [];
 
   for (const dbPlayer of dbPlayers) {
-    const dbWords = normalize(dbPlayer.name).split(" ").filter((w) => w.length > 0);
+    const dbWords = normalize(dbPlayer.name)
+      .split(" ")
+      .filter((w) => w.length > 0);
     if (allWordsMatch(extWords, dbWords)) {
       candidates.push(dbPlayer);
     }
@@ -272,7 +286,8 @@ function matchPlayer(
 }
 
 export interface FillStatsOptions {
-  seasonName?: string; }
+  seasonName?: string;
+}
 
 export async function syncFillStats(
   { db, log }: SyncDependencies,
@@ -349,7 +364,12 @@ export async function syncFillStats(
 
   const squadMemberships = await db.squadMembership.findMany({
     where: { seasonId: targetSeason.id },
-    select: { playerId: true, teamId: true, shirtNumber: true, player: { select: { id: true, name: true } } },
+    select: {
+      playerId: true,
+      teamId: true,
+      shirtNumber: true,
+      player: { select: { id: true, name: true } },
+    },
   });
 
   const playersByTeamId = new Map<number, PlayerCandidate[]>();
@@ -400,18 +420,18 @@ export async function syncFillStats(
         continue;
       }
 
-      log.info(
-        `🔗 Matched: ${fixture.homeTeam} vs ${fixture.awayTeam} → event ${matchedEvent.id}`
-      );
+      log.info(`🔗 Matched: ${fixture.homeTeam} vs ${fixture.awayTeam} → event ${matchedEvent.id}`);
 
       const lineups = await fetchJson<ExternalLineups>(
         page,
         `/api/v1/event/${matchedEvent.id}/lineups`,
-        log,
+        log
       );
 
       if (!lineups || !lineups.home?.players?.length || !lineups.away?.players?.length) {
-        log.warn(`⚠️  No lineups available for ${fixture.homeTeam} vs ${fixture.awayTeam} (event ${matchedEvent.id})`);
+        log.warn(
+          `⚠️  No lineups available for ${fixture.homeTeam} vs ${fixture.awayTeam} (event ${matchedEvent.id})`
+        );
         continue;
       }
 
@@ -419,9 +439,7 @@ export async function syncFillStats(
         where: { fixtureId: fixture.fixtureId },
         select: { playerId: true, jerseyNumber: true },
       });
-      const jerseyByPlayerId = new Map(
-        fixtureLineups.map((l) => [l.playerId, l.jerseyNumber])
-      );
+      const jerseyByPlayerId = new Map(fixtureLineups.map((l) => [l.playerId, l.jerseyNumber]));
 
       const statsBatch: {
         sportmonksId: null;
@@ -477,10 +495,16 @@ export async function syncFillStats(
             };
             teamPlayers.push(newCandidate);
             const teamList = playersByTeamId.get(teamId) ?? [];
-            teamList.push({ id: newPlayer.id, name: extPlayer.player.name, shirtNumber: extJersey });
+            teamList.push({
+              id: newPlayer.id,
+              name: extPlayer.player.name,
+              shirtNumber: extJersey,
+            });
             playersByTeamId.set(teamId, teamList);
             playerId = newPlayer.id;
-            log.info(`⚠️  Created from external source: ${extPlayer.player.name} #${extJersey ?? "?"} (${side})`);
+            log.info(
+              `⚠️  Created from external source: ${extPlayer.player.name} #${extJersey ?? "?"} (${side})`
+            );
           }
 
           for (const [extKey, typeId] of Object.entries(EXTERNAL_TO_STAT_TYPE)) {
@@ -515,7 +539,10 @@ export async function syncFillStats(
           });
 
           if (cardEvents.length > 0) {
-            const cardCounts = new Map<string, { playerId: number; statTypeId: number; count: number }>();
+            const cardCounts = new Map<
+              string,
+              { playerId: number; statTypeId: number; count: number }
+            >();
             for (const event of cardEvents) {
               const statTypeId = event.typeId === 19 ? 84 : event.typeId === 20 ? 83 : 85;
               const key = `${event.playerId}:${statTypeId}`;

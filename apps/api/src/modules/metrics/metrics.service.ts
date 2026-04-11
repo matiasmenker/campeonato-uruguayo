@@ -3,13 +3,18 @@ import { getPrisma } from "../../database/index.js";
 import { toPlayerSummary } from "../players/players.mapper.js";
 import { toTeamSummary } from "../teams/teams.mapper.js";
 import { toStatTypeSummary } from "../stat-types/stat-types.mapper.js";
-import type { LeadersQuery, LeadersContract, LeaderCategory, LeaderEntry } from "./metrics.contracts.js";
+import type {
+  LeadersQuery,
+  LeadersContract,
+  LeaderCategory,
+  LeaderEntry,
+} from "./metrics.contracts.js";
 
 async function buildLeaderCategory(
   category: string,
   developerName: string,
   seasonId: number | undefined,
-  limit: number,
+  limit: number
 ): Promise<LeaderCategory> {
   const prisma = getPrisma();
 
@@ -39,7 +44,10 @@ async function buildLeaderCategory(
     },
   });
 
-  const playerTotals = new Map<number, { player: typeof stats[number]["player"]; total: number }>();
+  const playerTotals = new Map<
+    number,
+    { player: (typeof stats)[number]["player"]; total: number }
+  >();
 
   for (const stat of stats) {
     let numericValue = 0;
@@ -58,15 +66,17 @@ async function buildLeaderCategory(
     }
   }
 
-  const sorted = [...playerTotals.values()]
-    .sort((a, b) => b.total - a.total)
-    .slice(0, limit);
+  const sorted = [...playerTotals.values()].sort((a, b) => b.total - a.total).slice(0, limit);
 
   const playerIds = sorted.map((entry) => entry.player.id);
-  const currentSeasonId = seasonId ?? (await prisma.season.findFirst({
-    where: { isCurrent: true },
-    select: { id: true },
-  }))?.id;
+  const currentSeasonId =
+    seasonId ??
+    (
+      await prisma.season.findFirst({
+        where: { isCurrent: true },
+        select: { id: true },
+      })
+    )?.id;
 
   const squadMemberships = currentSeasonId
     ? await prisma.squadMembership.findMany({
@@ -79,7 +89,7 @@ async function buildLeaderCategory(
     : [];
 
   const playerTeamMap = new Map(
-    squadMemberships.map((membership) => [membership.playerId, membership.team]),
+    squadMemberships.map((membership) => [membership.playerId, membership.team])
   );
 
   const leaders: LeaderEntry[] = sorted.map((entry) => ({
@@ -97,9 +107,7 @@ async function buildLeaderCategory(
   };
 }
 
-export async function getLeaders(
-  query: LeadersQuery,
-): Promise<DetailResponse<LeadersContract>> {
+export async function getLeaders(query: LeadersQuery): Promise<DetailResponse<LeadersContract>> {
   const [topScorers, topAssists, topYellowCards, topRedCards] = await Promise.all([
     buildLeaderCategory("topScorers", "goals", query.seasonId, query.limit),
     buildLeaderCategory("topAssists", "assists", query.seasonId, query.limit),

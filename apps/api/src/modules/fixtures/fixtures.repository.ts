@@ -25,7 +25,7 @@ const includeRelations = {
 } as const;
 
 export async function findFixtures(
-  query: FixturesQuery,
+  query: FixturesQuery
 ): Promise<{ fixtures: FixtureWithRelations[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.FixtureWhereInput = {};
@@ -38,10 +38,7 @@ export async function findFixtures(
   if (query.venueId) where.venueId = query.venueId;
 
   if (query.teamId) {
-    where.OR = [
-      { homeTeamId: query.teamId },
-      { awayTeamId: query.teamId },
-    ];
+    where.OR = [{ homeTeamId: query.teamId }, { awayTeamId: query.teamId }];
   }
 
   if (query.dateFrom || query.dateTo) {
@@ -51,9 +48,7 @@ export async function findFixtures(
   }
 
   const orderBy: Prisma.FixtureOrderByWithRelationInput =
-    query.sort === "kickoffAt"
-      ? { kickoffAt: query.order }
-      : { id: query.order };
+    query.sort === "kickoffAt" ? { kickoffAt: query.order } : { id: query.order };
 
   const [fixtures, totalItems] = await Promise.all([
     prisma.fixture.findMany({
@@ -69,9 +64,7 @@ export async function findFixtures(
   return { fixtures, totalItems };
 }
 
-export async function findFixtureById(
-  id: number,
-): Promise<FixtureWithRelations | null> {
+export async function findFixtureById(id: number): Promise<FixtureWithRelations | null> {
   const prisma = getPrisma();
   return prisma.fixture.findUnique({
     where: { id },

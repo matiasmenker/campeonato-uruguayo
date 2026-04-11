@@ -1,7 +1,11 @@
 import type { PlayerDto, TeamWithPlayersDto } from "sportmonks-client";
 import type { SyncDependencies, SyncOptions } from "./shared.js";
 
-const mapPlayer = (player: PlayerDto, fallbackPositionId: number | null, countryMap: Map<number, number>) => {
+const mapPlayer = (
+  player: PlayerDto,
+  fallbackPositionId: number | null,
+  countryMap: Map<number, number>
+) => {
   const smCountryId = player.country_id ?? player.nationality_id ?? null;
   const countryId = smCountryId ? (countryMap.get(smCountryId) ?? null) : null;
 
@@ -23,7 +27,10 @@ const mapPlayer = (player: PlayerDto, fallbackPositionId: number | null, country
   };
 };
 
-const syncPlayers = async ({ client, db, log }: SyncDependencies, options?: SyncOptions): Promise<void> => {
+const syncPlayers = async (
+  { client, db, log }: SyncDependencies,
+  options?: SyncOptions
+): Promise<void> => {
   log.info("=== PLAYERS START ===");
   log.info("🚀 Syncing Players...");
 
@@ -48,7 +55,9 @@ const syncPlayers = async ({ client, db, log }: SyncDependencies, options?: Sync
   const seasons = await db.season.findMany({
     where: {
       leagueId: uruguayLeague.id,
-      ...(options?.seasonSportmonksIds ? { sportmonksId: { in: options.seasonSportmonksIds } } : {}),
+      ...(options?.seasonSportmonksIds
+        ? { sportmonksId: { in: options.seasonSportmonksIds } }
+        : {}),
     },
     select: { sportmonksId: true, name: true },
     orderBy: { endingAt: "desc" },
@@ -71,10 +80,13 @@ const syncPlayers = async ({ client, db, log }: SyncDependencies, options?: Sync
     const seasonProgress = i + 1;
     log.info(`🏆 Season ${seasonProgress}/${seasons.length}: ${season.name}`);
 
-    const teams = await client.getAllPages<TeamWithPlayersDto>(`/teams/seasons/${season.sportmonksId}`, {
-      perPage: 50,
-      include: "players.player",
-    });
+    const teams = await client.getAllPages<TeamWithPlayersDto>(
+      `/teams/seasons/${season.sportmonksId}`,
+      {
+        perPage: 50,
+        include: "players.player",
+      }
+    );
     log.info(`🏟️  ${season.name}: ${teams.length} teams fetched`);
 
     let seasonCreated = 0;
@@ -124,7 +136,10 @@ const syncPlayers = async ({ client, db, log }: SyncDependencies, options?: Sync
           countryMap
         );
 
-        const existing = await db.player.findUnique({ where: { sportmonksId: mapped.sportmonksId }, select: { id: true } });
+        const existing = await db.player.findUnique({
+          where: { sportmonksId: mapped.sportmonksId },
+          select: { id: true },
+        });
         await db.player.upsert({
           where: { sportmonksId: mapped.sportmonksId },
           create: mapped,
@@ -143,15 +158,21 @@ const syncPlayers = async ({ client, db, log }: SyncDependencies, options?: Sync
       }
 
       const teamName = (team as any).name ?? `Team ${(team as any).id}`;
-      log.info(`  👤 ${teamName}: ${teamCreated} new, ${teamUpdated} updated (${squadPlayers.length} in squad)`);
+      log.info(
+        `  👤 ${teamName}: ${teamCreated} new, ${teamUpdated} updated (${squadPlayers.length} in squad)`
+      );
     }
 
-    log.info(`🏆 Season ${season.name} done: ${seasonCreated} new players, ${seasonUpdated} updated, ${seasonSkipped} skipped`);
+    log.info(
+      `🏆 Season ${season.name} done: ${seasonCreated} new players, ${seasonUpdated} updated, ${seasonSkipped} skipped`
+    );
   }
 
   const totalRows = await db.player.count();
   log.info("✅ Players sync complete");
-  log.info(`  👤 Created: ${totalCreated} | Updated: ${totalUpdated} | Skipped (no ID): ${totalSkipped}`);
+  log.info(
+    `  👤 Created: ${totalCreated} | Updated: ${totalUpdated} | Skipped (no ID): ${totalSkipped}`
+  );
   log.info(`  👤 Total players in DB: ${totalRows}`);
   log.info("=== PLAYERS END ===");
 };

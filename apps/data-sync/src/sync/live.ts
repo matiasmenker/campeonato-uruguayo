@@ -3,7 +3,7 @@ import type { SyncDependencies } from "./shared.js";
 
 const extractArray = <T>(raw: { data: T[] } | T[] | undefined): T[] => {
   if (!raw) return [];
-  return Array.isArray(raw) ? raw : raw.data ?? [];
+  return Array.isArray(raw) ? raw : (raw.data ?? []);
 };
 
 const resolveGoal = (
@@ -80,7 +80,7 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
   // Keep finished-without-stats so the next run fills them.
   const FINISHED_STATE_ID = 5;
   const todayFixtures = recentFixtures.filter(
-    (fixture) => fixture.stateId !== FINISHED_STATE_ID || fixture._count.playerStats === 0,
+    (fixture) => fixture.stateId !== FINISHED_STATE_ID || fixture._count.playerStats === 0
   );
 
   if (todayFixtures.length === 0) {
@@ -105,13 +105,16 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
   const teamIdBySportmonksId = new Map(teamRows.map((team) => [team.sportmonksId, team.id]));
   const playerRows = await db.player.findMany({ select: { id: true, sportmonksId: true } });
   const playerIdBySportmonksId = new Map(
-    playerRows.filter((p) => p.sportmonksId != null).map((player) => [player.sportmonksId as number, player.id])
+    playerRows
+      .filter((p) => p.sportmonksId != null)
+      .map((player) => [player.sportmonksId as number, player.id])
   );
 
   const apiFixtures = await client.get<FixtureDto[]>(
     `/fixtures/multi/${fixtureSportmonksIds.join(",")}`,
     {
-      include: "participants;scores;events;events.player;lineups;lineups.player;lineups.details;statistics",
+      include:
+        "participants;scores;events;events.player;lineups;lineups.player;lineups.details;statistics",
     }
   );
 
@@ -120,14 +123,18 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
 
   // Fix 1 + Fix 3: Validate API response before proceeding
   if (fixturesFromApi.length === 0 && todayFixtures.length > 0) {
-    log.warn(`⚠️ API returned 0 fixtures but DB has ${todayFixtures.length} scheduled. Possible API failure.`);
+    log.warn(
+      `⚠️ API returned 0 fixtures but DB has ${todayFixtures.length} scheduled. Possible API failure.`
+    );
     const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
     log.info(`=== LIVE SYNC END (${elapsedSeconds}s) ===`);
     return;
   }
 
   if (fixturesFromApi.length < todayFixtures.length) {
-    log.warn(`⚠️ API returned ${fixturesFromApi.length}/${todayFixtures.length} fixtures. Some may be missing from API response.`);
+    log.warn(
+      `⚠️ API returned ${fixturesFromApi.length}/${todayFixtures.length} fixtures. Some may be missing from API response.`
+    );
   }
 
   let updatedFixtures = 0;
@@ -300,9 +307,9 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
         teamId:
           statistic.participant_id != null
             ? (teamIdBySportmonksId.get(statistic.participant_id) ?? null)
-            : (statistic.participant?.id != null
+            : statistic.participant?.id != null
               ? (teamIdBySportmonksId.get(statistic.participant.id) ?? null)
-              : null),
+              : null,
         typeId: statistic.type_id ?? null,
         value: statistic.value ?? statistic.data ?? null,
         location: statistic.location ?? statistic.participant?.meta?.location ?? null,
@@ -316,7 +323,9 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
       teamStatRows.length > 0;
 
     if (!hasReplacementData) {
-      log.warn(`⚠️ No detail data returned for fixture ${fixtureId} (SM: ${fixtureDto.id}). Skipping delete to preserve existing data.`);
+      log.warn(
+        `⚠️ No detail data returned for fixture ${fixtureId} (SM: ${fixtureDto.id}). Skipping delete to preserve existing data.`
+      );
     } else {
       await db.$transaction(async (transaction) => {
         await transaction.event.deleteMany({ where: { fixtureId } });

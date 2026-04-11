@@ -1,10 +1,4 @@
-import type {
-  PlayerMarketValue,
-  Injury,
-  Suspension,
-  Player,
-  Prisma,
-} from "db";
+import type { PlayerMarketValue, Injury, Suspension, Player, Prisma } from "db";
 import { getPrisma } from "../../database/index.js";
 import type {
   MarketValuesQuery,
@@ -15,7 +9,7 @@ import type {
 type MarketValueWithPlayer = PlayerMarketValue & { player: Player };
 
 export async function findMarketValues(
-  query: MarketValuesQuery,
+  query: MarketValuesQuery
 ): Promise<{ marketValues: MarketValueWithPlayer[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.PlayerMarketValueWhereInput = {};
@@ -38,7 +32,7 @@ export async function findMarketValues(
 
 export async function findMarketValuesByPlayerId(
   playerId: number,
-  query: MarketValuesQuery,
+  query: MarketValuesQuery
 ): Promise<{ marketValues: MarketValueWithPlayer[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.PlayerMarketValueWhereInput = { playerId };
@@ -60,7 +54,7 @@ export async function findMarketValuesByPlayerId(
 type InjuryWithPlayer = Injury & { player: Player };
 
 export async function findInjuries(
-  query: InjuriesQuery,
+  query: InjuriesQuery
 ): Promise<{ injuries: InjuryWithPlayer[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.InjuryWhereInput = {};
@@ -83,7 +77,7 @@ export async function findInjuries(
 
 export async function findInjuriesByPlayerId(
   playerId: number,
-  query: InjuriesQuery,
+  query: InjuriesQuery
 ): Promise<{ injuries: InjuryWithPlayer[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.InjuryWhereInput = { playerId };
@@ -105,7 +99,7 @@ export async function findInjuriesByPlayerId(
 type SuspensionWithPlayer = Suspension & { player: Player };
 
 export async function findSuspensions(
-  query: SuspensionsQuery,
+  query: SuspensionsQuery
 ): Promise<{ suspensions: SuspensionWithPlayer[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.SuspensionWhereInput = {};
@@ -128,7 +122,7 @@ export async function findSuspensions(
 
 export async function findSuspensionsByPlayerId(
   playerId: number,
-  query: SuspensionsQuery,
+  query: SuspensionsQuery
 ): Promise<{ suspensions: SuspensionWithPlayer[]; totalItems: number }> {
   const prisma = getPrisma();
   const where: Prisma.SuspensionWhereInput = { playerId };

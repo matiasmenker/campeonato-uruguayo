@@ -1,12 +1,7 @@
 import type { FixtureState } from "db";
-import type {
-  FixtureStateContract,
-  FixtureStateSummary,
-} from "./fixture-states.contracts.js";
+import type { FixtureStateContract, FixtureStateSummary } from "./fixture-states.contracts.js";
 
-export function toFixtureStateContract(
-  state: FixtureState,
-): FixtureStateContract {
+export function toFixtureStateContract(state: FixtureState): FixtureStateContract {
   return {
     id: state.id,
     state: state.state,
@@ -18,9 +13,7 @@ export function toFixtureStateContract(
   };
 }
 
-export function toFixtureStateSummary(
-  state: FixtureState,
-): FixtureStateSummary {
+export function toFixtureStateSummary(state: FixtureState): FixtureStateSummary {
   return {
     id: state.id,
     state: state.state,

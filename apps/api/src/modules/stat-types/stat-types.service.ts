@@ -6,7 +6,7 @@ import { toStatTypeContract } from "./stat-types.mapper.js";
 import { findStatTypes, findStatTypeById } from "./stat-types.repository.js";
 
 export async function listStatTypes(
-  query: StatTypesQuery,
+  query: StatTypesQuery
 ): Promise<PaginatedResponse<StatTypeContract>> {
   const { statTypes, totalItems } = await findStatTypes(query);
 
@@ -16,9 +16,7 @@ export async function listStatTypes(
   };
 }
 
-export async function getStatType(
-  id: number,
-): Promise<DetailResponse<StatTypeContract>> {
+export async function getStatType(id: number): Promise<DetailResponse<StatTypeContract>> {
   const statType = await findStatTypeById(id);
 
   if (!statType) {

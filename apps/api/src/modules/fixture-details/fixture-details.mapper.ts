@@ -54,7 +54,7 @@ export function normalizeStatValue(rawValue: unknown): NormalizedStatValue {
 export function toChangeLogContract(
   changeLog: FixtureChangeLog,
   previousState: FixtureState | null,
-  nextState: FixtureState | null,
+  nextState: FixtureState | null
 ): ChangeLogContract {
   return {
     id: changeLog.id,
@@ -93,10 +93,7 @@ export function toEventContract(event: EventWithPlayer): EventContract {
 
 type LineupWithPlayer = Lineup & { player: Player };
 
-export function toLineupContract(
-  lineup: LineupWithPlayer,
-  team: Team | null,
-): LineupContract {
+export function toLineupContract(lineup: LineupWithPlayer, team: Team | null): LineupContract {
   const teamResolution: LineupTeamResolution = team ? "resolved" : "unresolved";
 
   return {
@@ -117,7 +114,7 @@ type PlayerStatWithPlayer = FixturePlayerStatistic & { player: Player };
 
 export function toFixturePlayerStatContract(
   stat: PlayerStatWithPlayer,
-  statType: StatType | null,
+  statType: StatType | null
 ): FixturePlayerStatContract {
   return {
     id: stat.id,
@@ -136,7 +133,7 @@ type TeamStatWithTeam = FixtureTeamStatistic & { team: Team | null };
 
 export function toFixtureTeamStatContract(
   stat: TeamStatWithTeam,
-  statType: StatType | null,
+  statType: StatType | null
 ): FixtureTeamStatContract {
   return {
     id: stat.id,

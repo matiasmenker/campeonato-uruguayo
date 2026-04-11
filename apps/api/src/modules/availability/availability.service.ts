@@ -23,7 +23,7 @@ import {
 } from "./availability.repository.js";
 
 export async function listMarketValues(
-  query: MarketValuesQuery,
+  query: MarketValuesQuery
 ): Promise<PaginatedResponse<PlayerMarketValueContract>> {
   const { marketValues, totalItems } = await findMarketValues(query);
   return {
@@ -34,7 +34,7 @@ export async function listMarketValues(
 
 export async function listPlayerMarketValues(
   playerId: number,
-  query: MarketValuesQuery,
+  query: MarketValuesQuery
 ): Promise<PaginatedResponse<PlayerMarketValueContract>> {
   const { marketValues, totalItems } = await findMarketValuesByPlayerId(playerId, query);
   return {
@@ -44,7 +44,7 @@ export async function listPlayerMarketValues(
 }
 
 export async function listInjuries(
-  query: InjuriesQuery,
+  query: InjuriesQuery
 ): Promise<PaginatedResponse<InjuryContract>> {
   const { injuries, totalItems } = await findInjuries(query);
   return {
@@ -55,7 +55,7 @@ export async function listInjuries(
 
 export async function listPlayerInjuries(
   playerId: number,
-  query: InjuriesQuery,
+  query: InjuriesQuery
 ): Promise<PaginatedResponse<InjuryContract>> {
   const { injuries, totalItems } = await findInjuriesByPlayerId(playerId, query);
   return {
@@ -65,7 +65,7 @@ export async function listPlayerInjuries(
 }
 
 export async function listSuspensions(
-  query: SuspensionsQuery,
+  query: SuspensionsQuery
 ): Promise<PaginatedResponse<SuspensionContract>> {
   const { suspensions, totalItems } = await findSuspensions(query);
   return {
@@ -76,7 +76,7 @@ export async function listSuspensions(
 
 export async function listPlayerSuspensions(
   playerId: number,
-  query: SuspensionsQuery,
+  query: SuspensionsQuery
 ): Promise<PaginatedResponse<SuspensionContract>> {
   const { suspensions, totalItems } = await findSuspensionsByPlayerId(playerId, query);
   return {
