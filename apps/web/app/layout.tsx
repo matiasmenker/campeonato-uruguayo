@@ -21,7 +21,7 @@ const RootLayout = ({
 }>) => {
   return (
     <html
-      lang="en"
+      lang="es"
       suppressHydrationWarning
       className={cn(
         "antialiased",
