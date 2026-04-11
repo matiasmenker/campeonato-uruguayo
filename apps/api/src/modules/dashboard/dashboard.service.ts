@@ -8,7 +8,7 @@ import {
 } from "../competition/competition.mapper.js";
 import { toTeamSummary } from "../teams/teams.mapper.js";
 import { toStandingContract } from "../standings/standings.mapper.js";
-import type { DashboardOverviewContract, DashboardFixtureSummary } from "./dashboard.contracts.js";
+import type { DashboardOverviewContract, DashboardFixtureSummary, DashboardVenueSummary } from "./dashboard.contracts.js";
 export const getDashboardOverview = async (): Promise<
   DetailResponse<DashboardOverviewContract>
 > => {
@@ -81,7 +81,7 @@ export const getDashboardOverview = async (): Promise<
         seasonId: currentSeason.id,
         kickoffAt: { gte: new Date() },
       },
-      include: { homeTeam: true, awayTeam: true },
+      include: { homeTeam: true, awayTeam: true, venue: true },
       orderBy: { kickoffAt: "asc" },
       take: 5,
     }),
@@ -91,7 +91,7 @@ export const getDashboardOverview = async (): Promise<
         homeScore: { not: null },
         awayScore: { not: null },
       },
-      include: { homeTeam: true, awayTeam: true },
+      include: { homeTeam: true, awayTeam: true, venue: true },
       orderBy: { kickoffAt: "desc" },
       take: 5,
     }),
@@ -104,11 +104,17 @@ export const getDashboardOverview = async (): Promise<
       orderBy: { position: "asc" },
     }),
   ]);
+  const mapVenueSummary = (venue: (typeof upcomingFixturesRaw)[number]["venue"]): DashboardVenueSummary | null => {
+    if (!venue) return null;
+    return { id: venue.id, name: venue.name, imagePath: venue.imagePath };
+  };
+
   const mapFixtureSummary = (
     fixture: (typeof upcomingFixturesRaw)[number]
   ): DashboardFixtureSummary => ({
     id: fixture.id,
     kickoffAt: fixture.kickoffAt?.toISOString() ?? null,
+    venue: mapVenueSummary(fixture.venue),
     homeTeam: fixture.homeTeam ? toTeamSummary(fixture.homeTeam) : null,
     awayTeam: fixture.awayTeam ? toTeamSummary(fixture.awayTeam) : null,
     homeScore: fixture.homeScore,

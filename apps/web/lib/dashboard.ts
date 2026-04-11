@@ -51,9 +51,16 @@ interface StandingContract {
   team: TeamSummary
 }
 
-interface DashboardFixtureSummary {
+interface VenueSummary {
+  id: number
+  name: string
+  imagePath: string | null
+}
+
+export interface DashboardFixtureSummary {
   id: number
   kickoffAt: string | null
+  venue: VenueSummary | null
   homeTeam: TeamSummary | null
   awayTeam: TeamSummary | null
   homeScore: number | null

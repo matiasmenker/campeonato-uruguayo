@@ -53,4 +53,5 @@ export interface VenueSummary {
   name: string;
   city: string | null;
   capacity: number | null;
+  imagePath: string | null;
 }

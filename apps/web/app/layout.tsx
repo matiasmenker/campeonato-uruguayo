@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
+import Header from "@/components/header"
 const roboto = Roboto({ subsets: ["latin"], variable: "--font-sans" })
 const fontMono = Geist_Mono({
   subsets: ["latin"],
@@ -33,6 +34,7 @@ const RootLayout = ({
       <body>
         <ThemeProvider>
           <TooltipProvider>
+            <Header />
             {children}
             <Toaster />
           </TooltipProvider>

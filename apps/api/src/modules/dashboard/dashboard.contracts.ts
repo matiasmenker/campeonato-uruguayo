@@ -7,9 +7,16 @@ import type {
 import type { TeamSummary } from "../teams/teams.contracts.js";
 import type { StandingContract } from "../standings/standings.contracts.js";
 
+export interface DashboardVenueSummary {
+  id: number;
+  name: string;
+  imagePath: string | null;
+}
+
 export interface DashboardFixtureSummary {
   id: number;
   kickoffAt: string | null;
+  venue: DashboardVenueSummary | null;
   homeTeam: TeamSummary | null;
   awayTeam: TeamSummary | null;
   homeScore: number | null;

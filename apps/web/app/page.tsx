@@ -1,18 +1,10 @@
 import {
+  IconPlayerPlay,
+  IconTrophy,
   IconBallFootball,
-  IconCalendar,
-  IconShield,
-  IconStar,
+  IconUsersGroup,
 } from "@tabler/icons-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -21,50 +13,86 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getDashboardOverview, type DashboardOverview } from "@/lib/dashboard"
+import { getDashboardOverview, type DashboardOverview, type DashboardFixtureSummary } from "@/lib/dashboard"
+import MatchesCarousel from "@/components/matches-carousel"
 
 export const dynamic = "force-dynamic"
 
-const uruguayDateFormatter = new Intl.DateTimeFormat("es-UY", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "America/Montevideo",
-})
-
-const compactDateFormatter = new Intl.DateTimeFormat("es-UY", {
-  day: "numeric",
-  month: "short",
-  timeZone: "America/Montevideo",
-})
-
-const formatKickoff = (value: string | null) => {
-  if (!value) {
-    return "Horario pendiente"
-  }
-
-  return `${uruguayDateFormatter.format(new Date(value))} UYT`
-}
-
 const formatResultDate = (value: string | null) => {
-  if (!value) {
-    return "Sin fecha"
-  }
-
-  return compactDateFormatter.format(new Date(value))
+  if (!value) return "Sin fecha"
+  return new Intl.DateTimeFormat("es-UY", {
+    day: "numeric",
+    month: "short",
+    timeZone: "America/Montevideo",
+  }).format(new Date(value))
 }
 
-const buildHeroSummary = (overview: DashboardOverview | null) => {
-  const leader = overview?.standings[0]
+const MatchVideoCard = ({ match }: { match: DashboardFixtureSummary }) => (
+  <article className="group relative overflow-hidden rounded-2xl bg-slate-950">
+    <div
+      className="absolute inset-0 opacity-60"
+      style={{
+        background:
+          "linear-gradient(150deg, #0a1628 0%, #0c2b1a 40%, #0a3320 70%, #050d1a 100%)",
+      }}
+    />
+    <div
+      className="absolute inset-0 opacity-[0.06]"
+      style={{
+        backgroundImage: `repeating-linear-gradient(
+          0deg, transparent, transparent 19px,
+          rgba(255,255,255,0.6) 19px, rgba(255,255,255,0.6) 20px
+        ), repeating-linear-gradient(
+          90deg, transparent, transparent 19px,
+          rgba(255,255,255,0.6) 19px, rgba(255,255,255,0.6) 20px
+        )`,
+      }}
+    />
 
-  if (!overview || !leader) {
-    return "Seguimiento en tiempo real del Apertura uruguayo, con tabla, resultados y próximos partidos."
-  }
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm transition-transform group-hover:scale-110">
+        <IconPlayerPlay className="h-5 w-5 translate-x-0.5 text-white" />
+      </div>
+    </div>
 
-  return `${leader.team.name} lidera con ${leader.points} puntos en ${leader.played} partidos, mientras la fecha ${overview.currentRound?.name ?? "actual"} ya empieza a mover la tabla.`
-}
+    <div className="relative flex flex-col justify-between p-4 pt-14">
+      <div className="space-y-1">
+        <p className="text-xs tracking-wider text-white/50 uppercase">
+          {formatResultDate(match.kickoffAt)}
+        </p>
+        <p className="text-sm font-semibold leading-tight text-white">
+          {match.homeTeam?.name ?? "Local"}{" "}
+          <span className="font-black text-emerald-400">
+            {match.homeScore ?? "-"} : {match.awayScore ?? "-"}
+          </span>{" "}
+          {match.awayTeam?.name ?? "Visitante"}
+        </p>
+      </div>
+    </div>
+  </article>
+)
+
+const SectionTitle = ({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  description?: string
+}) => (
+  <div className="flex items-center gap-3">
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-950">
+      <Icon className="h-4 w-4 text-white" />
+    </div>
+    <div>
+      <h2 className="text-lg font-bold text-slate-950">{title}</h2>
+      {description ? (
+        <p className="text-xs text-slate-500">{description}</p>
+      ) : null}
+    </div>
+  </div>
+)
 
 const HomePage = async () => {
   let overview: DashboardOverview | null = null
@@ -79,96 +107,13 @@ const HomePage = async () => {
         : "No se pudo cargar la portada desde la API."
   }
 
-  const stats = [
-    {
-      label: "Equipos",
-      value: overview?.totalTeams ?? 0,
-      icon: IconShield,
-    },
-    {
-      label: "Jugadores",
-      value: overview?.totalPlayers ?? 0,
-      icon: IconStar,
-    },
-    {
-      label: "Partidos",
-      value: overview?.totalFixtures ?? 0,
-      icon: IconBallFootball,
-    },
-    {
-      label: "Finalizados",
-      value: overview?.completedFixtures ?? 0,
-      icon: IconCalendar,
-    },
-  ]
+  const topScorers = [...(overview?.standings ?? [])]
+    .sort((a, b) => b.goalsFor - a.goalsFor)
+    .slice(0, 8)
 
   return (
-    <main className="min-h-svh bg-[radial-gradient(circle_at_top_left,_rgba(125,211,252,0.35),_transparent_28%),radial-gradient(circle_at_85%_10%,_rgba(15,23,42,0.14),_transparent_24%),linear-gradient(180deg,_#f8fcff_0%,_#eef6ff_52%,_#f8fafc_100%)]">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
-        <section className="relative overflow-hidden rounded-[2rem] border border-sky-200/70 bg-white/85 p-6 shadow-[0_30px_90px_-45px_rgba(14,116,144,0.55)] backdrop-blur sm:p-8 lg:p-10">
-          <div className="absolute top-0 -left-16 h-40 w-40 rounded-full bg-sky-200/50 blur-3xl" />
-          <div className="absolute right-0 bottom-0 h-48 w-48 rounded-full bg-slate-950/8 blur-3xl" />
-
-          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge className="border border-sky-300/70 bg-sky-100 text-sky-900 hover:bg-sky-100">
-                  {overview?.league?.name ?? "Campeonato Uruguayo"}
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="bg-slate-950 text-slate-50 hover:bg-slate-950"
-                >
-                  Temporada {overview?.season?.name ?? "activa"}
-                </Badge>
-                <Badge variant="outline" className="bg-white/70">
-                  {overview?.currentStage?.name ?? "Sin etapa activa"}
-                </Badge>
-                <Badge variant="outline" className="bg-white/70">
-                  Fecha {overview?.currentRound?.name ?? "pendiente"}
-                </Badge>
-              </div>
-
-              <div className="space-y-3">
-                <p className="text-sm font-medium tracking-[0.28em] text-sky-700 uppercase">
-                  Portada
-                </p>
-                <h1 className="max-w-2xl text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
-                  El Apertura uruguayo, en una sola vista.
-                </h1>
-                <p className="max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-                  {buildHeroSummary(overview)}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid w-full gap-3 sm:grid-cols-2 lg:w-[28rem]">
-              {stats.map((stat) => {
-                const Icon = stat.icon
-
-                return (
-                  <div
-                    key={stat.label}
-                    className="rounded-2xl border border-slate-200/80 bg-slate-950 px-4 py-4 text-white shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm text-slate-300">{stat.label}</p>
-                        <p className="mt-3 text-3xl font-bold tracking-tight">
-                          {stat.value}
-                        </p>
-                      </div>
-                      <div className="rounded-xl bg-white/10 p-2 text-sky-300">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </section>
-
+    <main className="min-h-svh bg-slate-50">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-8 sm:px-8 lg:px-10">
         {errorMessage ? (
           <Alert className="border-amber-300 bg-amber-50 text-amber-950">
             <AlertTitle>No pudimos cargar la API</AlertTitle>
@@ -182,127 +127,151 @@ const HomePage = async () => {
           </Alert>
         ) : null}
 
-        <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <Card className="overflow-hidden border-slate-200/80 bg-white/90 shadow-[0_24px_64px_-44px_rgba(15,23,42,0.45)]">
-            <CardHeader className="border-b border-slate-100 bg-white/70">
-              <CardTitle className="text-2xl font-bold text-slate-950">
-                Tabla del Apertura
-              </CardTitle>
-              <CardDescription className="text-slate-600">
-                Foto rápida de la parte alta de la liga.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-14">#</TableHead>
-                    <TableHead>Equipo</TableHead>
-                    <TableHead className="text-right">PJ</TableHead>
-                    <TableHead className="text-right">PTS</TableHead>
-                    <TableHead className="text-right">DG</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {overview?.standings.slice(0, 5).map((standing) => (
-                    <TableRow key={standing.id}>
-                      <TableCell className="font-semibold text-slate-500">
-                        {standing.position}
-                      </TableCell>
-                      <TableCell className="font-medium text-slate-950">
-                        {standing.team.name}
-                      </TableCell>
-                      <TableCell className="text-right text-slate-600">
-                        {standing.played}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold text-slate-950">
-                        {standing.points}
-                      </TableCell>
-                      <TableCell className="text-right text-slate-600">
-                        {standing.goalDifference > 0 ? "+" : ""}
-                        {standing.goalDifference}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
-          <Card className="border-slate-200/80 bg-white/90 shadow-[0_24px_64px_-44px_rgba(15,23,42,0.45)]">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-slate-950">
-                Próximos partidos
-              </CardTitle>
-              <CardDescription className="text-slate-600">
-                Agenda inmediata en horario de Uruguay.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {overview?.upcomingFixtures.map((fixture) => (
-                <article
-                  key={fixture.id}
-                  className="rounded-2xl border border-slate-200/80 bg-slate-50/70 px-4 py-4"
-                >
-                  <p className="text-xs font-medium tracking-[0.24em] text-sky-700 uppercase">
-                    {formatKickoff(fixture.kickoffAt)}
-                  </p>
-                  <div className="mt-3 space-y-1">
-                    <p className="text-base font-semibold text-slate-950">
-                      {fixture.homeTeam?.name ?? "Local pendiente"}
-                    </p>
-                    <p className="text-sm text-slate-500">vs</p>
-                    <p className="text-base font-semibold text-slate-950">
-                      {fixture.awayTeam?.name ?? "Visitante pendiente"}
-                    </p>
-                  </div>
-                </article>
-              ))}
-            </CardContent>
-          </Card>
+        <section className="flex flex-col gap-3">
+          <div className="flex items-baseline gap-2 px-1">
+            <h2 className="text-sm font-semibold text-slate-700">
+              Última fecha jugada
+            </h2>
+            <span className="text-xs text-slate-400">
+              Fecha {overview?.currentRound?.name ?? "—"} · {overview?.currentStage?.name ?? "Apertura"} {overview?.season?.name ?? ""}
+            </span>
+          </div>
+          <MatchesCarousel
+            matches={overview?.recentResults ?? []}
+            roundName={overview?.currentRound?.name}
+          />
         </section>
 
-        <Card className="border-slate-200/80 bg-white/90 shadow-[0_24px_64px_-44px_rgba(15,23,42,0.45)]">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-slate-950">
-              Últimos resultados
-            </CardTitle>
-            <CardDescription className="text-slate-600">
-              Los cierres más recientes de la temporada actual.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 lg:grid-cols-5">
-            {overview?.recentResults.map((fixture) => (
-              <article
-                key={fixture.id}
-                className="rounded-2xl border border-slate-200/80 bg-slate-950 px-4 py-4 text-white"
-              >
-                <p className="text-xs tracking-[0.24em] text-slate-400 uppercase">
-                  {formatResultDate(fixture.kickoffAt)}
-                </p>
-                <div className="mt-4 space-y-3">
-                  <div className="space-y-1">
-                    <p className="text-sm text-slate-300">
-                      {fixture.homeTeam?.name ?? "Local pendiente"}
-                    </p>
-                    <p className="text-3xl font-black tracking-tight">
-                      {fixture.homeScore ?? "-"}
-                    </p>
-                  </div>
-                  <div className="h-px bg-white/10" />
-                  <div className="space-y-1">
-                    <p className="text-sm text-slate-300">
-                      {fixture.awayTeam?.name ?? "Visitante pendiente"}
-                    </p>
-                    <p className="text-3xl font-black tracking-tight">
-                      {fixture.awayScore ?? "-"}
-                    </p>
-                  </div>
+        <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+          <div className="flex flex-col gap-8">
+            <section className="flex flex-col gap-4">
+              <SectionTitle
+                icon={IconPlayerPlay}
+                title="Highlights"
+                description="Resúmenes de los últimos partidos"
+              />
+              {(overview?.recentResults ?? []).length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {(overview?.recentResults ?? []).map((match) => (
+                    <MatchVideoCard key={match.id} match={match} />
+                  ))}
                 </div>
-              </article>
-            ))}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
+                  No hay highlights disponibles
+                </div>
+              )}
+            </section>
+
+            <section className="flex flex-col gap-4">
+              <SectionTitle
+                icon={IconUsersGroup}
+                title="Mejores jugadores"
+                description="Los más destacados de la fecha"
+              />
+              <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 text-center">
+                <IconUsersGroup className="h-8 w-8 text-slate-300" />
+                <p className="text-sm font-medium text-slate-400">
+                  Próximamente
+                </p>
+                <p className="text-xs text-slate-300">
+                  Los puntos por jugador estarán disponibles en breve
+                </p>
+              </div>
+            </section>
+          </div>
+
+          <div className="flex flex-col gap-8">
+            <section className="flex flex-col gap-4">
+              <SectionTitle
+                icon={IconTrophy}
+                title="Tabla de posiciones"
+                description={overview?.currentStage?.name ?? "Apertura"}
+              />
+              <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead className="w-10 text-center text-xs">#</TableHead>
+                      <TableHead className="text-xs">Equipo</TableHead>
+                      <TableHead className="text-right text-xs">PJ</TableHead>
+                      <TableHead className="text-right text-xs">PTS</TableHead>
+                      <TableHead className="text-right text-xs">DG</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(overview?.standings ?? []).map((standing, index) => (
+                      <TableRow key={standing.id}>
+                        <TableCell className="text-center">
+                          <span
+                            className={
+                              index < 3
+                                ? "text-xs font-bold text-emerald-600"
+                                : "text-xs font-medium text-slate-400"
+                            }
+                          >
+                            {standing.position}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs font-medium text-slate-950">
+                          {standing.team.name}
+                        </TableCell>
+                        <TableCell className="text-right text-xs text-slate-500">
+                          {standing.played}
+                        </TableCell>
+                        <TableCell className="text-right text-xs font-bold text-slate-950">
+                          {standing.points}
+                        </TableCell>
+                        <TableCell className="text-right text-xs text-slate-500">
+                          {standing.goalDifference > 0 ? "+" : ""}
+                          {standing.goalDifference}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </section>
+
+            <section className="flex flex-col gap-4">
+              <SectionTitle
+                icon={IconBallFootball}
+                title="Goleadores"
+                description="Goles anotados por equipo"
+              />
+              <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead className="w-10 text-center text-xs">#</TableHead>
+                      <TableHead className="text-xs">Equipo</TableHead>
+                      <TableHead className="text-right text-xs">GF</TableHead>
+                      <TableHead className="text-right text-xs">GA</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {topScorers.map((standing, index) => (
+                      <TableRow key={standing.id}>
+                        <TableCell className="text-center text-xs font-medium text-slate-400">
+                          {index + 1}
+                        </TableCell>
+                        <TableCell className="text-xs font-medium text-slate-950">
+                          {standing.team.name}
+                        </TableCell>
+                        <TableCell className="text-right text-xs font-bold text-emerald-600">
+                          {standing.goalsFor}
+                        </TableCell>
+                        <TableCell className="text-right text-xs text-slate-500">
+                          {standing.goalsAgainst}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
     </main>
   )

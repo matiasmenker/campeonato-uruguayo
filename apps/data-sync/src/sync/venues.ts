@@ -1,5 +1,9 @@
+import { createRequire } from "module";
 import type { VenueDto } from "sportmonks-client";
 import type { SyncDependencies } from "./shared.js";
+
+const require = createRequire(import.meta.url);
+const venueImageOverrides: { sportmonksId: number; imagePath: string }[] = require("./venue-image-overrides.json");
 
 const mapVenue = (venueDto: VenueDto, countryId: number, cityId: number | null) => {
   return {
@@ -73,7 +77,14 @@ const syncVenues = async ({ client, db, log }: SyncDependencies): Promise<void> 
     await db.venue.upsert({
       where: { sportmonksId: venue.sportmonksId },
       create: venue,
-      update: venue,
+      update: {
+        name: venue.name,
+        city: venue.city,
+        capacity: venue.capacity,
+        countryId: venue.countryId,
+        cityId: venue.cityId,
+        ...(venue.imagePath !== null ? { imagePath: venue.imagePath } : {}),
+      },
     });
     savedVenues += 1;
 
@@ -81,6 +92,18 @@ const syncVenues = async ({ client, db, log }: SyncDependencies): Promise<void> 
     if (processed % 25 === 0 || processed === venuesResponse.length) {
       log.info(`💾 Progress: ${processed}/${venuesResponse.length} venues`);
     }
+  }
+
+  let patchedImages = 0;
+  for (const override of venueImageOverrides) {
+    const updated = await db.venue.updateMany({
+      where: { sportmonksId: override.sportmonksId, imagePath: null },
+      data: { imagePath: override.imagePath },
+    });
+    if (updated.count > 0) patchedImages += 1;
+  }
+  if (patchedImages > 0) {
+    log.info(`🖼️  Applied ${patchedImages} manual image override(s)`);
   }
 
   const totalRows = await db.venue.count();

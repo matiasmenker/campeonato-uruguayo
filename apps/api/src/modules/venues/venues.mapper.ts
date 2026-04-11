@@ -44,5 +44,6 @@ export const toVenueSummary = (venue: Venue): VenueSummary => {
     name: venue.name,
     city: venue.city,
     capacity: venue.capacity,
+    imagePath: venue.imagePath,
   };
 };

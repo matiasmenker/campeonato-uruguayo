@@ -1,0 +1,52 @@
+[
+  {
+    "sportmonksId": 1974,
+    "name": "Estadio Monumental Luis Tróccoli",
+    "imagePath": "https://upload.wikimedia.org/wikipedia/commons/7/70/Estadio_Luis_Troccoli.jpg"
+  },
+  {
+    "sportmonksId": 11513,
+    "name": "Estadio Charrúa",
+    "imagePath": "https://upload.wikimedia.org/wikipedia/commons/3/36/Estadio-charrua-montevideo-2017.jpg"
+  },
+  {
+    "sportmonksId": 5284,
+    "name": "Estadio Luis Franzini",
+    "imagePath": "https://upload.wikimedia.org/wikipedia/commons/1/15/Estadio_Luis_Franzini_-_Abril_de_2016_-_02.jpg"
+  },
+  {
+    "sportmonksId": 1508,
+    "name": "Estadio Municipal Arquitecto Antonio Eleuterio Ubilla",
+    "imagePath": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Estadio_Ubilla_Cerro_Largo_vs_Pe%C3%B1arol.jpg"
+  },
+  {
+    "sportmonksId": 1674,
+    "name": "Parque Federico Omar Saroldi",
+    "imagePath": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Saroldi_Stadium_2012.jpg"
+  },
+  {
+    "sportmonksId": 9270,
+    "name": "Parque José Nasazzi",
+    "imagePath": "https://upload.wikimedia.org/wikipedia/commons/7/72/Estadio_Jos%C3%A9_Nasazzi.jpg"
+  },
+  {
+    "sportmonksId": 4676,
+    "name": "Parque Palermo",
+    "imagePath": "https://upload.wikimedia.org/wikipedia/commons/6/61/Estadio_Parque_Palermo.jpg"
+  },
+  {
+    "sportmonksId": 5326,
+    "name": "Parque Abraham Paladino",
+    "imagePath": "https://upload.wikimedia.org/wikipedia/commons/7/74/Mural_en_su_memoria_en_la_fachada_del_estadio_Abraham_Paladino.jpg"
+  },
+  {
+    "sportmonksId": 10667,
+    "name": "Parque Luis Méndez Piana",
+    "imagePath": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Fachada_Estadio_Luis_M%C3%A9ndez_Piana.png"
+  },
+  {
+    "sportmonksId": 1954,
+    "name": "Estadio Campeón del Siglo",
+    "imagePath": "https://upload.wikimedia.org/wikipedia/commons/8/87/Estadio_Campe%C3%B3n_del_Siglo_setiembre_2021.jpg"
+  }
+]
