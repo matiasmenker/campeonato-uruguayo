@@ -38,7 +38,10 @@
     "dev": "turbo dev",
     "dev:api": "pnpm --filter api dev",
     "build:api": "pnpm db:generate && pnpm --filter api build",
-    "start:api": "pnpm --filter api start"
+    "start:api": "pnpm --filter api start",
+    "dev:web": "pnpm --filter web dev",
+    "build:web": "pnpm --filter web build",
+    "start:web": "pnpm --filter web start"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

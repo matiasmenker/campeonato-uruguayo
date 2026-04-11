@@ -4,8 +4,12 @@ node_modules
 
 # Build
 dist
+.next
+out
+build
 .turbo
 *.tsbuildinfo
+next-env.d.ts
 
 # Environment
 .env
@@ -38,4 +42,3 @@ coverage
 .cursor
 .idea
 .vscode
-
