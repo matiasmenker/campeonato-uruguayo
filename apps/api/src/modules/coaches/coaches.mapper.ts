@@ -2,12 +2,13 @@ import type { Coach, CoachAssignment, Team, Season } from "db";
 import { toTeamSummary } from "../teams/teams.mapper.js";
 import { toSeasonSummary } from "../competition/competition.mapper.js";
 import type { CoachContract } from "./coaches.contracts.js";
-
 type CoachWithAssignments = Coach & {
-  assignments: (CoachAssignment & { team: Team; season: Season })[];
+  assignments: (CoachAssignment & {
+    team: Team;
+    season: Season;
+  })[];
 };
-
-export function toCoachContract(coach: CoachWithAssignments): CoachContract {
+export const toCoachContract = (coach: CoachWithAssignments): CoachContract => {
   return {
     id: coach.id,
     sportmonksId: coach.sportmonksId,
@@ -20,4 +21,4 @@ export function toCoachContract(coach: CoachWithAssignments): CoachContract {
     createdAt: coach.createdAt.toISOString(),
     updatedAt: coach.updatedAt.toISOString(),
   };
-}
+};

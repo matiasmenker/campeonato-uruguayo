@@ -22,20 +22,16 @@ import type {
   FixtureTeamStatContract,
   NormalizedStatValue,
 } from "./fixture-details.contracts.js";
-
-export function normalizeStatValue(rawValue: unknown): NormalizedStatValue {
+export const normalizeStatValue = (rawValue: unknown): NormalizedStatValue => {
   if (rawValue === null || rawValue === undefined) {
     return { rawValue, normalizedValue: null, normalizedType: "null" };
   }
-
   if (typeof rawValue === "boolean") {
     return { rawValue, normalizedValue: rawValue, normalizedType: "boolean" };
   }
-
   if (typeof rawValue === "number") {
     return { rawValue, normalizedValue: rawValue, normalizedType: "number" };
   }
-
   if (typeof rawValue === "string") {
     const parsed = Number(rawValue);
     if (!Number.isNaN(parsed)) {
@@ -43,19 +39,17 @@ export function normalizeStatValue(rawValue: unknown): NormalizedStatValue {
     }
     return { rawValue, normalizedValue: rawValue, normalizedType: "string" };
   }
-
   return {
     rawValue,
     normalizedValue: String(rawValue),
     normalizedType: "string",
   };
-}
-
-export function toChangeLogContract(
+};
+export const toChangeLogContract = (
   changeLog: FixtureChangeLog,
   previousState: FixtureState | null,
   nextState: FixtureState | null
-): ChangeLogContract {
+): ChangeLogContract => {
   return {
     id: changeLog.id,
     fixtureId: changeLog.fixtureId,
@@ -69,11 +63,11 @@ export function toChangeLogContract(
     nextResultInfo: changeLog.nextResultInfo,
     detectedAt: changeLog.detectedAt.toISOString(),
   };
-}
-
-type EventWithPlayer = Event & { player: Player | null };
-
-export function toEventContract(event: EventWithPlayer): EventContract {
+};
+type EventWithPlayer = Event & {
+  player: Player | null;
+};
+export const toEventContract = (event: EventWithPlayer): EventContract => {
   return {
     id: event.id,
     sportmonksId: event.sportmonksId,
@@ -89,13 +83,12 @@ export function toEventContract(event: EventWithPlayer): EventContract {
     createdAt: event.createdAt.toISOString(),
     updatedAt: event.updatedAt.toISOString(),
   };
-}
-
-type LineupWithPlayer = Lineup & { player: Player };
-
-export function toLineupContract(lineup: LineupWithPlayer, team: Team | null): LineupContract {
+};
+type LineupWithPlayer = Lineup & {
+  player: Player;
+};
+export const toLineupContract = (lineup: LineupWithPlayer, team: Team | null): LineupContract => {
   const teamResolution: LineupTeamResolution = team ? "resolved" : "unresolved";
-
   return {
     id: lineup.id,
     fixtureId: lineup.fixtureId,
@@ -108,14 +101,14 @@ export function toLineupContract(lineup: LineupWithPlayer, team: Team | null): L
     createdAt: lineup.createdAt.toISOString(),
     updatedAt: lineup.updatedAt.toISOString(),
   };
-}
-
-type PlayerStatWithPlayer = FixturePlayerStatistic & { player: Player };
-
-export function toFixturePlayerStatContract(
+};
+type PlayerStatWithPlayer = FixturePlayerStatistic & {
+  player: Player;
+};
+export const toFixturePlayerStatContract = (
   stat: PlayerStatWithPlayer,
   statType: StatType | null
-): FixturePlayerStatContract {
+): FixturePlayerStatContract => {
   return {
     id: stat.id,
     sportmonksId: stat.sportmonksId,
@@ -127,14 +120,14 @@ export function toFixturePlayerStatContract(
     createdAt: stat.createdAt.toISOString(),
     updatedAt: stat.updatedAt.toISOString(),
   };
-}
-
-type TeamStatWithTeam = FixtureTeamStatistic & { team: Team | null };
-
-export function toFixtureTeamStatContract(
+};
+type TeamStatWithTeam = FixtureTeamStatistic & {
+  team: Team | null;
+};
+export const toFixtureTeamStatContract = (
   stat: TeamStatWithTeam,
   statType: StatType | null
-): FixtureTeamStatContract {
+): FixtureTeamStatContract => {
   return {
     id: stat.id,
     sportmonksId: stat.sportmonksId,
@@ -147,4 +140,4 @@ export function toFixtureTeamStatContract(
     createdAt: stat.createdAt.toISOString(),
     updatedAt: stat.updatedAt.toISOString(),
   };
-}
+};

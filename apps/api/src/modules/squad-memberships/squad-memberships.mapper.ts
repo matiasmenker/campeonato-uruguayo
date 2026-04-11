@@ -3,16 +3,14 @@ import { toPlayerSummary } from "../players/players.mapper.js";
 import { toTeamSummary } from "../teams/teams.mapper.js";
 import { toSeasonSummary } from "../competition/competition.mapper.js";
 import type { SquadMembershipContract } from "./squad-memberships.contracts.js";
-
 type SquadMembershipWithRelations = SquadMembership & {
   player: Player;
   team: Team;
   season: Season;
 };
-
-export function toSquadMembershipContract(
+export const toSquadMembershipContract = (
   membership: SquadMembershipWithRelations
-): SquadMembershipContract {
+): SquadMembershipContract => {
   return {
     id: membership.id,
     player: toPlayerSummary(membership.player),
@@ -27,4 +25,4 @@ export function toSquadMembershipContract(
     createdAt: membership.createdAt.toISOString(),
     updatedAt: membership.updatedAt.toISOString(),
   };
-}
+};

@@ -1,5 +1,4 @@
 "use client"
-
 import * as React from "react"
 import { toast } from "sonner"
 import {
@@ -10,7 +9,6 @@ import {
   IconShield,
   IconStar,
 } from "@tabler/icons-react"
-
 import {
   Accordion,
   AccordionContent,
@@ -122,14 +120,13 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
-
-function Section({
+const Section = ({
   title,
   children,
 }: {
   title: string
   children: React.ReactNode
-}) {
+}) => {
   return (
     <section className="space-y-4">
       <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
@@ -138,14 +135,13 @@ function Section({
     </section>
   )
 }
-
-function Subsection({
+const Subsection = ({
   title,
   children,
 }: {
   title: string
   children: React.ReactNode
-}) {
+}) => {
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
@@ -153,18 +149,15 @@ function Subsection({
     </div>
   )
 }
-
-export default function DesignSystemPage() {
+const DesignSystemPage = () => {
   const [progress, setProgress] = React.useState(60)
   const [sliderValue, setSliderValue] = React.useState([50])
-
   React.useEffect(() => {
     const timer = setInterval(() => {
       setProgress((previous) => (previous >= 100 ? 0 : previous + 10))
     }, 1500)
     return () => clearInterval(timer)
   }, [])
-
   return (
     <div className="mx-auto max-w-5xl space-y-12 px-6 py-10">
       <div>
@@ -999,3 +992,4 @@ export default function DesignSystemPage() {
     </div>
   )
 }
+export default DesignSystemPage

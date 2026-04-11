@@ -16,8 +16,7 @@ import { syncReferees } from "./referees.js";
 import { syncTransfers } from "./transfers.js";
 import { syncSidelined } from "./sidelined.js";
 import { syncStandings } from "./standings.js";
-
-export async function syncBase(dependencies: SyncDependencies): Promise<void> {
+export const syncBase = async (dependencies: SyncDependencies): Promise<void> => {
   dependencies.log.info("🚀 Starting sync:base");
   await syncCountries(dependencies);
   await syncTypes(dependencies);
@@ -37,4 +36,4 @@ export async function syncBase(dependencies: SyncDependencies): Promise<void> {
   await syncSidelined(dependencies);
   await syncStandings(dependencies);
   dependencies.log.info("🎉 Sync Finished Successfully");
-}
+};

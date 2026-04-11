@@ -13,40 +13,35 @@ import {
   findTeamSquad,
   findCurrentSeasonId,
 } from "./squad-memberships.repository.js";
-
-export async function listSquadMemberships(
+export const listSquadMemberships = async (
   query: SquadMembershipsQuery
-): Promise<PaginatedResponse<SquadMembershipContract>> {
+): Promise<PaginatedResponse<SquadMembershipContract>> => {
   const { memberships, totalItems } = await findSquadMemberships(query);
   return {
     data: memberships.map(toSquadMembershipContract),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
-}
-
-export async function getSquadMembership(
+};
+export const getSquadMembership = async (
   id: number
-): Promise<DetailResponse<SquadMembershipContract>> {
+): Promise<DetailResponse<SquadMembershipContract>> => {
   const membership = await findSquadMembershipById(id);
   if (!membership) throw new NotFoundError("Squad membership");
   return { data: toSquadMembershipContract(membership) };
-}
-
-export async function getTeamSquad(
+};
+export const getTeamSquad = async (
   teamId: number,
   query: TeamSquadQuery
-): Promise<DetailResponse<SquadMembershipContract[]>> {
+): Promise<DetailResponse<SquadMembershipContract[]>> => {
   let seasonId = query.seasonId ?? null;
-
   if (!seasonId) {
     seasonId = await findCurrentSeasonId();
     if (!seasonId) {
       throw new BadRequestError("No current season found. Please provide a seasonId.");
     }
   }
-
   const memberships = await findTeamSquad(teamId, seasonId);
   return {
     data: memberships.map(toSquadMembershipContract),
   };
-}
+};

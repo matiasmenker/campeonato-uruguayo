@@ -12,30 +12,23 @@ import { syncFixtures } from "./fixtures.js";
 import { syncFixtureDetails } from "./fixture-details.js";
 import { syncStandings } from "./standings.js";
 import { syncFillStats } from "./fill-stats.js";
-
-export async function syncDaily(dependencies: SyncDependencies): Promise<void> {
+export const syncDaily = async (dependencies: SyncDependencies): Promise<void> => {
   const { db, log } = dependencies;
   log.info("=== DAILY SYNC START ===");
   const startTime = Date.now();
-
   await syncSeasons(dependencies);
-
   const currentSeason = await db.season.findFirst({
     where: { isCurrent: true },
     select: { sportmonksId: true, name: true },
   });
-
   if (!currentSeason) {
     log.warn("⚠️  Daily sync aborted: no current season found.");
     return;
   }
-
   log.info(`📅 Current season: ${currentSeason.name} (${currentSeason.sportmonksId})`);
-
   const currentSeasonFilter: SyncOptions = {
     seasonSportmonksIds: [currentSeason.sportmonksId],
   };
-
   await syncStructure(dependencies, currentSeasonFilter);
   await syncVenues(dependencies);
   await syncReferees(dependencies, currentSeasonFilter);
@@ -47,9 +40,7 @@ export async function syncDaily(dependencies: SyncDependencies): Promise<void> {
   await syncFixtures(dependencies, currentSeasonFilter);
   await syncFixtureDetails(dependencies, currentSeasonFilter);
   await syncStandings(dependencies, currentSeasonFilter);
-
   await syncFillStats(dependencies);
-
   const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
   log.info(`=== DAILY SYNC END (${elapsedSeconds}s) ===`);
-}
+};

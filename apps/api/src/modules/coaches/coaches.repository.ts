@@ -1,40 +1,44 @@
 import type { Coach, CoachAssignment, Team, Season, Prisma } from "db";
 import { getPrisma } from "../../database/index.js";
 import type { CoachesQuery } from "./coaches.contracts.js";
-
 type CoachWithAssignments = Coach & {
-  assignments: (CoachAssignment & { team: Team; season: Season })[];
+  assignments: (CoachAssignment & {
+    team: Team;
+    season: Season;
+  })[];
 };
-
 const assignmentsInclude = {
   assignments: {
     include: { team: true, season: true },
     orderBy: { season: { startingAt: "desc" as const } },
   },
 };
-
-export async function findCoaches(
+export const findCoaches = async (
   query: CoachesQuery
-): Promise<{ coaches: CoachWithAssignments[]; totalItems: number }> {
+): Promise<{
+  coaches: CoachWithAssignments[];
+  totalItems: number;
+}> => {
   const prisma = getPrisma();
   const where: Prisma.CoachWhereInput = {};
-
   if (query.search) {
     const pattern = `%${query.search}%`;
-    const matchingIds = await prisma.$queryRaw<{ id: number }[]>`
+    const matchingIds = await prisma.$queryRaw<
+      {
+        id: number;
+      }[]
+    >`
       SELECT id FROM "Coach"
       WHERE unaccent("name") ILIKE unaccent(${pattern})
     `;
     where.id = { in: matchingIds.map((r) => r.id) };
   }
-
   if (query.teamId || query.seasonId) {
     const assignmentFilter: Prisma.CoachAssignmentWhereInput = {};
     if (query.teamId) assignmentFilter.teamId = query.teamId;
     if (query.seasonId) assignmentFilter.seasonId = query.seasonId;
     where.assignments = { some: assignmentFilter };
   }
-
   const [coaches, totalItems] = await Promise.all([
     prisma.coach.findMany({
       where,
@@ -45,23 +49,20 @@ export async function findCoaches(
     }),
     prisma.coach.count({ where }),
   ]);
-
   return { coaches, totalItems };
-}
-
-export async function findCoachById(id: number): Promise<CoachWithAssignments | null> {
+};
+export const findCoachById = async (id: number): Promise<CoachWithAssignments | null> => {
   const prisma = getPrisma();
   return prisma.coach.findUnique({
     where: { id },
     include: assignmentsInclude,
   });
-}
-
-export async function findCoachesByTeamId(teamId: number): Promise<CoachWithAssignments[]> {
+};
+export const findCoachesByTeamId = async (teamId: number): Promise<CoachWithAssignments[]> => {
   const prisma = getPrisma();
   return prisma.coach.findMany({
     where: { assignments: { some: { teamId } } },
     include: assignmentsInclude,
     orderBy: { name: "asc" },
   });
-}
+};

@@ -17,8 +17,7 @@ import { availabilityRouter } from "./modules/availability/availability.routes.j
 import { standingsRouter } from "./modules/standings/standings.routes.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { metricsRouter } from "./modules/metrics/metrics.routes.js";
-
-export function registerRoutes(app: Express): void {
+export const registerRoutes = (app: Express): void => {
   app.use(systemRouter);
   app.use(countriesRouter);
   app.use(statTypesRouter);
@@ -37,4 +36,4 @@ export function registerRoutes(app: Express): void {
   app.use(standingsRouter);
   app.use(dashboardRouter);
   app.use(metricsRouter);
-}
+};

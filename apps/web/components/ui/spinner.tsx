@@ -1,7 +1,6 @@
 import { cn } from "@/lib/utils"
 import { IconLoader } from "@tabler/icons-react"
-
-function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
+const Spinner = ({ className, ...props }: React.ComponentProps<"svg">) => {
   return (
     <IconLoader
       role="status"
@@ -11,5 +10,4 @@ function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
     />
   )
 }
-
 export { Spinner }

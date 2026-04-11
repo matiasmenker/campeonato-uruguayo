@@ -21,66 +21,60 @@ import {
   findSuspensions,
   findSuspensionsByPlayerId,
 } from "./availability.repository.js";
-
-export async function listMarketValues(
+export const listMarketValues = async (
   query: MarketValuesQuery
-): Promise<PaginatedResponse<PlayerMarketValueContract>> {
+): Promise<PaginatedResponse<PlayerMarketValueContract>> => {
   const { marketValues, totalItems } = await findMarketValues(query);
   return {
     data: marketValues.map(toMarketValueContract),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
-}
-
-export async function listPlayerMarketValues(
+};
+export const listPlayerMarketValues = async (
   playerId: number,
   query: MarketValuesQuery
-): Promise<PaginatedResponse<PlayerMarketValueContract>> {
+): Promise<PaginatedResponse<PlayerMarketValueContract>> => {
   const { marketValues, totalItems } = await findMarketValuesByPlayerId(playerId, query);
   return {
     data: marketValues.map(toMarketValueContract),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
-}
-
-export async function listInjuries(
+};
+export const listInjuries = async (
   query: InjuriesQuery
-): Promise<PaginatedResponse<InjuryContract>> {
+): Promise<PaginatedResponse<InjuryContract>> => {
   const { injuries, totalItems } = await findInjuries(query);
   return {
     data: injuries.map(toInjuryContract),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
-}
-
-export async function listPlayerInjuries(
+};
+export const listPlayerInjuries = async (
   playerId: number,
   query: InjuriesQuery
-): Promise<PaginatedResponse<InjuryContract>> {
+): Promise<PaginatedResponse<InjuryContract>> => {
   const { injuries, totalItems } = await findInjuriesByPlayerId(playerId, query);
   return {
     data: injuries.map(toInjuryContract),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
-}
-
-export async function listSuspensions(
+};
+export const listSuspensions = async (
   query: SuspensionsQuery
-): Promise<PaginatedResponse<SuspensionContract>> {
+): Promise<PaginatedResponse<SuspensionContract>> => {
   const { suspensions, totalItems } = await findSuspensions(query);
   return {
     data: suspensions.map(toSuspensionContract),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
-}
-
-export async function listPlayerSuspensions(
+};
+export const listPlayerSuspensions = async (
   playerId: number,
   query: SuspensionsQuery
-): Promise<PaginatedResponse<SuspensionContract>> {
+): Promise<PaginatedResponse<SuspensionContract>> => {
   const { suspensions, totalItems } = await findSuspensionsByPlayerId(playerId, query);
   return {
     data: suspensions.map(toSuspensionContract),
     pagination: buildPaginationMeta(query.page, query.pageSize, totalItems),
   };
-}
+};

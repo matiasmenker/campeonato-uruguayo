@@ -7,28 +7,32 @@ import type {
   RoundsQuery,
   GroupsQuery,
 } from "./competition.contracts.js";
-
-type LeagueWithCountry = League & { country: Country | null };
-
-export async function findLeagues(
+type LeagueWithCountry = League & {
+  country: Country | null;
+};
+export const findLeagues = async (
   query: LeaguesQuery
-): Promise<{ leagues: LeagueWithCountry[]; totalItems: number }> {
+): Promise<{
+  leagues: LeagueWithCountry[];
+  totalItems: number;
+}> => {
   const prisma = getPrisma();
   const where: Prisma.LeagueWhereInput = {};
-
   if (query.search) {
     const pattern = `%${query.search}%`;
-    const matchingIds = await prisma.$queryRaw<{ id: number }[]>`
+    const matchingIds = await prisma.$queryRaw<
+      {
+        id: number;
+      }[]
+    >`
       SELECT id FROM "League"
       WHERE unaccent("name") ILIKE unaccent(${pattern})
     `;
     where.id = { in: matchingIds.map((r) => r.id) };
   }
-
   if (query.countryId) {
     where.countryId = query.countryId;
   }
-
   const [leagues, totalItems] = await Promise.all([
     prisma.league.findMany({
       where,
@@ -39,34 +43,32 @@ export async function findLeagues(
     }),
     prisma.league.count({ where }),
   ]);
-
   return { leagues, totalItems };
-}
-
-export async function findLeagueById(id: number): Promise<LeagueWithCountry | null> {
+};
+export const findLeagueById = async (id: number): Promise<LeagueWithCountry | null> => {
   const prisma = getPrisma();
   return prisma.league.findUnique({
     where: { id },
     include: { country: true },
   });
-}
-
-type SeasonWithLeague = Season & { league: League };
-
-export async function findSeasons(
+};
+type SeasonWithLeague = Season & {
+  league: League;
+};
+export const findSeasons = async (
   query: SeasonsQuery
-): Promise<{ seasons: SeasonWithLeague[]; totalItems: number }> {
+): Promise<{
+  seasons: SeasonWithLeague[];
+  totalItems: number;
+}> => {
   const prisma = getPrisma();
   const where: Prisma.SeasonWhereInput = {};
-
   if (query.leagueId) {
     where.leagueId = query.leagueId;
   }
-
   if (query.isCurrent !== undefined) {
     where.isCurrent = query.isCurrent;
   }
-
   const [seasons, totalItems] = await Promise.all([
     prisma.season.findMany({
       where,
@@ -77,30 +79,29 @@ export async function findSeasons(
     }),
     prisma.season.count({ where }),
   ]);
-
   return { seasons, totalItems };
-}
-
-export async function findSeasonById(id: number): Promise<SeasonWithLeague | null> {
+};
+export const findSeasonById = async (id: number): Promise<SeasonWithLeague | null> => {
   const prisma = getPrisma();
   return prisma.season.findUnique({
     where: { id },
     include: { league: true },
   });
-}
-
-type StageWithSeason = Stage & { season: Season };
-
-export async function findStages(
+};
+type StageWithSeason = Stage & {
+  season: Season;
+};
+export const findStages = async (
   query: StagesQuery
-): Promise<{ stages: StageWithSeason[]; totalItems: number }> {
+): Promise<{
+  stages: StageWithSeason[];
+  totalItems: number;
+}> => {
   const prisma = getPrisma();
   const where: Prisma.StageWhereInput = {};
-
   if (query.seasonId) {
     where.seasonId = query.seasonId;
   }
-
   const [stages, totalItems] = await Promise.all([
     prisma.stage.findMany({
       where,
@@ -111,30 +112,29 @@ export async function findStages(
     }),
     prisma.stage.count({ where }),
   ]);
-
   return { stages, totalItems };
-}
-
-export async function findStageById(id: number): Promise<StageWithSeason | null> {
+};
+export const findStageById = async (id: number): Promise<StageWithSeason | null> => {
   const prisma = getPrisma();
   return prisma.stage.findUnique({
     where: { id },
     include: { season: true },
   });
-}
-
-type RoundWithStage = Round & { stage: Stage };
-
-export async function findRounds(
+};
+type RoundWithStage = Round & {
+  stage: Stage;
+};
+export const findRounds = async (
   query: RoundsQuery
-): Promise<{ rounds: RoundWithStage[]; totalItems: number }> {
+): Promise<{
+  rounds: RoundWithStage[];
+  totalItems: number;
+}> => {
   const prisma = getPrisma();
   const where: Prisma.RoundWhereInput = {};
-
   if (query.stageId) {
     where.stageId = query.stageId;
   }
-
   const [rounds, totalItems] = await Promise.all([
     prisma.round.findMany({
       where,
@@ -145,30 +145,29 @@ export async function findRounds(
     }),
     prisma.round.count({ where }),
   ]);
-
   return { rounds, totalItems };
-}
-
-export async function findRoundById(id: number): Promise<RoundWithStage | null> {
+};
+export const findRoundById = async (id: number): Promise<RoundWithStage | null> => {
   const prisma = getPrisma();
   return prisma.round.findUnique({
     where: { id },
     include: { stage: true },
   });
-}
-
-type GroupWithStage = Group & { stage: Stage };
-
-export async function findGroups(
+};
+type GroupWithStage = Group & {
+  stage: Stage;
+};
+export const findGroups = async (
   query: GroupsQuery
-): Promise<{ groups: GroupWithStage[]; totalItems: number }> {
+): Promise<{
+  groups: GroupWithStage[];
+  totalItems: number;
+}> => {
   const prisma = getPrisma();
   const where: Prisma.GroupWhereInput = {};
-
   if (query.stageId) {
     where.stageId = query.stageId;
   }
-
   const [groups, totalItems] = await Promise.all([
     prisma.group.findMany({
       where,
@@ -179,21 +178,24 @@ export async function findGroups(
     }),
     prisma.group.count({ where }),
   ]);
-
   return { groups, totalItems };
-}
-
-export async function findGroupById(id: number): Promise<GroupWithStage | null> {
+};
+export const findGroupById = async (id: number): Promise<GroupWithStage | null> => {
   const prisma = getPrisma();
   return prisma.group.findUnique({
     where: { id },
     include: { stage: true },
   });
-}
-
-export async function findCurrentSeason(): Promise<
-  (Season & { league: League; stages: (Stage & { rounds: Round[] })[] }) | null
-> {
+};
+export const findCurrentSeason = async (): Promise<
+  | (Season & {
+      league: League;
+      stages: (Stage & {
+        rounds: Round[];
+      })[];
+    })
+  | null
+> => {
   const prisma = getPrisma();
   return prisma.season.findFirst({
     where: { isCurrent: true },
@@ -205,4 +207,4 @@ export async function findCurrentSeason(): Promise<
       },
     },
   });
-}
+};

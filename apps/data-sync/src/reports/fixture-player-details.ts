@@ -1,31 +1,25 @@
 import type { Prisma, PrismaClient } from "db";
-
 type ReportDependencies = {
   db: PrismaClient;
 };
-
 type ReportView = "compact" | "full";
-
 type ReportOptions = {
   season: string;
   group: string;
   jornada: string;
   view: ReportView;
 };
-
 type MatchableEntity = {
   id: number;
   sportmonksId?: number | null;
   name?: string | null;
   slug?: string | null;
 };
-
 type GroupScopeCandidate = MatchableEntity & {
   stageId: number;
   stageName: string;
   actualGroupId: number | null;
 };
-
 type FixtureWithDetails = Prisma.FixtureGetPayload<{
   include: {
     season: true;
@@ -64,11 +58,23 @@ type FixtureWithDetails = Prisma.FixtureGetPayload<{
           };
         };
       };
-      orderBy: [{ minute: "asc" }, { extraMinute: "asc" }, { sortOrder: "asc" }, { id: "asc" }];
+      orderBy: [
+        {
+          minute: "asc";
+        },
+        {
+          extraMinute: "asc";
+        },
+        {
+          sortOrder: "asc";
+        },
+        {
+          id: "asc";
+        },
+      ];
     };
   };
 }>;
-
 type SquadMembershipLite = {
   playerId: number;
   teamId: number;
@@ -76,12 +82,10 @@ type SquadMembershipLite = {
   from: Date;
   to: Date | null;
 };
-
 type PlayerWithCountry = FixtureWithDetails["lineups"][number]["player"];
 type LineupWithPlayer = FixtureWithDetails["lineups"][number];
 type PlayerStatWithPlayer = FixtureWithDetails["playerStats"][number];
 type EventWithPlayer = FixtureWithDetails["events"][number];
-
 type ResolvedPlayerEntry = {
   player: PlayerWithCountry;
   lineup: LineupWithPlayer | null;
@@ -91,13 +95,11 @@ type ResolvedPlayerEntry = {
   teamBucket: "home" | "away" | "unknown";
   events: EventWithPlayer[];
 };
-
 type StatTypeInfo = {
   name: string;
   developerName: string | null;
   statGroup: string | null;
 };
-
 type FixtureStateInfo = {
   id: number;
   state: string | null;
@@ -105,7 +107,6 @@ type FixtureStateInfo = {
   shortName: string | null;
   developerName: string | null;
 };
-
 type PreparedStat = {
   key: string;
   label: string;
@@ -114,13 +115,11 @@ type PreparedStat = {
   numericValue: number | null;
   category: "headline" | "overall" | "offensive" | "defensive" | "discipline" | "other";
 };
-
 type StatSection = {
   title: string;
   accent: string;
   items: string[];
 };
-
 type PlayerSummaryData = {
   stats: PreparedStat[];
   statMap: Map<string, PreparedStat>;
@@ -132,14 +131,15 @@ type PlayerSummaryData = {
   rating: string;
   captain: boolean;
 };
-
 type TeamPlayerRow = {
   entry: ResolvedPlayerEntry;
   summary: PlayerSummaryData;
-  position: { label: string; usedFallback: boolean };
+  position: {
+    label: string;
+    usedFallback: boolean;
+  };
   role: string;
 };
-
 type DenseStatCategory =
   | "overall"
   | "offensive"
@@ -147,7 +147,6 @@ type DenseStatCategory =
   | "discipline"
   | "goalkeeper"
   | "other";
-
 type FixtureQuality = {
   playersTotal: number;
   starters: number;
@@ -159,7 +158,6 @@ type FixtureQuality = {
   withoutStatsCount: number;
   unresolvedTeamCount: number;
 };
-
 type PreparedFixtureReport = {
   fixture: FixtureWithDetails;
   stateLabel: string;
@@ -167,11 +165,9 @@ type PreparedFixtureReport = {
   players: ResolvedPlayerEntry[];
   quality: FixtureQuality;
 };
-
 type GlobalQuality = FixtureQuality & {
   fixturesWithoutGroup: number;
 };
-
 const ANSI = {
   reset: "\u001b[0m",
   bold: "\u001b[1m",
@@ -198,10 +194,8 @@ const ANSI = {
   bgPurple: "\u001b[48;5;57m",
   bgGray: "\u001b[48;5;238m",
 };
-
 const REPORT_WIDTH = Math.max(92, Math.min(process.stdout.columns ?? 120, 118));
 const LABEL_WIDTH = 10;
-
 const POSITION_LABELS: Record<number, string> = {
   24: "Goalkeeper",
   25: "Defender",
@@ -220,8 +214,13 @@ const POSITION_LABELS: Record<number, string> = {
   158: "Wing-Back",
   163: "Second Str.",
 };
-
-const STAT_LABELS: Record<string, { label: string; short: string }> = {
+const STAT_LABELS: Record<
+  string,
+  {
+    label: string;
+    short: string;
+  }
+> = {
   ACCURATE_CROSSES: { label: "Acc. Crosses", short: "C.OK" },
   ACCURATE_PASSES: { label: "Acc. Passes", short: "P.OK" },
   AERIALS_LOST: { label: "Aerials Lost", short: "Aer L" },
@@ -263,7 +262,6 @@ const STAT_LABELS: Record<string, { label: string; short: string }> = {
   TOTAL_DUELS: { label: "Duels", short: "Duel" },
   YELLOWCARDS: { label: "Yellow Cards", short: "YC" },
 };
-
 const HEADLINE_KEYS = [
   "MINUTES_PLAYED",
   "RATING",
@@ -274,12 +272,10 @@ const HEADLINE_KEYS = [
   "SAVES",
   "GOALS_CONCEDED",
 ];
-
 const GOAL_EVENT_TYPE_IDS = new Set([14, 16]);
 const YELLOW_EVENT_TYPE_IDS = new Set([19]);
 const RED_EVENT_TYPE_IDS = new Set([20]);
 const YELLOW_RED_EVENT_TYPE_IDS = new Set([21]);
-
 const BASE_TABLE_STAT_KEYS = new Set([
   "MINUTES_PLAYED",
   "GOALS",
@@ -288,7 +284,6 @@ const BASE_TABLE_STAT_KEYS = new Set([
   "REDCARDS",
   "RATING",
 ]);
-
 const GOALKEEPER_STAT_KEYS = new Set([
   "SAVES",
   "SAVES_INSIDE_BOX",
@@ -296,7 +291,6 @@ const GOALKEEPER_STAT_KEYS = new Set([
   "GOALS_CONCEDED",
   "GOALKEEPER_GOALS_CONCEDED",
 ]);
-
 const COMPLETE_MATCH_STAT_KEYS = new Set([
   "PASSES",
   "ACCURATE_PASSES",
@@ -320,12 +314,15 @@ const COMPLETE_MATCH_STAT_KEYS = new Set([
   "SAVES_INSIDE_BOX",
   "GOOD_HIGH_CLAIM",
 ]);
-
 const COMPACT_HIDDEN_META_KEYS = new Set(["CAPTAIN"]);
-
 const PARTIAL_STATS_NOISE_KEYS = new Set(["GOALS_CONCEDED", "GOALKEEPER_GOALS_CONCEDED"]);
-
-const DENSE_STAT_CATEGORY_META: Record<DenseStatCategory, { title: string; accent: string }> = {
+const DENSE_STAT_CATEGORY_META: Record<
+  DenseStatCategory,
+  {
+    title: string;
+    accent: string;
+  }
+> = {
   overall: { title: "🎮 Gen", accent: ANSI.cyan },
   offensive: { title: "⚔️ Atk", accent: ANSI.orange },
   defensive: { title: "🛡️ Def", accent: ANSI.blue },
@@ -333,7 +330,6 @@ const DENSE_STAT_CATEGORY_META: Record<DenseStatCategory, { title: string; accen
   goalkeeper: { title: "🧤 GK", accent: ANSI.teal },
   other: { title: "🧩 Otr", accent: ANSI.purple },
 };
-
 const DENSE_STAT_CATEGORY_ORDER: DenseStatCategory[] = [
   "overall",
   "offensive",
@@ -342,7 +338,6 @@ const DENSE_STAT_CATEGORY_ORDER: DenseStatCategory[] = [
   "goalkeeper",
   "other",
 ];
-
 const STAT_COLUMN_HEADERS: Record<string, string> = {
   PASSES: "Pass",
   ACCURATE_PASSES: "Pass+",
@@ -379,7 +374,6 @@ const STAT_COLUMN_HEADERS: Record<string, string> = {
   FOULS: "Fls",
   FOULS_DRAWN: "FD",
 };
-
 const STAT_COLUMN_ORDER = [
   "PASSES",
   "ACCURATE_PASSES",
@@ -416,7 +410,6 @@ const STAT_COLUMN_ORDER = [
   "GOALS_CONCEDED",
   "GOALKEEPER_GOALS_CONCEDED",
 ];
-
 const CATEGORY_PRIORITY: Record<PreparedStat["category"], number> = {
   headline: 0,
   overall: 1,
@@ -425,16 +418,13 @@ const CATEGORY_PRIORITY: Record<PreparedStat["category"], number> = {
   discipline: 4,
   other: 5,
 };
-
-function color(text: string, ...codes: string[]): string {
+const color = (text: string, ...codes: string[]): string => {
   return `${codes.join("")}${text}${ANSI.reset}`;
-}
-
-function badge(text: string, fg: string, bg: string): string {
+};
+const badge = (text: string, fg: string, bg: string): string => {
   return color(` ${text} `, ANSI.bold, fg, bg);
-}
-
-function ratingBadge(value: string): string {
+};
+const ratingBadge = (value: string): string => {
   if (value === "-") return badge("--", ANSI.white, ANSI.bgGray);
   const numeric = Number(value);
   if (Number.isNaN(numeric)) return badge(value, ANSI.white, ANSI.bgGray);
@@ -443,9 +433,8 @@ function ratingBadge(value: string): string {
   if (numeric >= 6.5) return badge(value, ANSI.black, ANSI.bgYellow);
   if (numeric >= 6) return badge(value, ANSI.white, ANSI.bgOrange);
   return badge(value, ANSI.white, ANSI.bgRed);
-}
-
-function roleBadge(role: string): string {
+};
+const roleBadge = (role: string): string => {
   switch (role) {
     case "STR":
       return badge(role, ANSI.white, ANSI.bgBlue);
@@ -454,17 +443,15 @@ function roleBadge(role: string): string {
     default:
       return badge(role, ANSI.white, ANSI.bgGray);
   }
-}
-
-function stateBadge(state: string): string {
+};
+const stateBadge = (state: string): string => {
   const normalized = normalizeText(state).replace(/\s+/g, "_");
   if (normalized === "ft") return badge("FT", ANSI.white, ANSI.bgGreen);
   if (normalized === "ht") return badge("HT", ANSI.black, ANSI.bgYellow);
   if (normalized.includes("live")) return badge(state, ANSI.white, ANSI.bgRed);
   return badge(state, ANSI.white, ANSI.bgGray);
-}
-
-function teamBadge(kind: "home" | "away" | "unknown"): string {
+};
+const teamBadge = (kind: "home" | "away" | "unknown"): string => {
   switch (kind) {
     case "home":
       return badge("HOME", ANSI.white, ANSI.bgBlue);
@@ -473,77 +460,62 @@ function teamBadge(kind: "home" | "away" | "unknown"): string {
     default:
       return badge("NO TM", ANSI.white, ANSI.bgGray);
   }
-}
-
-function stripAnsi(value: string): string {
+};
+const stripAnsi = (value: string): string => {
   return value.replace(/\u001b\[[0-9;]*m/g, "");
-}
-
-function visibleLength(value: string): number {
+};
+const visibleLength = (value: string): number => {
   return stripAnsi(value).length;
-}
-
-function pad(value: string, length: number): string {
+};
+const pad = (value: string, length: number): string => {
   const clean = stripAnsi(value);
   if (clean.length >= length) return value;
   return `${value}${" ".repeat(length - clean.length)}`;
-}
-
-function truncate(value: string, maxLength: number): string {
+};
+const truncate = (value: string, maxLength: number): string => {
   if (value.length <= maxLength) return value;
   return `${value.slice(0, Math.max(0, maxLength - 1))}…`;
-}
-
-function truncateVisible(value: string, maxLength: number): string {
+};
+const truncateVisible = (value: string, maxLength: number): string => {
   const clean = stripAnsi(value);
   if (clean.length <= maxLength) return value;
   return truncate(clean, maxLength);
-}
-
-function padAlign(value: string, length: number, align: "left" | "right" = "left"): string {
+};
+const padAlign = (value: string, length: number, align: "left" | "right" = "left"): string => {
   const cleanLength = visibleLength(value);
   if (cleanLength >= length) return value;
   const padding = " ".repeat(length - cleanLength);
   return align === "right" ? `${padding}${value}` : `${value}${padding}`;
-}
-
-function wrapText(value: string, width: number): string[] {
+};
+const wrapText = (value: string, width: number): string[] => {
   const trimmed = value.trim();
   if (!trimmed) return [""];
-
   const words = trimmed.split(/\s+/);
   const lines: string[] = [];
   let current = "";
-
   for (const word of words) {
     if (!current) {
       current = word;
       continue;
     }
-
     if (`${current} ${word}`.length <= width) {
       current = `${current} ${word}`;
       continue;
     }
-
     lines.push(current);
     current = word;
   }
-
   if (current) lines.push(current);
   return lines;
-}
-
-function printRule(char = "─", width = REPORT_WIDTH): void {
+};
+const printRule = (char = "─", width = REPORT_WIDTH): void => {
   console.log(color(char.repeat(width), ANSI.gray));
-}
-
-function printBox(title: string, lines: string[], accent = ANSI.blue): void {
+};
+const printBox = (title: string, lines: string[], accent = ANSI.blue): void => {
   const width = Math.min(
     120,
     Math.max(title.length + 6, ...lines.map((line) => visibleLength(line) + 4), 40)
   );
-
   console.log(color(`┌${"─".repeat(width - 2)}┐`, accent));
   console.log(
     color("│ ", accent) +
@@ -552,7 +524,6 @@ function printBox(title: string, lines: string[], accent = ANSI.blue): void {
       color(" │", accent)
   );
   console.log(color(`├${"─".repeat(width - 2)}┤`, accent));
-
   for (const line of lines) {
     const renderedLine = truncateVisible(line, width - 4);
     console.log(
@@ -562,100 +533,81 @@ function printBox(title: string, lines: string[], accent = ANSI.blue): void {
         color(" │", accent)
     );
   }
-
   console.log(color(`└${"─".repeat(width - 2)}┘`, accent));
-}
-
-function packInlineItems(
+};
+const packInlineItems = (
   items: string[],
   width: number,
   separator = color(" • ", ANSI.gray)
-): string[] {
+): string[] => {
   const filtered = items.filter((item) => stripAnsi(item).trim().length > 0);
   if (filtered.length === 0) return [];
-
   const lines: string[] = [];
   const separatorLength = visibleLength(separator);
   let current = "";
-
   for (const item of filtered) {
     if (!current) {
       current = item;
       continue;
     }
-
     if (visibleLength(current) + separatorLength + visibleLength(item) <= width) {
       current = `${current}${separator}${item}`;
       continue;
     }
-
     lines.push(current);
     current = item;
   }
-
   if (current) lines.push(current);
   return lines;
-}
-
-function buildLabeledItemLines(label: string, items: string[], width: number): string[] {
+};
+const buildLabeledItemLines = (label: string, items: string[], width: number): string[] => {
   const labelPrefix = `${label} `;
   const labelWidth = visibleLength(labelPrefix);
   const availableWidth = Math.max(24, width - labelWidth);
   const lines = packInlineItems(items, availableWidth);
-
   if (lines.length === 0) return [];
-
   return lines.map(
     (line, index) =>
       `${index === 0 ? color(labelPrefix, ANSI.bold, ANSI.white) : " ".repeat(labelWidth)}${line}`
   );
-}
-
-function buildLabeledTextLines(label: string, value: string, width: number): string[] {
+};
+const buildLabeledTextLines = (label: string, value: string, width: number): string[] => {
   const labelPrefix = `${label} `;
   const labelWidth = visibleLength(labelPrefix);
   const availableWidth = Math.max(24, width - labelWidth);
   const wrapped = wrapText(value, availableWidth);
-
   return wrapped.map(
     (line, index) =>
       `${index === 0 ? color(labelPrefix, ANSI.bold, ANSI.white) : " ".repeat(labelWidth)}${line}`
   );
-}
-
-function printCard(lines: string[], accent: string): void {
+};
+const printCard = (lines: string[], accent: string): void => {
   const indent = "  ";
   const contentWidth = Math.max(72, REPORT_WIDTH - 8);
-
   console.log(`${indent}${color(`┌${"─".repeat(contentWidth + 2)}┐`, accent)}`);
-
   for (const line of lines) {
     const rendered = truncateVisible(line, contentWidth);
     console.log(
       `${indent}${color("│ ", accent)}${rendered}${" ".repeat(Math.max(0, contentWidth - visibleLength(rendered)))}${color(" │", accent)}`
     );
   }
-
   console.log(`${indent}${color(`└${"─".repeat(contentWidth + 2)}┘`, accent)}`);
-}
-
+};
 type TableColumn = {
   header: string;
   width: number;
   align?: "left" | "right";
 };
-
 type TableOptions = {
   cellPadding?: number;
   indent?: string;
 };
-
-function printTable(
+const printTable = (
   columns: TableColumn[],
   rows: string[][],
   accent: string,
   options?: TableOptions
-): void {
+): void => {
   const indent = options?.indent ?? "  ";
   const cellPadding = options?.cellPadding ?? 1;
   const paddedWidth = (column: TableColumn) => column.width + cellPadding * 2;
@@ -666,95 +618,77 @@ function printTable(
           `${color("─".repeat(paddedWidth(column)), accent)}${index < columns.length - 1 ? color(middle, accent) : ""}`
       )
       .join("")}${color(right, accent)}`;
-
   const renderRow = (cells: string[]): string => {
     const formatted = columns.map(
       (column, index) =>
         `${" ".repeat(cellPadding)}${padAlign(truncateVisible(cells[index] ?? "", column.width), column.width, column.align ?? "left")}${" ".repeat(cellPadding)}`
     );
-
     return `${indent}${color("│", accent)}${formatted.join(color("│", accent))}${color("│", accent)}`;
   };
-
   console.log(renderBorder("┌", "┬", "┐"));
   console.log(renderRow(columns.map((column) => color(column.header, ANSI.bold, ANSI.white))));
   console.log(renderBorder("├", "┼", "┤"));
-
   rows.forEach((row, index) => {
     console.log(renderRow(row));
     if (index < rows.length - 1) {
       console.log(renderBorder("├", "┼", "┤"));
     }
   });
-
   console.log(renderBorder("└", "┴", "┘"));
-}
-
-function printWrappedLine(label: string, value: string, indent = 5, width = REPORT_WIDTH): void {
+};
+const printWrappedLine = (label: string, value: string, indent = 5, width = REPORT_WIDTH): void => {
   const prefix = `${" ".repeat(indent)}${pad(color(`${label}:`, ANSI.bold, ANSI.gray), LABEL_WIDTH)}`;
   const continuation = `${" ".repeat(indent)}${" ".repeat(LABEL_WIDTH)}`;
   const wrapped = wrapText(value, width - prefix.length);
-
   wrapped.forEach((line, index) => {
     console.log(`${index === 0 ? prefix : continuation}${line}`);
   });
-}
-
-function formatDate(value: Date | null | undefined): string {
+};
+const formatDate = (value: Date | null | undefined): string => {
   if (!value) return "No date";
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "America/Montevideo",
   }).format(value);
-}
-
-function formatDateOnly(value: Date | null | undefined): string {
+};
+const formatDateOnly = (value: Date | null | undefined): string => {
   if (!value) return "No date";
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeZone: "America/Montevideo",
   }).format(value);
-}
-
-function calculateAge(dateOfBirth: Date | null): number | null {
+};
+const calculateAge = (dateOfBirth: Date | null): number | null => {
   if (!dateOfBirth) return null;
-
   const now = new Date();
   let age = now.getUTCFullYear() - dateOfBirth.getUTCFullYear();
   const monthDiff = now.getUTCMonth() - dateOfBirth.getUTCMonth();
   const dayDiff = now.getUTCDate() - dateOfBirth.getUTCDate();
-
   if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
     age -= 1;
   }
-
   return age;
-}
-
-function normalizeText(value: string | null | undefined): string {
+};
+const normalizeText = (value: string | null | undefined): string => {
   return (value ?? "")
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
-}
-
-function extractNumbers(value: string | null | undefined): number[] {
+};
+const extractNumbers = (value: string | null | undefined): number[] => {
   if (!value) return [];
   return [...value.matchAll(/\d+/g)].map((match) => Number(match[0])).filter(Number.isFinite);
-}
-
-function rankCandidate(query: string, entity: MatchableEntity): number {
+};
+const rankCandidate = (query: string, entity: MatchableEntity): number => {
   const normalizedQuery = normalizeText(query);
   const queryNumbers = extractNumbers(query);
   const names = [entity.name, entity.slug]
     .filter((value): value is string => Boolean(value))
     .map((value) => normalizeText(value));
-
   let score = 0;
-
   if (String(entity.id) === query) score += 1000;
   if (
     entity.sportmonksId !== null &&
@@ -763,7 +697,6 @@ function rankCandidate(query: string, entity: MatchableEntity): number {
   ) {
     score += 900;
   }
-
   for (const name of names) {
     if (!name) continue;
     if (name === normalizedQuery) score += 800;
@@ -771,7 +704,6 @@ function rankCandidate(query: string, entity: MatchableEntity): number {
     if (name.includes(normalizedQuery)) score += 200;
     if (normalizedQuery.includes(name) && name.length > 2) score += 100;
   }
-
   const candidateNumbers = [...extractNumbers(entity.name), ...extractNumbers(entity.slug)];
   if (
     queryNumbers.length > 0 &&
@@ -779,34 +711,30 @@ function rankCandidate(query: string, entity: MatchableEntity): number {
   ) {
     score += 700;
   }
-
   return score;
-}
-
-function pickBestCandidate<T extends MatchableEntity>(items: T[], query: string, label: string): T {
+};
+const pickBestCandidate = <T extends MatchableEntity>(
+  items: T[],
+  query: string,
+  label: string
+): T => {
   if (items.length === 0) {
     throw new Error(`No ${label}s loaded to resolve "${query}".`);
   }
-
   const ranked = items
     .map((item) => ({ item, score: rankCandidate(query, item) }))
     .sort((left, right) => right.score - left.score);
-
   if (ranked[0] && ranked[0].score > 0) {
     return ranked[0].item;
   }
-
   const sample = items
     .slice(0, 10)
     .map((item) => item.name ?? item.slug ?? `ID ${item.id}`)
     .join(", ");
-
   throw new Error(`Could not find ${label} for "${query}". Some options: ${sample}`);
-}
-
-function parseArgs(argv: string[]): ReportOptions {
+};
+const parseArgs = (argv: string[]): ReportOptions => {
   const argMap = new Map<string, string>();
-
   for (const arg of argv) {
     if (!arg.startsWith("--")) continue;
     const [rawKey, ...rawValue] = arg.slice(2).split("=");
@@ -814,52 +742,57 @@ function parseArgs(argv: string[]): ReportOptions {
     const value = rawValue.join("=").trim();
     if (key) argMap.set(key, value);
   }
-
   const season = argMap.get("season");
   const group = argMap.get("group");
   const jornada = argMap.get("jornada");
   const rawView = normalizeText(argMap.get("view"));
   const view: ReportView = rawView === "full" ? "full" : "compact";
-
   if (!season || !group || !jornada) {
     throw new Error(
       'Missing arguments. Usage: pnpm report:fixture-players --season="2026" --group="Apertura" --jornada="1" [--view="compact|full"]'
     );
   }
-
   return { season, group, jornada, view };
-}
-
-function normalizeStatKey(value: string | null | undefined): string {
+};
+const normalizeStatKey = (value: string | null | undefined): string => {
   return (value ?? "")
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
-}
-
-function toStatValueString(value: Prisma.JsonValue | null): string {
+};
+const toStatValueString = (value: Prisma.JsonValue | null): string => {
   if (value === null) return "null";
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   if (typeof value === "string") return value;
   if (value && typeof value === "object" && !Array.isArray(value) && "value" in value) {
-    return toStatValueString((value as { value?: Prisma.JsonValue | null }).value ?? null);
+    return toStatValueString(
+      (
+        value as {
+          value?: Prisma.JsonValue | null;
+        }
+      ).value ?? null
+    );
   }
   return JSON.stringify(value);
-}
-
-function toStatNumber(value: Prisma.JsonValue | null): number | null {
+};
+const toStatNumber = (value: Prisma.JsonValue | null): number | null => {
   if (typeof value === "number") return value;
   if (typeof value === "string") {
     const parsed = Number(value);
     return Number.isNaN(parsed) ? null : parsed;
   }
   if (value && typeof value === "object" && !Array.isArray(value) && "value" in value) {
-    return toStatNumber((value as { value?: Prisma.JsonValue | null }).value ?? null);
+    return toStatNumber(
+      (
+        value as {
+          value?: Prisma.JsonValue | null;
+        }
+      ).value ?? null
+    );
   }
   return null;
-}
-
-function toStatBoolean(value: Prisma.JsonValue | null): boolean {
+};
+const toStatBoolean = (value: Prisma.JsonValue | null): boolean => {
   if (typeof value === "boolean") return value;
   if (typeof value === "number") return value !== 0;
   if (typeof value === "string") {
@@ -870,36 +803,39 @@ function toStatBoolean(value: Prisma.JsonValue | null): boolean {
     if (normalized === "0") return false;
   }
   if (value && typeof value === "object" && !Array.isArray(value) && "value" in value) {
-    return toStatBoolean((value as { value?: Prisma.JsonValue | null }).value ?? null);
+    return toStatBoolean(
+      (
+        value as {
+          value?: Prisma.JsonValue | null;
+        }
+      ).value ?? null
+    );
   }
   return false;
-}
-
-function resolveStatLabel(
+};
+const resolveStatLabel = (
   key: string,
   fallbackName: string | null | undefined
-): { label: string; short: string } {
+): {
+  label: string;
+  short: string;
+} => {
   const known = STAT_LABELS[key];
   if (known) return known;
-
   const base = (fallbackName ?? key).replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
-
   const title = base
     .split(" ")
     .filter(Boolean)
     .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1).toLowerCase()}`)
     .join(" ");
-
   return { label: title || key, short: title.slice(0, 4) || key.slice(0, 4) };
-}
-
-function resolveStatCategory(
+};
+const resolveStatCategory = (
   key: string,
   statGroup: string | null | undefined
-): PreparedStat["category"] {
+): PreparedStat["category"] => {
   if (HEADLINE_KEYS.includes(key)) return "headline";
   if (["YELLOWCARDS", "REDCARDS", "FOULS", "FOULS_DRAWN"].includes(key)) return "discipline";
-
   switch ((statGroup ?? "").toLowerCase()) {
     case "overall":
     case "null":
@@ -911,25 +847,20 @@ function resolveStatCategory(
     default:
       return "other";
   }
-}
-
-function comparePreparedStats(left: PreparedStat, right: PreparedStat): number {
+};
+const comparePreparedStats = (left: PreparedStat, right: PreparedStat): number => {
   const leftPriority = CATEGORY_PRIORITY[left.category];
   const rightPriority = CATEGORY_PRIORITY[right.category];
   if (leftPriority !== rightPriority) return leftPriority - rightPriority;
-
   const leftHeadlineIndex = HEADLINE_KEYS.indexOf(left.key);
   const rightHeadlineIndex = HEADLINE_KEYS.indexOf(right.key);
   const safeLeft = leftHeadlineIndex === -1 ? Number.MAX_SAFE_INTEGER : leftHeadlineIndex;
   const safeRight = rightHeadlineIndex === -1 ? Number.MAX_SAFE_INTEGER : rightHeadlineIndex;
   if (safeLeft !== safeRight) return safeLeft - safeRight;
-
   return left.label.localeCompare(right.label, "en");
-}
-
-function buildSyntheticPreparedStat(key: string, numericValue: number): PreparedStat {
+};
+const buildSyntheticPreparedStat = (key: string, numericValue: number): PreparedStat => {
   const labels = resolveStatLabel(key, key);
-
   return {
     key,
     label: labels.label,
@@ -938,13 +869,14 @@ function buildSyntheticPreparedStat(key: string, numericValue: number): Prepared
     numericValue,
     category: resolveStatCategory(key, null),
   };
-}
-
-function buildEventFallbackTotals(events: EventWithPlayer[]): {
+};
+const buildEventFallbackTotals = (
+  events: EventWithPlayer[]
+): {
   goals: number;
   yellow: number;
   red: number;
-} {
+} => {
   return events.reduce(
     (acc, event) => {
       if (event.typeId && GOAL_EVENT_TYPE_IDS.has(event.typeId)) acc.goals += 1;
@@ -954,39 +886,35 @@ function buildEventFallbackTotals(events: EventWithPlayer[]): {
         acc.yellow += 1;
         acc.red += 1;
       }
-
       return acc;
     },
     { goals: 0, yellow: 0, red: 0 }
   );
-}
-
-function applyEventFallbackStats(stats: PreparedStat[], events: EventWithPlayer[]): PreparedStat[] {
+};
+const applyEventFallbackStats = (
+  stats: PreparedStat[],
+  events: EventWithPlayer[]
+): PreparedStat[] => {
   const merged = [...stats];
   const existingKeys = new Set(merged.map((stat) => stat.key));
   const fallbackTotals = buildEventFallbackTotals(events);
-
   const fallbackEntries: Array<[keyof typeof fallbackTotals, string]> = [
     ["goals", "GOALS"],
     ["yellow", "YELLOWCARDS"],
     ["red", "REDCARDS"],
   ];
-
   for (const [sourceKey, targetKey] of fallbackEntries) {
     const value = fallbackTotals[sourceKey];
     if (value <= 0 || existingKeys.has(targetKey)) continue;
-
     merged.push(buildSyntheticPreparedStat(targetKey, value));
     existingKeys.add(targetKey);
   }
-
   return merged.sort(comparePreparedStats);
-}
-
-function prepareStats(
+};
+const prepareStats = (
   stats: PlayerStatWithPlayer[],
   statTypeMap: Map<number, StatTypeInfo>
-): PreparedStat[] {
+): PreparedStat[] => {
   return stats
     .map((stat) => {
       const typeInfo = stat.typeId ? statTypeMap.get(stat.typeId) : null;
@@ -1004,38 +932,33 @@ function prepareStats(
       };
     })
     .sort(comparePreparedStats);
-}
-
-function buildStatMap(stats: PreparedStat[]): Map<string, PreparedStat> {
+};
+const buildStatMap = (stats: PreparedStat[]): Map<string, PreparedStat> => {
   return new Map(stats.map((stat) => [stat.key, stat]));
-}
-
-function getStatValue(stats: Map<string, PreparedStat>, key: string): string {
+};
+const getStatValue = (stats: Map<string, PreparedStat>, key: string): string => {
   return stats.get(key)?.value ?? "-";
-}
-
-function getStatNumber(stats: Map<string, PreparedStat>, key: string): number | null {
+};
+const getStatNumber = (stats: Map<string, PreparedStat>, key: string): number | null => {
   return stats.get(key)?.numericValue ?? null;
-}
-
-function buildComboStat(
+};
+const buildComboStat = (
   stats: Map<string, PreparedStat>,
   madeKey: string,
   totalKey: string,
   label: string
-): string | null {
+): string | null => {
   const made = getStatValue(stats, madeKey);
   const total = getStatValue(stats, totalKey);
   if (made === "-" && total === "-") return null;
   if (made !== "-" && total !== "-") return `${label} ${made}/${total}`;
   return `${label} ${made !== "-" ? made : total}`;
-}
-
-function findRawStatValue(
+};
+const findRawStatValue = (
   stats: PlayerStatWithPlayer[],
   statTypeMap: Map<number, StatTypeInfo>,
   targetKey: string
-): Prisma.JsonValue | null {
+): Prisma.JsonValue | null => {
   const match = stats.find((stat) => {
     const typeInfo = stat.typeId ? statTypeMap.get(stat.typeId) : null;
     const key = normalizeStatKey(
@@ -1043,18 +966,15 @@ function findRawStatValue(
     );
     return key === targetKey;
   });
-
   return match?.value ?? null;
-}
-
-function hasCompleteMatchStats(statMap: Map<string, PreparedStat>): boolean {
+};
+const hasCompleteMatchStats = (statMap: Map<string, PreparedStat>): boolean => {
   return [...COMPLETE_MATCH_STAT_KEYS].some((key) => getStatValue(statMap, key) !== "-");
-}
-
-function buildPlayerSummary(
+};
+const buildPlayerSummary = (
   entry: ResolvedPlayerEntry,
   statTypeMap: Map<number, StatTypeInfo>
-): PlayerSummaryData {
+): PlayerSummaryData => {
   const stats = applyEventFallbackStats(
     prepareStats(entry.stats, statTypeMap).filter(
       (stat) => !COMPACT_HIDDEN_META_KEYS.has(stat.key)
@@ -1062,7 +982,6 @@ function buildPlayerSummary(
     entry.events
   );
   const statMap = buildStatMap(stats);
-
   return {
     stats,
     statMap,
@@ -1074,47 +993,39 @@ function buildPlayerSummary(
     rating: getStatValue(statMap, "RATING"),
     captain: toStatBoolean(findRawStatValue(entry.stats, statTypeMap, "CAPTAIN")),
   };
-}
-
-function resolvePositionLabel(entry: ResolvedPlayerEntry): {
+};
+const resolvePositionLabel = (
+  entry: ResolvedPlayerEntry
+): {
   label: string;
   usedFallback: boolean;
-} {
+} => {
   if (entry.lineup?.position) {
     return { label: entry.lineup.position, usedFallback: false };
   }
-
   const detailed = entry.player.detailedPositionId
     ? POSITION_LABELS[entry.player.detailedPositionId]
     : null;
   if (detailed) return { label: detailed, usedFallback: true };
-
   const general = entry.player.positionId ? POSITION_LABELS[entry.player.positionId] : null;
   if (general) return { label: general, usedFallback: true };
-
   return { label: "No position", usedFallback: false };
-}
-
-function resolveRole(entry: ResolvedPlayerEntry, statMap: Map<string, PreparedStat>): string {
+};
+const resolveRole = (entry: ResolvedPlayerEntry, statMap: Map<string, PreparedStat>): string => {
   if (entry.lineup?.formationPosition !== null && entry.lineup?.formationPosition !== undefined)
     return "STR";
-
   const minutes = getStatNumber(statMap, "MINUTES_PLAYED");
   if ((minutes ?? 0) > 0 || entry.stats.length > 0 || entry.events.length > 0) return "SUB";
-
   return "BCH";
-}
-
-function summarizeEvents(events: EventWithPlayer[]): string {
+};
+const summarizeEvents = (events: EventWithPlayer[]): string => {
   if (events.length === 0) return "No events";
-
   return events
     .map((event) => {
       const minute =
         event.minute !== null
           ? `${event.minute}${event.extraMinute ? `+${event.extraMinute}` : ""}'`
           : "n/a";
-
       switch (event.typeId) {
         case 14:
         case 16:
@@ -1137,11 +1048,9 @@ function summarizeEvents(events: EventWithPlayer[]): string {
       }
     })
     .join(" | ");
-}
-
-function buildProfileItems(entry: ResolvedPlayerEntry): string[] {
+};
+const buildProfileItems = (entry: ResolvedPlayerEntry): string[] => {
   const age = calculateAge(entry.player.dateOfBirth);
-
   return [
     `🌍 ${entry.player.country?.name ?? "Country n/a"}`,
     age !== null ? `🎂 ${age}a` : null,
@@ -1149,12 +1058,14 @@ function buildProfileItems(entry: ResolvedPlayerEntry): string[] {
     entry.player.weight ? `⚖️ ${entry.player.weight} kg` : null,
     entry.player.dateOfBirth ? `📅 ${formatDateOnly(entry.player.dateOfBirth)}` : null,
   ].filter((value): value is string => Boolean(value));
-}
-
-function buildContextItems(
+};
+const buildContextItems = (
   entry: ResolvedPlayerEntry,
-  position: { label: string; usedFallback: boolean }
-): string[] {
+  position: {
+    label: string;
+    usedFallback: boolean;
+  }
+): string[] => {
   return [
     entry.teamName ? `🏟 ${entry.teamName}` : null,
     entry.player.commonName && entry.player.commonName !== entry.player.displayName
@@ -1169,9 +1080,8 @@ function buildContextItems(
     position.usedFallback ? "🛟 Position inferred from profile" : null,
     position.label === "No position" ? "🚫 No position data" : null,
   ].filter((value): value is string => Boolean(value));
-}
-
-function buildSummaryMetricItems(statMap: Map<string, PreparedStat>): string[] {
+};
+const buildSummaryMetricItems = (statMap: Map<string, PreparedStat>): string[] => {
   const items = [
     getStatValue(statMap, "MINUTES_PLAYED") !== "-"
       ? `⏱ ${getStatValue(statMap, "MINUTES_PLAYED")} min`
@@ -1204,24 +1114,20 @@ function buildSummaryMetricItems(statMap: Map<string, PreparedStat>): string[] {
       ? `🥅 Goals Conceded ${getStatValue(statMap, "GOALS_CONCEDED")}`
       : null,
   ].filter((value): value is string => Boolean(value));
-
   return items.length > 0 ? items : ["No statistical summary"];
-}
-
-function formatStatComboCell(
+};
+const formatStatComboCell = (
   stats: Map<string, PreparedStat>,
   madeKey: string,
   totalKey: string
-): string {
+): string => {
   const made = getStatValue(stats, madeKey);
   const total = getStatValue(stats, totalKey);
-
   if (made === "-" && total === "-") return "-";
   if (made !== "-" && total !== "-") return `${made}/${total}`;
   return made !== "-" ? made : total;
-}
-
-function formatCompactPositionLabel(value: string): string {
+};
+const formatCompactPositionLabel = (value: string): string => {
   switch (value) {
     case "Right-Back":
       return "RB";
@@ -1248,12 +1154,10 @@ function formatCompactPositionLabel(value: string): string {
     default:
       return value;
   }
-}
-
-function resolveDenseStatCategory(stat: PreparedStat): DenseStatCategory | null {
+};
+const resolveDenseStatCategory = (stat: PreparedStat): DenseStatCategory | null => {
   if (BASE_TABLE_STAT_KEYS.has(stat.key)) return null;
   if (GOALKEEPER_STAT_KEYS.has(stat.key)) return "goalkeeper";
-
   switch (stat.category) {
     case "overall":
       return "overall";
@@ -1266,25 +1170,20 @@ function resolveDenseStatCategory(stat: PreparedStat): DenseStatCategory | null 
     default:
       return "other";
   }
-}
-
-function resolveDenseStatHeader(stat: PreparedStat): string {
+};
+const resolveDenseStatHeader = (stat: PreparedStat): string => {
   return STAT_COLUMN_HEADERS[stat.key] ?? stat.shortLabel ?? stat.label.slice(0, 5);
-}
-
-function sortStatKeys(left: string, right: string): number {
+};
+const sortStatKeys = (left: string, right: string): number => {
   const leftIndex = STAT_COLUMN_ORDER.indexOf(left);
   const rightIndex = STAT_COLUMN_ORDER.indexOf(right);
   const safeLeft = leftIndex === -1 ? Number.MAX_SAFE_INTEGER : leftIndex;
   const safeRight = rightIndex === -1 ? Number.MAX_SAFE_INTEGER : rightIndex;
-
   if (safeLeft !== safeRight) return safeLeft - safeRight;
   return left.localeCompare(right, "en");
-}
-
-function buildColumnLegend(statKeys: string[]): string[] {
+};
+const buildColumnLegend = (statKeys: string[]): string[] => {
   const items = ["No=jersey", "Rtg=rating"];
-
   if (statKeys.some((key) => key.includes("ACCURATE") || key.endsWith("_WON"))) {
     items.push("+= accurate/won");
   }
@@ -1306,28 +1205,22 @@ function buildColumnLegend(statKeys: string[]): string[] {
   if (statKeys.includes("ERROR_LEAD_TO_SHOT")) {
     items.push("Err=error leading to shot");
   }
-
   return items;
-}
-
-function printDenseStatTables(rows: TeamPlayerRow[], kind: "home" | "away" | "unknown"): void {
+};
+const printDenseStatTables = (rows: TeamPlayerRow[], kind: "home" | "away" | "unknown"): void => {
   const buckets = new Map<DenseStatCategory, Map<string, PreparedStat>>();
-
   for (const row of rows) {
     for (const stat of row.summary.stats) {
       const category = resolveDenseStatCategory(stat);
       if (!category) continue;
-
       const current = buckets.get(category) ?? new Map<string, PreparedStat>();
       if (!current.has(stat.key)) current.set(stat.key, stat);
       buckets.set(category, current);
     }
   }
-
   for (const category of DENSE_STAT_CATEGORY_ORDER) {
     const bucket = buckets.get(category);
     if (!bucket || bucket.size === 0) continue;
-
     const categoryMeta = DENSE_STAT_CATEGORY_META[category];
     const statKeys = [...bucket.keys()].sort(sortStatKeys);
     const columns: TableColumn[] = [
@@ -1348,7 +1241,6 @@ function printDenseStatTables(rows: TeamPlayerRow[], kind: "home" | "away" | "un
         };
       }),
     ];
-
     console.log(color(`  ${categoryMeta.title}`, ANSI.bold, categoryMeta.accent));
     printTable(
       columns,
@@ -1366,15 +1258,13 @@ function printDenseStatTables(rows: TeamPlayerRow[], kind: "home" | "away" | "un
     );
     console.log("");
   }
-}
-
-function buildStatSections(stats: PreparedStat[]): StatSection[] {
+};
+const buildStatSections = (stats: PreparedStat[]): StatSection[] => {
   const excluded = new Set([...HEADLINE_KEYS, "YELLOWCARDS", "REDCARDS"]);
   const buildItems = (items: PreparedStat[], extraExcluded?: Set<string>) =>
     items
       .filter((stat) => !excluded.has(stat.key) && !(extraExcluded?.has(stat.key) ?? false))
       .map((stat) => `${stat.label}: ${stat.value}`);
-
   const sections: StatSection[] = [
     {
       title: "🎮 Game",
@@ -1411,29 +1301,27 @@ function buildStatSections(stats: PreparedStat[]): StatSection[] {
       items: buildItems(stats.filter((stat) => stat.category === "other")),
     },
   ];
-
   return sections.filter((section) => section.items.length > 0);
-}
-
-function comparePlayerEntries(left: ResolvedPlayerEntry, right: ResolvedPlayerEntry): number {
+};
+const comparePlayerEntries = (left: ResolvedPlayerEntry, right: ResolvedPlayerEntry): number => {
   const leftFormation = left.lineup?.formationPosition ?? Number.MAX_SAFE_INTEGER;
   const rightFormation = right.lineup?.formationPosition ?? Number.MAX_SAFE_INTEGER;
   if (leftFormation !== rightFormation) return leftFormation - rightFormation;
-
   const leftJersey = left.lineup?.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
   const rightJersey = right.lineup?.jerseyNumber ?? Number.MAX_SAFE_INTEGER;
   if (leftJersey !== rightJersey) return leftJersey - rightJersey;
-
   return (left.player.displayName ?? left.player.name).localeCompare(
     right.player.displayName ?? right.player.name,
     "en"
   );
-}
-
-function resolveTeamBucket(
+};
+const resolveTeamBucket = (
   fixture: FixtureWithDetails,
   teamId: number | null
-): { teamBucket: "home" | "away" | "unknown"; teamName: string | null } {
+): {
+  teamBucket: "home" | "away" | "unknown";
+  teamName: string | null;
+} => {
   if (teamId !== null && fixture.homeTeamId === teamId) {
     return { teamBucket: "home", teamName: fixture.homeTeam?.name ?? "Home" };
   }
@@ -1441,13 +1329,12 @@ function resolveTeamBucket(
     return { teamBucket: "away", teamName: fixture.awayTeam?.name ?? "Away" };
   }
   return { teamBucket: "unknown", teamName: null };
-}
-
-function resolveMembershipTeamId(
+};
+const resolveMembershipTeamId = (
   memberships: SquadMembershipLite[],
   fixture: FixtureWithDetails,
   playerId: number
-): number | null {
+): number | null => {
   const fixtureDate = fixture.kickoffAt ?? new Date();
   const membership = memberships.find(
     (item) =>
@@ -1457,34 +1344,29 @@ function resolveMembershipTeamId(
       item.from <= fixtureDate &&
       (item.to === null || item.to >= fixtureDate)
   );
-
   return membership?.teamId ?? null;
-}
-
-function prepareFixture(
+};
+const prepareFixture = (
   fixture: FixtureWithDetails,
   statTypeMap: Map<number, StatTypeInfo>,
   squadMemberships: SquadMembershipLite[],
   stateMap: Map<number, FixtureStateInfo>
-): PreparedFixtureReport {
+): PreparedFixtureReport => {
   const lineupByPlayerId = new Map<number, LineupWithPlayer>(
     fixture.lineups.map((lineup) => [lineup.playerId, lineup])
   );
   const statsByPlayerId = new Map<number, PlayerStatWithPlayer[]>();
   const eventsByPlayerId = new Map<number, EventWithPlayer[]>();
   const playerMap = new Map<number, PlayerWithCountry>();
-
   for (const lineup of fixture.lineups) {
     playerMap.set(lineup.playerId, lineup.player);
   }
-
   for (const stat of fixture.playerStats) {
     playerMap.set(stat.playerId, stat.player);
     const current = statsByPlayerId.get(stat.playerId) ?? [];
     current.push(stat);
     statsByPlayerId.set(stat.playerId, current);
   }
-
   for (const event of fixture.events) {
     if (!event.playerId || !event.player) continue;
     playerMap.set(event.playerId, event.player);
@@ -1492,7 +1374,6 @@ function prepareFixture(
     current.push(event);
     eventsByPlayerId.set(event.playerId, current);
   }
-
   const players: ResolvedPlayerEntry[] = [...playerMap.entries()]
     .map(([playerId, player]) => {
       const lineup = lineupByPlayerId.get(playerId) ?? null;
@@ -1500,7 +1381,6 @@ function prepareFixture(
       const events = eventsByPlayerId.get(playerId) ?? [];
       const teamId = lineup?.teamId ?? resolveMembershipTeamId(squadMemberships, fixture, playerId);
       const { teamBucket, teamName } = resolveTeamBucket(fixture, teamId);
-
       return {
         player,
         lineup,
@@ -1512,13 +1392,11 @@ function prepareFixture(
       };
     })
     .sort(comparePlayerEntries);
-
   const quality = players.reduce<FixtureQuality>(
     (acc, playerEntry) => {
       const prepared = buildPlayerSummary(playerEntry, statTypeMap);
       const position = resolvePositionLabel(playerEntry);
       const role = resolveRole(playerEntry, prepared.statMap);
-
       acc.playersTotal += 1;
       if (role === "STR") acc.starters += 1;
       if (role === "SUB") acc.substitutes += 1;
@@ -1534,7 +1412,6 @@ function prepareFixture(
       }
       if (playerEntry.stats.length === 0) acc.withoutStatsCount += 1;
       if (playerEntry.teamBucket === "unknown") acc.unresolvedTeamCount += 1;
-
       return acc;
     },
     {
@@ -1549,10 +1426,8 @@ function prepareFixture(
       unresolvedTeamCount: 0,
     }
   );
-
   const resolvedState = fixture.stateId ? (stateMap.get(fixture.stateId) ?? null) : null;
   const stateLabel = resolvedState?.state ?? resolvedState?.name ?? "No state";
-
   return {
     fixture,
     stateLabel,
@@ -1560,9 +1435,8 @@ function prepareFixture(
     players,
     quality,
   };
-}
-
-function buildGlobalQuality(reports: PreparedFixtureReport[]): GlobalQuality {
+};
+const buildGlobalQuality = (reports: PreparedFixtureReport[]): GlobalQuality => {
   return reports.reduce<GlobalQuality>(
     (acc, report) => {
       acc.playersTotal += report.quality.playersTotal;
@@ -1590,9 +1464,8 @@ function buildGlobalQuality(reports: PreparedFixtureReport[]): GlobalQuality {
       fixturesWithoutGroup: 0,
     }
   );
-}
-
-function printQualityBox(globalQuality: GlobalQuality): void {
+};
+const printQualityBox = (globalQuality: GlobalQuality): void => {
   printBox(
     "📊 Quick Overview",
     [
@@ -1604,9 +1477,8 @@ function printQualityBox(globalQuality: GlobalQuality): void {
     ANSI.purple
   );
   console.log("");
-}
-
-function accentForTeamKind(kind: "home" | "away" | "unknown"): string {
+};
+const accentForTeamKind = (kind: "home" | "away" | "unknown"): string => {
   switch (kind) {
     case "home":
       return ANSI.teal;
@@ -1615,9 +1487,8 @@ function accentForTeamKind(kind: "home" | "away" | "unknown"): string {
     default:
       return ANSI.gray;
   }
-}
-
-function teamNameColor(kind: "home" | "away" | "unknown"): string {
+};
+const teamNameColor = (kind: "home" | "away" | "unknown"): string => {
   switch (kind) {
     case "home":
       return ANSI.cyan;
@@ -1626,27 +1497,23 @@ function teamNameColor(kind: "home" | "away" | "unknown"): string {
     default:
       return ANSI.white;
   }
-}
-
-function formatAverageRating(
+};
+const formatAverageRating = (
   players: ResolvedPlayerEntry[],
   statTypeMap: Map<number, StatTypeInfo>
-): string {
+): string => {
   const ratings = players
     .map((player) => Number(buildPlayerSummary(player, statTypeMap).rating))
     .filter((value) => Number.isFinite(value));
-
   if (ratings.length === 0) return "-";
-
   return (ratings.reduce((sum, value) => sum + value, 0) / ratings.length).toFixed(2);
-}
-
-function printPlayerCard(
+};
+const printPlayerCard = (
   entry: ResolvedPlayerEntry,
   index: number,
   statTypeMap: Map<number, StatTypeInfo>,
   kind: "home" | "away" | "unknown"
-): void {
+): void => {
   const accent = accentForTeamKind(kind);
   const contentWidth = Math.max(72, REPORT_WIDTH - 8);
   const summary = buildPlayerSummary(entry, statTypeMap);
@@ -1669,7 +1536,6 @@ function printPlayerCard(
           : position.label === "No position"
             ? ANSI.red
             : ANSI.magenta;
-
   const headerLines = packInlineItems(
     [
       color(`${String(index + 1).padStart(2, "0")}.`, ANSI.gray),
@@ -1687,7 +1553,6 @@ function printPlayerCard(
     contentWidth,
     color("  ", ANSI.gray)
   );
-
   const lines: string[] = [
     ...headerLines,
     ...buildLabeledItemLines("👤 Profile", buildProfileItems(entry), contentWidth),
@@ -1699,24 +1564,21 @@ function printPlayerCard(
     ...buildLabeledItemLines("🧭 Context", buildContextItems(entry, position), contentWidth),
     ...buildLabeledTextLines("🎬 Events", summarizeEvents(entry.events), contentWidth),
   ];
-
   const sections = buildStatSections(summary.stats);
   for (const section of sections) {
     lines.push(color(section.title, ANSI.bold, section.accent));
     const statLines = packInlineItems(section.items, Math.max(24, contentWidth - 2));
     lines.push(...statLines.map((line) => `  ${line}`));
   }
-
   printCard(lines, accent);
-}
-
-function printTeamSection(
+};
+const printTeamSection = (
   kind: "home" | "away" | "unknown",
   title: string,
   players: ResolvedPlayerEntry[],
   statTypeMap: Map<number, StatTypeInfo>,
   view: ReportView
-): void {
+): void => {
   const accent = accentForTeamKind(kind);
   const highlight = teamNameColor(kind);
   const teamPlayers = players.length;
@@ -1730,7 +1592,6 @@ function printTeamSection(
   }).length;
   const bench = Math.max(0, teamPlayers - starters - subs);
   const averageRating = formatAverageRating(players, statTypeMap);
-
   console.log(`${teamBadge(kind)} ${color(title, ANSI.bold, highlight)}`);
   const summaryLines = packInlineItems(
     [
@@ -1744,18 +1605,15 @@ function printTeamSection(
   );
   summaryLines.forEach((line) => console.log(`  ${line}`));
   console.log("");
-
   if (players.length === 0) {
     console.log(color("  No players in this section", ANSI.dim));
     console.log("");
     return;
   }
-
   const teamRows: TeamPlayerRow[] = players.map((entry) => {
     const summary = buildPlayerSummary(entry, statTypeMap);
     const position = resolvePositionLabel(entry);
     const role = resolveRole(entry, summary.statMap);
-
     return {
       entry,
       summary,
@@ -1763,11 +1621,9 @@ function printTeamSection(
       role,
     };
   });
-
   const teamHasCompleteStats = teamRows.some((row) => hasCompleteMatchStats(row.summary.statMap));
   const teamHasPartialOnlyStats =
     !teamHasCompleteStats && teamRows.some((row) => row.summary.stats.length > 0);
-
   const statKeys = [
     ...new Set(
       teamRows.flatMap((row) =>
@@ -1779,7 +1635,6 @@ function printTeamSection(
       )
     ),
   ].sort(sortStatKeys);
-
   console.log(
     color(`  📋 ${view === "full" ? "Player Summary" : "Players"}`, ANSI.bold, highlight)
   );
@@ -1816,7 +1671,6 @@ function printTeamSection(
           ...teamRows.map((row) => visibleLength(getStatValue(row.summary.statMap, key))),
           1
         );
-
         return {
           header,
           width,
@@ -1848,12 +1702,10 @@ function printTeamSection(
     accent,
     { cellPadding: 0 }
   );
-
   if (view === "full") {
     console.log("");
     console.log(color("  🧾 Full Profiles", ANSI.bold, highlight));
     console.log("");
-
     players.forEach((entry, index) => {
       printPlayerCard(entry, index, statTypeMap, kind);
       if (index < players.length - 1) {
@@ -1861,26 +1713,22 @@ function printTeamSection(
       }
     });
   }
-
   console.log("");
-}
-
-function normalizeFixtureStateText(state: FixtureStateInfo | null): string {
+};
+const normalizeFixtureStateText = (state: FixtureStateInfo | null): string => {
   return [state?.state, state?.name, state?.shortName, state?.developerName]
     .filter((value): value is string => Boolean(value))
     .join(" ")
     .toLowerCase();
-}
-
-function fixtureHasKeyword(text: string, keywords: string[]): boolean {
+};
+const fixtureHasKeyword = (text: string, keywords: string[]): boolean => {
   return keywords.some((keyword) => text.includes(keyword));
-}
-
-function buildFixtureDataNotice(
+};
+const buildFixtureDataNotice = (
   fixture: FixtureWithDetails,
   stateLabel: string,
   resolvedState: FixtureStateInfo | null
-): string[] {
+): string[] => {
   const hasAnyDetailFeed =
     fixture.lineups.length > 0 ||
     fixture.playerStats.length > 0 ||
@@ -1908,7 +1756,6 @@ function buildFixtureDataNotice(
     "walk over",
     "awarded",
   ]);
-
   if (isNotStartedLike) {
     if (kickoffInFuture) {
       return [
@@ -1916,47 +1763,40 @@ function buildFixtureDataNotice(
         `📦 Current state: ${stateLabel} | lineups ${fixture.lineups.length} | playerStats ${fixture.playerStats.length} | events ${fixture.events.length} | teamStats ${fixture.teamStats.length}.`,
       ];
     }
-
     return [
       "⏳ This match is still listed as not started or pending update in the feed.",
       `📦 Current state: ${stateLabel} | lineups ${fixture.lineups.length} | playerStats ${fixture.playerStats.length} | events ${fixture.events.length} | teamStats ${fixture.teamStats.length}.`,
     ];
   }
-
   if (isDelayedLike && !hasAnyDetailFeed && !hasMatchBasics) {
     return [
       "⏸️ This match is listed as postponed, suspended or cancelled; the player table is not shown.",
       `📦 Current state: ${stateLabel} | lineups ${fixture.lineups.length} | playerStats ${fixture.playerStats.length} | events ${fixture.events.length} | teamStats ${fixture.teamStats.length}.`,
     ];
   }
-
   if (hasAnyDetailFeed || hasMatchBasics) {
     return [
       "⚠️ The match header is in, but the player detail is not yet complete in this sync.",
       `⏳ Current state: ${stateLabel} | lineups ${fixture.lineups.length} | playerStats ${fixture.playerStats.length} | events ${fixture.events.length} | teamStats ${fixture.teamStats.length}.`,
     ];
   }
-
   return [
     "⏳ No lineups or player statistics yet for this match.",
     "📦 For now we only have the base fixture record; once the detail arrives, this view will fill in automatically.",
   ];
-}
-
-function printFixtureReport(
+};
+const printFixtureReport = (
   report: PreparedFixtureReport,
   statTypeMap: Map<number, StatTypeInfo>,
   fixtureIndex: number,
   totalFixtures: number,
   view: ReportView
-): void {
+): void => {
   const { fixture, players, stateLabel, resolvedState, quality } = report;
   const homePlayers = players.filter((player) => player.teamBucket === "home");
   const awayPlayers = players.filter((player) => player.teamBucket === "away");
   const unknownPlayers = players.filter((player) => player.teamBucket === "unknown");
-
   const title = `Match ${fixtureIndex}/${totalFixtures} · ${fixture.homeTeam?.name ?? "Home"} ${fixture.homeScore ?? "-"} - ${fixture.awayScore ?? "-"} ${fixture.awayTeam?.name ?? "Away"}`;
-
   const boxLines = [
     ...packInlineItems(
       [
@@ -1999,9 +1839,7 @@ function printFixtureReport(
       color("  |  ", ANSI.gray)
     ),
   ];
-
   printBox(title, boxLines, ANSI.teal);
-
   console.log("");
   const stateText = normalizeFixtureStateText(resolvedState);
   const shouldHideTablesForState = fixtureHasKeyword(stateText, [
@@ -2015,7 +1853,6 @@ function printFixtureReport(
     "walk over",
     "awarded",
   ]);
-
   if (players.length === 0 || shouldHideTablesForState) {
     buildFixtureDataNotice(fixture, stateLabel, resolvedState).forEach((line, index) => {
       console.log(color(`  ${line}`, index === 0 ? ANSI.yellow : ANSI.dim));
@@ -2025,22 +1862,18 @@ function printFixtureReport(
     console.log("");
     return;
   }
-
   printTeamSection("home", `${fixture.homeTeam?.name ?? "Home"}`, homePlayers, statTypeMap, view);
   printTeamSection("away", `${fixture.awayTeam?.name ?? "Away"}`, awayPlayers, statTypeMap, view);
-
   if (unknownPlayers.length > 0) {
     printTeamSection("unknown", "Players with unresolved team", unknownPlayers, statTypeMap, view);
   }
-
   printRule();
   console.log("");
-}
-
-export async function reportFixturePlayerDetails(
+};
+export const reportFixturePlayerDetails = async (
   deps: ReportDependencies,
   rawOptions?: Partial<ReportOptions>
-): Promise<void> {
+): Promise<void> => {
   const options: ReportOptions =
     rawOptions?.season && rawOptions?.group && rawOptions?.jornada
       ? {
@@ -2050,9 +1883,7 @@ export async function reportFixturePlayerDetails(
           view: rawOptions.view === "full" ? "full" : "compact",
         }
       : parseArgs(process.argv.slice(3));
-
   const { db } = deps;
-
   const seasons = await db.season.findMany({
     include: {
       league: true,
@@ -2065,7 +1896,6 @@ export async function reportFixturePlayerDetails(
     },
     orderBy: { startingAt: "desc" },
   });
-
   const season = pickBestCandidate(
     seasons.map((item) => ({
       ...item,
@@ -2074,12 +1904,10 @@ export async function reportFixturePlayerDetails(
     options.season,
     "season"
   );
-
   const seasonRecord = seasons.find((item) => item.id === season.id);
   if (!seasonRecord) {
     throw new Error(`Could not load resolved season with ID ${season.id}.`);
   }
-
   const groups: GroupScopeCandidate[] = seasonRecord.stages.flatMap(
     (stage): GroupScopeCandidate[] => {
       if (stage.groups.length === 0) {
@@ -2094,7 +1922,6 @@ export async function reportFixturePlayerDetails(
           },
         ];
       }
-
       return stage.groups.map((group) => ({
         id: group.id,
         sportmonksId: group.sportmonksId,
@@ -2105,7 +1932,6 @@ export async function reportFixturePlayerDetails(
       }));
     }
   );
-
   const matchedGroup = pickBestCandidate(groups, options.group, "group");
   const matchedStage = seasonRecord.stages.find(
     (stage) => stage.id === (matchedGroup as GroupScopeCandidate).stageId
@@ -2113,13 +1939,11 @@ export async function reportFixturePlayerDetails(
   if (!matchedStage) {
     throw new Error(`Could not resolve stage for group ${matchedGroup.name ?? matchedGroup.id}.`);
   }
-
   const rounds = matchedStage.rounds.map((round) => ({
     ...round,
     slug: round.slug ?? undefined,
   }));
   const matchedRound = pickBestCandidate(rounds, options.jornada, "round");
-
   const groupCandidate = matchedGroup as GroupScopeCandidate;
   const fixtures = await db.fixture.findMany({
     where: {
@@ -2170,13 +1994,11 @@ export async function reportFixturePlayerDetails(
     },
     orderBy: [{ kickoffAt: "asc" }, { id: "asc" }],
   });
-
   if (fixtures.length === 0) {
     throw new Error(
       `No matches found for season="${seasonRecord.name}", group="${matchedGroup.name ?? matchedStage.name}" and round="${matchedRound.name}".`
     );
   }
-
   const statTypeIds = [
     ...new Set(
       fixtures
@@ -2205,7 +2027,6 @@ export async function reportFixturePlayerDetails(
         .filter((id): id is number => id !== null)
     ),
   ];
-
   const statTypes =
     statTypeIds.length > 0
       ? await db.statType.findMany({ where: { id: { in: statTypeIds } } })
@@ -2232,7 +2053,6 @@ export async function reportFixturePlayerDetails(
           orderBy: { from: "desc" },
         })
       : [];
-
   const statTypeMap = new Map<number, StatTypeInfo>(
     statTypes.map((type) => [
       type.id,
@@ -2244,12 +2064,10 @@ export async function reportFixturePlayerDetails(
     ])
   );
   const stateMap = new Map(states.map((state) => [state.id, state]));
-
   const preparedReports = fixtures.map((fixture) =>
     prepareFixture(fixture, statTypeMap, squadMemberships, stateMap)
   );
   const globalQuality = buildGlobalQuality(preparedReports);
-
   printBox(
     "⚽ Professional Matchday Report",
     [
@@ -2260,10 +2078,8 @@ export async function reportFixturePlayerDetails(
     ANSI.orange
   );
   console.log("");
-
   printQualityBox(globalQuality);
-
   preparedReports.forEach((report, index) => {
     printFixtureReport(report, statTypeMap, index + 1, preparedReports.length, options.view);
   });
-}
+};

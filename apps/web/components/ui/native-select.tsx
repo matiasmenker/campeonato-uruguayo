@@ -1,17 +1,14 @@
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 import { IconSelector } from "@tabler/icons-react"
-
 type NativeSelectProps = Omit<React.ComponentProps<"select">, "size"> & {
   size?: "sm" | "default"
 }
-
-function NativeSelect({
+const NativeSelect = ({
   className,
   size = "default",
   ...props
-}: NativeSelectProps) {
+}: NativeSelectProps) => {
   return (
     <div
       className={cn(
@@ -35,11 +32,10 @@ function NativeSelect({
     </div>
   )
 }
-
-function NativeSelectOption({
+const NativeSelectOption = ({
   className,
   ...props
-}: React.ComponentProps<"option">) {
+}: React.ComponentProps<"option">) => {
   return (
     <option
       data-slot="native-select-option"
@@ -48,11 +44,10 @@ function NativeSelectOption({
     />
   )
 }
-
-function NativeSelectOptGroup({
+const NativeSelectOptGroup = ({
   className,
   ...props
-}: React.ComponentProps<"optgroup">) {
+}: React.ComponentProps<"optgroup">) => {
   return (
     <optgroup
       data-slot="native-select-optgroup"
@@ -61,5 +56,4 @@ function NativeSelectOptGroup({
     />
   )
 }
-
 export { NativeSelect, NativeSelectOptGroup, NativeSelectOption }

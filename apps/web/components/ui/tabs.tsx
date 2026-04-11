@@ -1,16 +1,13 @@
 "use client"
-
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Tabs as TabsPrimitive } from "radix-ui"
-
 import { cn } from "@/lib/utils"
-
-function Tabs({
+const Tabs = ({
   className,
   orientation = "horizontal",
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Root>) {
+}: React.ComponentProps<typeof TabsPrimitive.Root>) => {
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
@@ -23,7 +20,6 @@ function Tabs({
     />
   )
 }
-
 const tabsListVariants = cva(
   "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-horizontal/tabs:h-9 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col data-[variant=line]:rounded-none",
   {
@@ -38,13 +34,12 @@ const tabsListVariants = cva(
     },
   }
 )
-
-function TabsList({
+const TabsList = ({
   className,
   variant = "default",
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.List> &
-  VariantProps<typeof tabsListVariants>) {
+  VariantProps<typeof tabsListVariants>) => {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
@@ -54,11 +49,10 @@ function TabsList({
     />
   )
 }
-
-function TabsTrigger({
+const TabsTrigger = ({
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+}: React.ComponentProps<typeof TabsPrimitive.Trigger>) => {
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
@@ -73,11 +67,10 @@ function TabsTrigger({
     />
   )
 }
-
-function TabsContent({
+const TabsContent = ({
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+}: React.ComponentProps<typeof TabsPrimitive.Content>) => {
   return (
     <TabsPrimitive.Content
       data-slot="tabs-content"
@@ -86,5 +79,4 @@ function TabsContent({
     />
   )
 }
-
 export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }

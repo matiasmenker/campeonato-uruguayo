@@ -2,14 +2,12 @@ import type { Transfer, Player, Team } from "db";
 import { toPlayerSummary } from "../players/players.mapper.js";
 import { toTeamSummary } from "../teams/teams.mapper.js";
 import type { TransferContract } from "./transfers.contracts.js";
-
 type TransferWithRelations = Transfer & {
   player: Player;
   fromTeam: Team | null;
   toTeam: Team | null;
 };
-
-export function toTransferContract(transfer: TransferWithRelations): TransferContract {
+export const toTransferContract = (transfer: TransferWithRelations): TransferContract => {
   return {
     id: transfer.id,
     sportmonksId: transfer.sportmonksId,
@@ -22,4 +20,4 @@ export function toTransferContract(transfer: TransferWithRelations): TransferCon
     createdAt: transfer.createdAt.toISOString(),
     updatedAt: transfer.updatedAt.toISOString(),
   };
-}
+};

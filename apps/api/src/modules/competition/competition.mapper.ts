@@ -13,10 +13,10 @@ import type {
   GroupContract,
   GroupSummary,
 } from "./competition.contracts.js";
-
-type LeagueWithCountry = League & { country: Country | null };
-
-export function toLeagueContract(league: LeagueWithCountry): LeagueContract {
+type LeagueWithCountry = League & {
+  country: Country | null;
+};
+export const toLeagueContract = (league: LeagueWithCountry): LeagueContract => {
   return {
     id: league.id,
     sportmonksId: league.sportmonksId,
@@ -27,20 +27,19 @@ export function toLeagueContract(league: LeagueWithCountry): LeagueContract {
     createdAt: league.createdAt.toISOString(),
     updatedAt: league.updatedAt.toISOString(),
   };
-}
-
-export function toLeagueSummary(league: League): LeagueSummary {
+};
+export const toLeagueSummary = (league: League): LeagueSummary => {
   return {
     id: league.id,
     name: league.name,
     shortCode: league.shortCode,
     imagePath: league.imagePath,
   };
-}
-
-type SeasonWithLeague = Season & { league: League };
-
-export function toSeasonContract(season: SeasonWithLeague): SeasonContract {
+};
+type SeasonWithLeague = Season & {
+  league: League;
+};
+export const toSeasonContract = (season: SeasonWithLeague): SeasonContract => {
   return {
     id: season.id,
     sportmonksId: season.sportmonksId,
@@ -52,19 +51,18 @@ export function toSeasonContract(season: SeasonWithLeague): SeasonContract {
     createdAt: season.createdAt.toISOString(),
     updatedAt: season.updatedAt.toISOString(),
   };
-}
-
-export function toSeasonSummary(season: Season): SeasonSummary {
+};
+export const toSeasonSummary = (season: Season): SeasonSummary => {
   return {
     id: season.id,
     name: season.name,
     isCurrent: season.isCurrent,
   };
-}
-
-type StageWithSeason = Stage & { season: Season };
-
-export function toStageContract(stage: StageWithSeason): StageContract {
+};
+type StageWithSeason = Stage & {
+  season: Season;
+};
+export const toStageContract = (stage: StageWithSeason): StageContract => {
   return {
     id: stage.id,
     sportmonksId: stage.sportmonksId,
@@ -75,20 +73,19 @@ export function toStageContract(stage: StageWithSeason): StageContract {
     createdAt: stage.createdAt.toISOString(),
     updatedAt: stage.updatedAt.toISOString(),
   };
-}
-
-export function toStageSummary(stage: Stage): StageSummary {
+};
+export const toStageSummary = (stage: Stage): StageSummary => {
   return {
     id: stage.id,
     name: stage.name,
     type: stage.type,
     isCurrent: stage.isCurrent,
   };
-}
-
-type RoundWithStage = Round & { stage: Stage };
-
-export function toRoundContract(round: RoundWithStage): RoundContract {
+};
+type RoundWithStage = Round & {
+  stage: Stage;
+};
+export const toRoundContract = (round: RoundWithStage): RoundContract => {
   return {
     id: round.id,
     sportmonksId: round.sportmonksId,
@@ -99,19 +96,18 @@ export function toRoundContract(round: RoundWithStage): RoundContract {
     createdAt: round.createdAt.toISOString(),
     updatedAt: round.updatedAt.toISOString(),
   };
-}
-
-export function toRoundSummary(round: Round): RoundSummary {
+};
+export const toRoundSummary = (round: Round): RoundSummary => {
   return {
     id: round.id,
     name: round.name,
     isCurrent: round.isCurrent,
   };
-}
-
-type GroupWithStage = Group & { stage: Stage };
-
-export function toGroupContract(group: GroupWithStage): GroupContract {
+};
+type GroupWithStage = Group & {
+  stage: Stage;
+};
+export const toGroupContract = (group: GroupWithStage): GroupContract => {
   return {
     id: group.id,
     sportmonksId: group.sportmonksId,
@@ -120,11 +116,10 @@ export function toGroupContract(group: GroupWithStage): GroupContract {
     createdAt: group.createdAt.toISOString(),
     updatedAt: group.updatedAt.toISOString(),
   };
-}
-
-export function toGroupSummary(group: Group): GroupSummary {
+};
+export const toGroupSummary = (group: Group): GroupSummary => {
   return {
     id: group.id,
     name: group.name,
   };
-}
+};

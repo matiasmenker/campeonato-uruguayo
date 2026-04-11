@@ -10,7 +10,6 @@ import { toTeamSummary } from "../teams/teams.mapper.js";
 import { toRefereeSummary } from "../referees/referees.mapper.js";
 import { toFixtureStateSummary } from "../fixture-states/fixture-states.mapper.js";
 import type { FixtureContract } from "./fixtures.contracts.js";
-
 type FixtureWithRelations = Fixture & {
   season: Season;
   stage: Stage | null;
@@ -21,11 +20,10 @@ type FixtureWithRelations = Fixture & {
   homeTeam: Team | null;
   awayTeam: Team | null;
 };
-
-export function toFixtureContract(
+export const toFixtureContract = (
   fixture: FixtureWithRelations,
   resolvedState: FixtureState | null
-): FixtureContract {
+): FixtureContract => {
   return {
     id: fixture.id,
     sportmonksId: fixture.sportmonksId,
@@ -47,4 +45,4 @@ export function toFixtureContract(
     createdAt: fixture.createdAt.toISOString(),
     updatedAt: fixture.updatedAt.toISOString(),
   };
-}
+};

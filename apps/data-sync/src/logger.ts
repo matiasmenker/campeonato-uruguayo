@@ -1,13 +1,11 @@
 import pino from "pino";
-
 export interface Logger {
   info(msg: string, obj?: Record<string, unknown>): void;
   warn(msg: string, obj?: Record<string, unknown>): void;
   error(msg: string, obj?: Record<string, unknown>): void;
   child(bindings: Record<string, unknown>): Logger;
 }
-
-function createPinoLogger(): pino.Logger {
+const createPinoLogger = (): pino.Logger => {
   return pino({
     transport: {
       target: "pino-pretty",
@@ -18,11 +16,9 @@ function createPinoLogger(): pino.Logger {
       },
     },
   });
-}
-
-export function createLogger(name: string): Logger {
+};
+export const createLogger = (name: string): Logger => {
   const pinoLogger = createPinoLogger().child({ name });
-
   return {
     info: (msg, obj) => pinoLogger.info(obj ?? {}, msg),
     warn: (msg, obj) => pinoLogger.warn(obj ?? {}, msg),
@@ -37,4 +33,4 @@ export function createLogger(name: string): Logger {
       };
     },
   };
-}
+};

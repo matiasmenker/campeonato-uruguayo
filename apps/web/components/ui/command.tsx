@@ -1,8 +1,6 @@
 "use client"
-
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
-
 import { cn } from "@/lib/utils"
 import {
   Dialog,
@@ -13,11 +11,10 @@ import {
 } from "@/components/ui/dialog"
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group"
 import { IconSearch, IconCheck } from "@tabler/icons-react"
-
-function Command({
+const Command = ({
   className,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive>) {
+}: React.ComponentProps<typeof CommandPrimitive>) => {
   return (
     <CommandPrimitive
       data-slot="command"
@@ -29,8 +26,7 @@ function Command({
     />
   )
 }
-
-function CommandDialog({
+const CommandDialog = ({
   title = "Command Palette",
   description = "Search for a command to run...",
   children,
@@ -42,7 +38,7 @@ function CommandDialog({
   description?: string
   className?: string
   showCloseButton?: boolean
-}) {
+}) => {
   return (
     <Dialog {...props}>
       <DialogHeader className="sr-only">
@@ -61,11 +57,10 @@ function CommandDialog({
     </Dialog>
   )
 }
-
-function CommandInput({
+const CommandInput = ({
   className,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Input>) {
+}: React.ComponentProps<typeof CommandPrimitive.Input>) => {
   return (
     <div data-slot="command-input-wrapper" className="p-1 pb-0">
       <InputGroup className="h-8! rounded-lg! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
@@ -84,11 +79,10 @@ function CommandInput({
     </div>
   )
 }
-
-function CommandList({
+const CommandList = ({
   className,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.List>) {
+}: React.ComponentProps<typeof CommandPrimitive.List>) => {
   return (
     <CommandPrimitive.List
       data-slot="command-list"
@@ -100,11 +94,10 @@ function CommandList({
     />
   )
 }
-
-function CommandEmpty({
+const CommandEmpty = ({
   className,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Empty>) {
+}: React.ComponentProps<typeof CommandPrimitive.Empty>) => {
   return (
     <CommandPrimitive.Empty
       data-slot="command-empty"
@@ -113,11 +106,10 @@ function CommandEmpty({
     />
   )
 }
-
-function CommandGroup({
+const CommandGroup = ({
   className,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Group>) {
+}: React.ComponentProps<typeof CommandPrimitive.Group>) => {
   return (
     <CommandPrimitive.Group
       data-slot="command-group"
@@ -129,11 +121,10 @@ function CommandGroup({
     />
   )
 }
-
-function CommandSeparator({
+const CommandSeparator = ({
   className,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Separator>) {
+}: React.ComponentProps<typeof CommandPrimitive.Separator>) => {
   return (
     <CommandPrimitive.Separator
       data-slot="command-separator"
@@ -142,12 +133,11 @@ function CommandSeparator({
     />
   )
 }
-
-function CommandItem({
+const CommandItem = ({
   className,
   children,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Item>) {
+}: React.ComponentProps<typeof CommandPrimitive.Item>) => {
   return (
     <CommandPrimitive.Item
       data-slot="command-item"
@@ -162,11 +152,10 @@ function CommandItem({
     </CommandPrimitive.Item>
   )
 }
-
-function CommandShortcut({
+const CommandShortcut = ({
   className,
   ...props
-}: React.ComponentProps<"span">) {
+}: React.ComponentProps<"span">) => {
   return (
     <span
       data-slot="command-shortcut"
@@ -178,7 +167,6 @@ function CommandShortcut({
     />
   )
 }
-
 export {
   Command,
   CommandDialog,

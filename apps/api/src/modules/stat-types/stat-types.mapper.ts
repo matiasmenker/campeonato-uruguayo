@@ -1,7 +1,6 @@
 import type { StatType } from "db";
 import type { StatTypeContract, StatTypeSummary } from "./stat-types.contracts.js";
-
-export function toStatTypeContract(statType: StatType): StatTypeContract {
+export const toStatTypeContract = (statType: StatType): StatTypeContract => {
   return {
     id: statType.id,
     name: statType.name,
@@ -11,12 +10,11 @@ export function toStatTypeContract(statType: StatType): StatTypeContract {
     createdAt: statType.createdAt.toISOString(),
     updatedAt: statType.updatedAt.toISOString(),
   };
-}
-
-export function toStatTypeSummary(statType: StatType): StatTypeSummary {
+};
+export const toStatTypeSummary = (statType: StatType): StatTypeSummary => {
   return {
     id: statType.id,
     name: statType.name,
     developerName: statType.developerName,
   };
-}
+};

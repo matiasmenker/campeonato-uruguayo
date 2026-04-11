@@ -9,10 +9,10 @@ import {
 import { toTeamSummary } from "../teams/teams.mapper.js";
 import { toStandingContract } from "../standings/standings.mapper.js";
 import type { DashboardOverviewContract, DashboardFixtureSummary } from "./dashboard.contracts.js";
-
-export async function getDashboardOverview(): Promise<DetailResponse<DashboardOverviewContract>> {
+export const getDashboardOverview = async (): Promise<
+  DetailResponse<DashboardOverviewContract>
+> => {
   const prisma = getPrisma();
-
   const currentSeason = await prisma.season.findFirst({
     where: { isCurrent: true },
     include: {
@@ -25,7 +25,6 @@ export async function getDashboardOverview(): Promise<DetailResponse<DashboardOv
       },
     },
   });
-
   if (!currentSeason) {
     return {
       data: {
@@ -43,11 +42,9 @@ export async function getDashboardOverview(): Promise<DetailResponse<DashboardOv
       },
     };
   }
-
   const currentStage = currentSeason.stages.find((stage) => stage.isCurrent) ?? null;
   const allRounds = currentSeason.stages.flatMap((stage) => stage.rounds);
   const currentRound = allRounds.find((round) => round.isCurrent) ?? null;
-
   const [
     totalTeams,
     totalPlayers,
@@ -107,7 +104,6 @@ export async function getDashboardOverview(): Promise<DetailResponse<DashboardOv
       orderBy: { position: "asc" },
     }),
   ]);
-
   const mapFixtureSummary = (
     fixture: (typeof upcomingFixturesRaw)[number]
   ): DashboardFixtureSummary => ({
@@ -119,7 +115,6 @@ export async function getDashboardOverview(): Promise<DetailResponse<DashboardOv
     awayScore: fixture.awayScore,
     resultInfo: fixture.resultInfo,
   });
-
   return {
     data: {
       league: toLeagueSummary(currentSeason.league),
@@ -135,4 +130,4 @@ export async function getDashboardOverview(): Promise<DetailResponse<DashboardOv
       standings: standingsRaw.map(toStandingContract),
     },
   };
-}
+};

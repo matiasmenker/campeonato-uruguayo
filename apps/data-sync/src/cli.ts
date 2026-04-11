@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 import { config } from "dotenv";
 import { resolve } from "path";
-
 config({ path: resolve(process.cwd(), ".env") });
 config({ path: resolve(process.cwd(), "../../.env") });
-
 import { PrismaClient } from "db";
 import { createLogger } from "./logger.js";
 import { createClient } from "./sportmonks.js";
@@ -32,25 +30,20 @@ import { syncHealth } from "./sync/health.js";
 import { syncFillStats } from "./sync/fill-stats.js";
 import { reportFixturePlayerDetails } from "./reports/fixture-player-details.js";
 import { reportDataStatus } from "./reports/data-status.js";
-
 const log = createLogger("data-sync");
-
-function getEnv(name: string): string {
+const getEnv = (name: string): string => {
   const v = process.env[name];
   if (!v) {
     log.error(`Missing env: ${name}`);
     process.exit(1);
   }
   return v;
-}
-
-async function main(): Promise<void> {
+};
+const main = async (): Promise<void> => {
   const command = process.argv[2] ?? "sync:base";
-
   const db = new PrismaClient();
   const apiToken = getEnv("SPORTMONKS_API_TOKEN");
   const client = createClient(apiToken);
-
   try {
     switch (command) {
       case "sync:base": {
@@ -147,8 +140,7 @@ async function main(): Promise<void> {
   } finally {
     await db.$disconnect();
   }
-}
-
+};
 main().catch((err) => {
   log.error("Fatal error", { err: String(err) });
   process.exit(1);

@@ -1,32 +1,40 @@
 import type { FixtureDto } from "sportmonks-client";
 import type { SyncDependencies } from "./shared.js";
-
-const extractArray = <T>(raw: { data: T[] } | T[] | undefined): T[] => {
+const extractArray = <T>(
+  raw:
+    | {
+        data: T[];
+      }
+    | T[]
+    | undefined
+): T[] => {
   if (!raw) return [];
   return Array.isArray(raw) ? raw : (raw.data ?? []);
 };
-
 const resolveGoal = (
-  value: number | { goals?: number | null } | null | undefined
+  value:
+    | number
+    | {
+        goals?: number | null;
+      }
+    | null
+    | undefined
 ): number | null => {
   if (value == null) return null;
   if (typeof value === "number") return value;
   if (typeof value === "object" && "goals" in value) return value.goals ?? null;
   return null;
 };
-
 const sameDate = (left: Date | null, right: Date | null): boolean => {
   if (left == null && right == null) return true;
   if (left == null || right == null) return false;
   return left.getTime() === right.getTime();
 };
-
 const toDate = (value: string | null | undefined): Date | null => {
   if (!value) return null;
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
-
 /**
  * Live sync: lightweight, runs every few minutes on match days.
  *
@@ -35,11 +43,10 @@ const toDate = (value: string | null | undefined): Date | null => {
  * 3. If fixtures exist, fetches fresh data from SportMonks and updates
  *    scores, state, result info, and fixture details (events, lineups, stats).
  */
-export async function syncLive(dependencies: SyncDependencies): Promise<void> {
+export const syncLive = async (dependencies: SyncDependencies): Promise<void> => {
   const { client, db, log } = dependencies;
   log.info("=== LIVE SYNC START ===");
   const startTime = Date.now();
-
   // Fix 2: Skip live sync during daily sync window to prevent concurrent execution
   const currentUtcHour = new Date().getUTCHours();
   if (currentUtcHour === 9) {
@@ -47,7 +54,6 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
     log.info("=== LIVE SYNC END ===");
     return;
   }
-
   // Include yesterday's fixtures to catch late-night matches (e.g. 23:30 UTC kickoff
   // that finish after midnight UTC). Without this, live sync misses post-match stats
   // for fixtures whose kickoff falls on the previous UTC day.
@@ -56,7 +62,6 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
   yesterdayStart.setUTCHours(0, 0, 0, 0);
   const todayEnd = new Date();
   todayEnd.setUTCHours(23, 59, 59, 999);
-
   const recentFixtures = await db.fixture.findMany({
     where: {
       kickoffAt: {
@@ -75,32 +80,26 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
       _count: { select: { playerStats: true } },
     },
   });
-
   // Skip finished fixtures (stateId=5) that already have player stats.
   // Keep finished-without-stats so the next run fills them.
   const FINISHED_STATE_ID = 5;
   const todayFixtures = recentFixtures.filter(
     (fixture) => fixture.stateId !== FINISHED_STATE_ID || fixture._count.playerStats === 0
   );
-
   if (todayFixtures.length === 0) {
     const elapsedMilliseconds = Date.now() - startTime;
     log.info(`No fixtures scheduled for today. Exiting. (${elapsedMilliseconds}ms)`);
     log.info("=== LIVE SYNC END ===");
     return;
   }
-
   log.info(`📅 Fixtures scheduled today: ${todayFixtures.length}`);
-
   const fixtureSportmonksIds = todayFixtures.map((fixture) => fixture.sportmonksId);
   const existingFixtureBySportmonksId = new Map(
     todayFixtures.map((fixture) => [fixture.sportmonksId, fixture])
   );
-
   const fixtureIdBySportmonksId = new Map(
     todayFixtures.map((fixture) => [fixture.sportmonksId, fixture.id])
   );
-
   const teamRows = await db.team.findMany({ select: { id: true, sportmonksId: true } });
   const teamIdBySportmonksId = new Map(teamRows.map((team) => [team.sportmonksId, team.id]));
   const playerRows = await db.player.findMany({ select: { id: true, sportmonksId: true } });
@@ -109,7 +108,6 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
       .filter((p) => p.sportmonksId != null)
       .map((player) => [player.sportmonksId as number, player.id])
   );
-
   const apiFixtures = await client.get<FixtureDto[]>(
     `/fixtures/multi/${fixtureSportmonksIds.join(",")}`,
     {
@@ -117,10 +115,14 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
         "participants;scores;events;events.player;lineups;lineups.player;lineups.details;statistics",
     }
   );
-
-  const fixturesFromApi = extractArray(apiFixtures as FixtureDto[] | { data: FixtureDto[] });
+  const fixturesFromApi = extractArray(
+    apiFixtures as
+      | FixtureDto[]
+      | {
+          data: FixtureDto[];
+        }
+  );
   log.info(`📥 Fixtures fetched from API: ${fixturesFromApi.length}`);
-
   // Fix 1 + Fix 3: Validate API response before proceeding
   if (fixturesFromApi.length === 0 && todayFixtures.length > 0) {
     log.warn(
@@ -130,24 +132,20 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
     log.info(`=== LIVE SYNC END (${elapsedSeconds}s) ===`);
     return;
   }
-
   if (fixturesFromApi.length < todayFixtures.length) {
     log.warn(
       `⚠️ API returned ${fixturesFromApi.length}/${todayFixtures.length} fixtures. Some may be missing from API response.`
     );
   }
-
   let updatedFixtures = 0;
   let createdChangeLogs = 0;
   let savedEvents = 0;
   let savedLineups = 0;
   let savedPlayerStats = 0;
   let savedTeamStats = 0;
-
   for (const fixtureDto of fixturesFromApi) {
     const fixtureId = fixtureIdBySportmonksId.get(fixtureDto.id);
     if (!fixtureId) continue;
-
     const existingFixture = existingFixtureBySportmonksId.get(fixtureDto.id);
     const participants = fixtureDto.participants ?? [];
     const homeSportmonksId =
@@ -158,7 +156,6 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
       fixtureDto.away_team_id ??
       participants.find((participant) => participant.meta?.location === "away")?.id ??
       null;
-
     const scores = fixtureDto.scores ?? [];
     const currentScores = scores.filter((score) => score.description === "CURRENT");
     const homeScoreRow = currentScores.find((score) => {
@@ -169,13 +166,11 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
       const participantId = score.participant_id ?? null;
       return participantId === awaySportmonksId;
     });
-
     const stateId = fixtureDto.state_id ?? null;
     const kickoffAt = toDate(fixtureDto.starting_at ?? fixtureDto.kickoff_at ?? null);
     const resultInfo = fixtureDto.result_info?.trim() || null;
     const homeScore = resolveGoal(homeScoreRow?.score) ?? fixtureDto.home_score ?? null;
     const awayScore = resolveGoal(awayScoreRow?.score) ?? fixtureDto.away_score ?? null;
-
     await db.fixture.update({
       where: { id: fixtureId },
       data: {
@@ -187,12 +182,10 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
       },
     });
     updatedFixtures += 1;
-
     if (existingFixture) {
       const stateChanged = existingFixture.stateId !== stateId;
       const kickoffChanged = !sameDate(existingFixture.kickoffAt, kickoffAt);
       const resultInfoChanged = existingFixture.resultInfo !== resultInfo;
-
       if (stateChanged || kickoffChanged || resultInfoChanged) {
         await db.fixtureChangeLog.create({
           data: {
@@ -208,13 +201,17 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
         createdChangeLogs += 1;
       }
     }
-
     const events = fixtureDto.events ?? [];
     const lineups = fixtureDto.lineups ?? [];
     const statistics = fixtureDto.statistics ?? [];
-
     const eventRows = events
-      .filter((event): event is typeof event & { id: number } => event.id != null)
+      .filter(
+        (
+          event
+        ): event is typeof event & {
+          id: number;
+        } => event.id != null
+      )
       .map((event) => {
         const eventPlayerSportmonksId = event.player?.id ?? event.player_id ?? null;
         return {
@@ -233,7 +230,6 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
           addition: event.addition ?? null,
         };
       });
-
     const lineupRows = lineups
       .filter((lineup) => {
         const playerSportmonksId = lineup.player?.id ?? lineup.player_id ?? null;
@@ -250,7 +246,6 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
           jerseyNumber: lineup.jersey_number ?? null,
         };
       });
-
     const playerStatRows: Array<{
       sportmonksId: number | null;
       fixtureId: number;
@@ -258,7 +253,6 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
       typeId: number | null;
       value: unknown;
     }> = [];
-
     const teamStatRows: Array<{
       sportmonksId: number | null;
       fixtureId: number;
@@ -267,13 +261,11 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
       value: unknown;
       location: string | null;
     }> = [];
-
     for (const lineup of lineups) {
       const playerSportmonksId = lineup.player?.id ?? lineup.player_id ?? null;
       if (playerSportmonksId == null) continue;
       const playerId = playerIdBySportmonksId.get(playerSportmonksId);
       if (!playerId) continue;
-
       const detailRows = lineup.details ?? [];
       for (const detail of detailRows) {
         playerStatRows.push({
@@ -285,7 +277,6 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
         });
       }
     }
-
     for (const statistic of statistics) {
       const statisticPlayerSportmonksId = statistic.player?.id ?? statistic.player_id ?? null;
       if (statisticPlayerSportmonksId != null) {
@@ -300,7 +291,6 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
         });
         continue;
       }
-
       teamStatRows.push({
         sportmonksId: statistic.id ?? null,
         fixtureId,
@@ -315,13 +305,11 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
         location: statistic.location ?? statistic.participant?.meta?.location ?? null,
       });
     }
-
     const hasReplacementData =
       eventRows.length > 0 ||
       lineupRows.length > 0 ||
       playerStatRows.length > 0 ||
       teamStatRows.length > 0;
-
     if (!hasReplacementData) {
       log.warn(
         `⚠️ No detail data returned for fixture ${fixtureId} (SM: ${fixtureDto.id}). Skipping delete to preserve existing data.`
@@ -332,7 +320,6 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
         await transaction.lineup.deleteMany({ where: { fixtureId } });
         await transaction.fixturePlayerStatistic.deleteMany({ where: { fixtureId } });
         await transaction.fixtureTeamStatistic.deleteMany({ where: { fixtureId } });
-
         if (eventRows.length > 0) {
           await transaction.event.createMany({ data: eventRows });
         }
@@ -347,13 +334,11 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
         }
       });
     }
-
     savedEvents += eventRows.length;
     savedLineups += lineupRows.length;
     savedPlayerStats += playerStatRows.length;
     savedTeamStats += teamStatRows.length;
   }
-
   const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
   log.info("✅ Live sync summary");
   log.info(`🟢 Fixtures updated: ${updatedFixtures}`);
@@ -362,4 +347,4 @@ export async function syncLive(dependencies: SyncDependencies): Promise<void> {
     `🟢 Details: events=${savedEvents}, lineups=${savedLineups}, playerStats=${savedPlayerStats}, teamStats=${savedTeamStats}`
   );
   log.info(`=== LIVE SYNC END (${elapsedSeconds}s) ===`);
-}
+};

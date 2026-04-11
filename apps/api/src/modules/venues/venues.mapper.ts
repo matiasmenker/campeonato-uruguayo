@@ -1,10 +1,10 @@
 import type { City, Venue, Country } from "db";
 import { toCountrySummary } from "../countries/countries.mapper.js";
 import type { CityContract, CitySummary, VenueContract, VenueSummary } from "./venues.contracts.js";
-
-type CityWithCountry = City & { country: Country };
-
-export function toCityContract(city: CityWithCountry): CityContract {
+type CityWithCountry = City & {
+  country: Country;
+};
+export const toCityContract = (city: CityWithCountry): CityContract => {
   return {
     id: city.id,
     sportmonksId: city.sportmonksId,
@@ -13,21 +13,18 @@ export function toCityContract(city: CityWithCountry): CityContract {
     createdAt: city.createdAt.toISOString(),
     updatedAt: city.updatedAt.toISOString(),
   };
-}
-
-export function toCitySummary(city: City): CitySummary {
+};
+export const toCitySummary = (city: City): CitySummary => {
   return {
     id: city.id,
     name: city.name,
   };
-}
-
+};
 type VenueWithRelations = Venue & {
   country: Country | null;
   cityRecord: City | null;
 };
-
-export function toVenueContract(venue: VenueWithRelations): VenueContract {
+export const toVenueContract = (venue: VenueWithRelations): VenueContract => {
   return {
     id: venue.id,
     sportmonksId: venue.sportmonksId,
@@ -40,13 +37,12 @@ export function toVenueContract(venue: VenueWithRelations): VenueContract {
     createdAt: venue.createdAt.toISOString(),
     updatedAt: venue.updatedAt.toISOString(),
   };
-}
-
-export function toVenueSummary(venue: Venue): VenueSummary {
+};
+export const toVenueSummary = (venue: Venue): VenueSummary => {
   return {
     id: venue.id,
     name: venue.name,
     city: venue.city,
     capacity: venue.capacity,
   };
-}
+};

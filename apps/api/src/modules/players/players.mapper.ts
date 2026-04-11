@@ -1,9 +1,9 @@
 import type { Player, Country } from "db";
 import type { PlayerContract, PlayerSummary } from "./players.contracts.js";
-
-type PlayerWithCountry = Player & { country: Country | null };
-
-export function toPlayerContract(player: PlayerWithCountry): PlayerContract {
+type PlayerWithCountry = Player & {
+  country: Country | null;
+};
+export const toPlayerContract = (player: PlayerWithCountry): PlayerContract => {
   return {
     id: player.id,
     sportmonksId: player.sportmonksId,
@@ -25,9 +25,8 @@ export function toPlayerContract(player: PlayerWithCountry): PlayerContract {
     createdAt: player.createdAt.toISOString(),
     updatedAt: player.updatedAt.toISOString(),
   };
-}
-
-export function toPlayerSummary(player: Player): PlayerSummary {
+};
+export const toPlayerSummary = (player: Player): PlayerSummary => {
   return {
     id: player.id,
     name: player.name,
@@ -35,4 +34,4 @@ export function toPlayerSummary(player: Player): PlayerSummary {
     imagePath: player.imagePath,
     positionId: player.positionId,
   };
-}
+};

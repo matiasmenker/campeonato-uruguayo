@@ -5,12 +5,12 @@ import type {
   InjuryContract,
   SuspensionContract,
 } from "./availability.contracts.js";
-
-type MarketValueWithPlayer = PlayerMarketValue & { player: Player };
-
-export function toMarketValueContract(
+type MarketValueWithPlayer = PlayerMarketValue & {
+  player: Player;
+};
+export const toMarketValueContract = (
   marketValue: MarketValueWithPlayer
-): PlayerMarketValueContract {
+): PlayerMarketValueContract => {
   return {
     id: marketValue.id,
     sportmonksId: marketValue.sportmonksId,
@@ -21,11 +21,11 @@ export function toMarketValueContract(
     createdAt: marketValue.createdAt.toISOString(),
     updatedAt: marketValue.updatedAt.toISOString(),
   };
-}
-
-type InjuryWithPlayer = Injury & { player: Player };
-
-export function toInjuryContract(injury: InjuryWithPlayer): InjuryContract {
+};
+type InjuryWithPlayer = Injury & {
+  player: Player;
+};
+export const toInjuryContract = (injury: InjuryWithPlayer): InjuryContract => {
   return {
     id: injury.id,
     sportmonksId: injury.sportmonksId,
@@ -37,11 +37,11 @@ export function toInjuryContract(injury: InjuryWithPlayer): InjuryContract {
     createdAt: injury.createdAt.toISOString(),
     updatedAt: injury.updatedAt.toISOString(),
   };
-}
-
-type SuspensionWithPlayer = Suspension & { player: Player };
-
-export function toSuspensionContract(suspension: SuspensionWithPlayer): SuspensionContract {
+};
+type SuspensionWithPlayer = Suspension & {
+  player: Player;
+};
+export const toSuspensionContract = (suspension: SuspensionWithPlayer): SuspensionContract => {
   return {
     id: suspension.id,
     sportmonksId: suspension.sportmonksId,
@@ -52,4 +52,4 @@ export function toSuspensionContract(suspension: SuspensionWithPlayer): Suspensi
     createdAt: suspension.createdAt.toISOString(),
     updatedAt: suspension.updatedAt.toISOString(),
   };
-}
+};

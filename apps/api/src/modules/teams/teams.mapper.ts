@@ -1,7 +1,6 @@
 import type { Team } from "db";
 import type { TeamContract, TeamSummary } from "./teams.contracts.js";
-
-export function toTeamContract(team: Team): TeamContract {
+export const toTeamContract = (team: Team): TeamContract => {
   return {
     id: team.id,
     sportmonksId: team.sportmonksId,
@@ -11,13 +10,12 @@ export function toTeamContract(team: Team): TeamContract {
     createdAt: team.createdAt.toISOString(),
     updatedAt: team.updatedAt.toISOString(),
   };
-}
-
-export function toTeamSummary(team: Team): TeamSummary {
+};
+export const toTeamSummary = (team: Team): TeamSummary => {
   return {
     id: team.id,
     name: team.name,
     shortCode: team.shortCode,
     imagePath: team.imagePath,
   };
-}
+};

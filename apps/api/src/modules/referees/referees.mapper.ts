@@ -1,7 +1,6 @@
 import type { Referee } from "db";
 import type { RefereeContract, RefereeSummary } from "./referees.contracts.js";
-
-export function toRefereeContract(referee: Referee): RefereeContract {
+export const toRefereeContract = (referee: Referee): RefereeContract => {
   return {
     id: referee.id,
     sportmonksId: referee.sportmonksId,
@@ -10,11 +9,10 @@ export function toRefereeContract(referee: Referee): RefereeContract {
     createdAt: referee.createdAt.toISOString(),
     updatedAt: referee.updatedAt.toISOString(),
   };
-}
-
-export function toRefereeSummary(referee: Referee): RefereeSummary {
+};
+export const toRefereeSummary = (referee: Referee): RefereeSummary => {
   return {
     id: referee.id,
     name: referee.name,
   };
-}
+};
