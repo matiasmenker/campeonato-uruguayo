@@ -42,3 +42,10 @@ coverage
 .cursor
 .idea
 .vscode
+.claude
+CLAUDE.md
+**/CLAUDE.md
+AGENTS.md
+**/AGENTS.md
+.agents
+**/.agents
