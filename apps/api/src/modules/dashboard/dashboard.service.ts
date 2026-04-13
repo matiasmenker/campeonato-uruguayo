@@ -43,15 +43,41 @@ export const getDashboardOverview = async (): Promise<
     };
   }
   const currentStage = currentSeason.stages.find((stage) => stage.isCurrent) ?? null;
+
+  const [fixtureStates, activeRoundAnchor] = await Promise.all([
+    prisma.fixtureState.findMany({ select: { id: true, developerName: true } }),
+    // Active round = the round of the most recently kicked-off fixture.
+    // This is reliable regardless of the isCurrent sync flag:
+    // - Mid-round (some played, some upcoming): shows the in-progress round
+    // - Between rounds: shows the last completed round
+    // - Pre-season: falls back to the earliest upcoming round
+    prisma.fixture.findFirst({
+      where: { seasonId: currentSeason.id, kickoffAt: { lte: new Date() } },
+      orderBy: { kickoffAt: "desc" },
+      select: { roundId: true },
+    }),
+  ]);
+
+  const stateNameById = new Map(fixtureStates.map((state) => [state.id, state.developerName]));
+
+  // Fall back to the earliest upcoming round when no fixture has kicked off yet
+  const activeRoundId = activeRoundAnchor?.roundId ?? (
+    await prisma.fixture.findFirst({
+      where: { seasonId: currentSeason.id, kickoffAt: { gte: new Date() } },
+      orderBy: { kickoffAt: "asc" },
+      select: { roundId: true },
+    })
+  )?.roundId ?? null;
+
   const allRounds = currentSeason.stages.flatMap((stage) => stage.rounds);
-  const currentRound = allRounds.find((round) => round.isCurrent) ?? null;
+  const activeRound = allRounds.find((round) => round.id === activeRoundId) ?? null;
+
   const [
     totalTeams,
     totalPlayers,
     totalFixtures,
     completedFixtures,
-    upcomingFixturesRaw,
-    recentResultsRaw,
+    activeRoundFixturesRaw,
     standingsRaw,
   ] = await Promise.all([
     prisma.squadMembership
@@ -79,21 +105,10 @@ export const getDashboardOverview = async (): Promise<
     prisma.fixture.findMany({
       where: {
         seasonId: currentSeason.id,
-        kickoffAt: { gte: new Date() },
+        ...(activeRoundId ? { roundId: activeRoundId } : {}),
       },
       include: { homeTeam: true, awayTeam: true, venue: true },
       orderBy: { kickoffAt: "asc" },
-      take: 5,
-    }),
-    prisma.fixture.findMany({
-      where: {
-        seasonId: currentSeason.id,
-        homeScore: { not: null },
-        awayScore: { not: null },
-      },
-      include: { homeTeam: true, awayTeam: true, venue: true },
-      orderBy: { kickoffAt: "desc" },
-      take: 5,
     }),
     prisma.standing.findMany({
       where: {
@@ -104,35 +119,38 @@ export const getDashboardOverview = async (): Promise<
       orderBy: { position: "asc" },
     }),
   ]);
-  const mapVenueSummary = (venue: (typeof upcomingFixturesRaw)[number]["venue"]): DashboardVenueSummary | null => {
+  const mapVenueSummary = (venue: (typeof activeRoundFixturesRaw)[number]["venue"]): DashboardVenueSummary | null => {
     if (!venue) return null;
     return { id: venue.id, name: venue.name, imagePath: venue.imagePath };
   };
 
   const mapFixtureSummary = (
-    fixture: (typeof upcomingFixturesRaw)[number]
+    fixture: (typeof activeRoundFixturesRaw)[number]
   ): DashboardFixtureSummary => ({
     id: fixture.id,
     kickoffAt: fixture.kickoffAt?.toISOString() ?? null,
+    minute: null,
     venue: mapVenueSummary(fixture.venue),
     homeTeam: fixture.homeTeam ? toTeamSummary(fixture.homeTeam) : null,
     awayTeam: fixture.awayTeam ? toTeamSummary(fixture.awayTeam) : null,
     homeScore: fixture.homeScore,
     awayScore: fixture.awayScore,
     resultInfo: fixture.resultInfo,
+    stateCode: fixture.stateId ? (stateNameById.get(fixture.stateId) ?? null) : null,
   });
+
   return {
     data: {
       league: toLeagueSummary(currentSeason.league),
       season: toSeasonSummary(currentSeason),
       currentStage: currentStage ? toStageSummary(currentStage) : null,
-      currentRound: currentRound ? toRoundSummary(currentRound) : null,
+      currentRound: activeRound ? toRoundSummary(activeRound) : null,
       totalTeams,
       totalPlayers,
       totalFixtures,
       completedFixtures,
-      upcomingFixtures: upcomingFixturesRaw.map(mapFixtureSummary),
-      recentResults: recentResultsRaw.map(mapFixtureSummary),
+      upcomingFixtures: [],
+      recentResults: activeRoundFixturesRaw.map(mapFixtureSummary),
       standings: standingsRaw.map(toStandingContract),
     },
   };

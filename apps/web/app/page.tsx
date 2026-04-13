@@ -130,10 +130,10 @@ const HomePage = async () => {
         <section className="flex flex-col gap-3">
           <div className="flex items-baseline gap-2 px-1">
             <h2 className="text-sm font-semibold text-slate-700">
-              Última fecha jugada
+              Fecha {overview?.currentRound?.name ?? "—"}
             </h2>
             <span className="text-xs text-slate-400">
-              Fecha {overview?.currentRound?.name ?? "—"} · {overview?.currentStage?.name ?? "Apertura"} {overview?.season?.name ?? ""}
+              {overview?.currentStage?.name ?? "Apertura"} {overview?.season?.name ?? ""}
             </span>
           </div>
           <MatchesCarousel

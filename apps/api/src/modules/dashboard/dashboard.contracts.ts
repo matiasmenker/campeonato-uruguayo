@@ -16,12 +16,15 @@ export interface DashboardVenueSummary {
 export interface DashboardFixtureSummary {
   id: number;
   kickoffAt: string | null;
+  // Live match minute — populated by live sync once implemented
+  minute: number | null;
   venue: DashboardVenueSummary | null;
   homeTeam: TeamSummary | null;
   awayTeam: TeamSummary | null;
   homeScore: number | null;
   awayScore: number | null;
   resultInfo: string | null;
+  stateCode: string | null;
 }
 
 export interface DashboardOverviewContract {

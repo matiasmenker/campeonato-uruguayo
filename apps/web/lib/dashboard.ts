@@ -30,7 +30,7 @@ interface RoundSummary {
   isCurrent: boolean
 }
 
-interface TeamSummary {
+export interface TeamSummary {
   id: number
   name: string
   shortCode: string | null
@@ -60,12 +60,14 @@ interface VenueSummary {
 export interface DashboardFixtureSummary {
   id: number
   kickoffAt: string | null
+  minute: number | null
   venue: VenueSummary | null
   homeTeam: TeamSummary | null
   awayTeam: TeamSummary | null
   homeScore: number | null
   awayScore: number | null
   resultInfo: string | null
+  stateCode: string | null
 }
 
 export interface DashboardOverview {
