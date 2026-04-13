@@ -48,5 +48,40 @@
     "sportmonksId": 1954,
     "name": "Estadio Campeón del Siglo",
     "imagePath": "https://upload.wikimedia.org/wikipedia/commons/8/87/Estadio_Campe%C3%B3n_del_Siglo_setiembre_2021.jpg"
+  },
+  {
+    "sportmonksId": 11514,
+    "name": "Monumental Luis Tróccoli",
+    "imagePath": ""
+  },
+  {
+    "sportmonksId": 11520,
+    "name": "Estadio Dr. Víctor Della Valle",
+    "imagePath": ""
+  },
+  {
+    "sportmonksId": 11527,
+    "name": "Estadio Omar Odriozola",
+    "imagePath": ""
+  },
+  {
+    "sportmonksId": 11528,
+    "name": "Estadio Juan Antonio Lavalleja",
+    "imagePath": ""
+  },
+  {
+    "sportmonksId": 11529,
+    "name": "Estadio Atilio Paiva Olivera",
+    "imagePath": ""
+  },
+  {
+    "sportmonksId": 11533,
+    "name": "Parque Cincuentenario Juan Gaspar Prandi",
+    "imagePath": ""
+  },
+  {
+    "sportmonksId": 11540,
+    "name": "Estadio Eduardo Martínez Monegal",
+    "imagePath": ""
   }
 ]
