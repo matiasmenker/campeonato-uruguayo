@@ -1,42 +1,24 @@
 "use client"
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
+
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconClock,
+  IconShield,
+} from "@tabler/icons-react"
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   useCarousel,
 } from "@/components/ui/carousel"
-
-const CarouselArrows = () => {
-  const { scrollPrev, scrollNext, canScrollPrev, canScrollNext } = useCarousel()
-  return (
-    <>
-      {canScrollPrev && (
-        <button
-          onClick={scrollPrev}
-          className="absolute -left-8 top-1/2 z-10 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm text-slate-500 hover:border-slate-300 hover:text-slate-800 hover:shadow-md transition-[box-shadow,border-color,color]"
-        >
-          <IconChevronLeft size={14} />
-        </button>
-      )}
-      {canScrollNext && (
-        <button
-          onClick={scrollNext}
-          className="absolute -right-8 top-1/2 z-10 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm text-slate-500 hover:border-slate-300 hover:text-slate-800 hover:shadow-md transition-[box-shadow,border-color,color]"
-        >
-          <IconChevronRight size={14} />
-        </button>
-      )}
-    </>
-  )
-}
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import type { DashboardFixtureSummary, TeamSummary } from "@/lib/dashboard"
-
+import { cn } from "@/lib/utils"
 
 const LIVE_STATES = new Set([
   "INPLAY_1ST_HALF",
@@ -52,24 +34,33 @@ const LIVE_STATES = new Set([
 const FINISHED_STATES = new Set(["FT", "AET", "FT_PEN", "AWARDED"])
 
 const getMatchStatus = (match: DashboardFixtureSummary) => {
-  const developerName = match.stateCode ?? ""
-  if (LIVE_STATES.has(developerName)) return "live" as const
-  if (FINISHED_STATES.has(developerName)) return "finished" as const
-  if (match.homeScore !== null && match.awayScore !== null) return "finished" as const
+  const stateCode = match.stateCode ?? ""
+
+  if (LIVE_STATES.has(stateCode)) return "live" as const
+  if (FINISHED_STATES.has(stateCode)) return "finished" as const
+  if (match.homeScore !== null && match.awayScore !== null)
+    return "finished" as const
+
   return "upcoming" as const
 }
 
-const formatDate = (value: string | null) => {
-  if (!value) return ""
-  const date = new Date(value)
-  const timeZone = "America/Montevideo"
-  const weekday = new Intl.DateTimeFormat("es-UY", { weekday: "long", timeZone }).format(date)
-  const dayMonthYear = new Intl.DateTimeFormat("es-UY", { day: "2-digit", month: "2-digit", year: "numeric", timeZone }).format(date)
-  return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)}, ${dayMonthYear}`
+const formatMatchDay = (value: string | null) => {
+  if (!value) return "Sin fecha"
+
+  const formatted = new Intl.DateTimeFormat("es-UY", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "America/Montevideo",
+  }).format(new Date(value))
+
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
 }
 
-const formatTime = (value: string | null) => {
+const formatKickoffTime = (value: string | null) => {
   if (!value) return "--:--"
+
   return new Intl.DateTimeFormat("es-UY", {
     hour: "2-digit",
     minute: "2-digit",
@@ -78,41 +69,137 @@ const formatTime = (value: string | null) => {
   }).format(new Date(value))
 }
 
-const getLiveLabel = (developerName: string | null) => {
-  if (developerName === "HT") return "Entretiempo"
-  if (developerName === "INPLAY_ET" || developerName === "INPLAY_ET_SECOND_HALF") return "Prórroga"
-  if (developerName === "INPLAY_PENALTIES") return "Penales"
-  if (developerName === "EXTRA_TIME_BREAK") return "Desc. prórroga"
+const getLiveLabel = (stateCode: string | null) => {
+  if (stateCode === "HT") return "Entretiempo"
+  if (stateCode === "INPLAY_ET" || stateCode === "INPLAY_ET_SECOND_HALF") {
+    return "Prórroga"
+  }
+  if (stateCode === "INPLAY_PENALTIES") return "Penales"
+  if (stateCode === "EXTRA_TIME_BREAK") return "Descanso"
+
   return "En vivo"
 }
 
-// Returns "37'" only for states with a running clock.
-// HT, Penales, etc. return null — the bottom label already covers them.
-const getMinutePill = (developerName: string | null, minute: number | null): string | null => {
+const getMinutePill = (stateCode: string | null, minute: number | null) => {
   const hasRunningClock =
-    developerName === "INPLAY_1ST_HALF" ||
-    developerName === "INPLAY_2ND_HALF" ||
-    developerName === "INPLAY_ET" ||
-    developerName === "INPLAY_ET_SECOND_HALF"
+    stateCode === "INPLAY_1ST_HALF" ||
+    stateCode === "INPLAY_2ND_HALF" ||
+    stateCode === "INPLAY_ET" ||
+    stateCode === "INPLAY_ET_SECOND_HALF"
+
   if (!hasRunningClock || minute == null) return null
+
   return `${minute}'`
 }
 
-const TeamLogo = ({ team }: { team: TeamSummary | null }) => {
-  const name = team?.name ?? "—"
+const getStatusBadge = (
+  matchStatus: "live" | "finished" | "upcoming",
+  stateCode: string | null,
+  minute: number | null
+) => {
+  if (matchStatus === "live") {
+    return {
+      isLive: true,
+      dotClassName: "bg-red-500",
+      label: getLiveLabel(stateCode),
+      textClassName: "text-red-200",
+      wrapperClassName:
+        "border-red-400/20 bg-red-500/16 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+    }
+  }
+
+  if (matchStatus === "finished") {
+    return {
+      isLive: false,
+      dotClassName: "bg-emerald-400",
+      label: "Finalizado",
+      textClassName: "text-emerald-100",
+      wrapperClassName:
+        "border-emerald-400/20 bg-emerald-500/14 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
+    }
+  }
+
+  return {
+    isLive: false,
+    dotClassName: "bg-white/45",
+    label: "Próximo partido",
+    textClassName: "text-white/80",
+    wrapperClassName:
+      "border-white/12 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
+  }
+}
+
+const CarouselPrevButton = () => {
+  const { scrollPrev, canScrollPrev } = useCarousel()
+  return (
+    <button
+      type="button"
+      onClick={scrollPrev}
+      disabled={!canScrollPrev}
+      className={cn(
+        "absolute top-1/2 left-0 z-10 hidden h-8 w-8 -translate-x-[calc(100%+10px)] -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition-[opacity,box-shadow,background-color,color] hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm sm:flex",
+        !canScrollPrev && "pointer-events-none opacity-30"
+      )}
+      aria-label="Ir al partido anterior"
+    >
+      <IconChevronLeft size={15} />
+    </button>
+  )
+}
+
+const CarouselNextButton = () => {
+  const { scrollNext, canScrollNext } = useCarousel()
+  return (
+    <button
+      type="button"
+      onClick={scrollNext}
+      disabled={!canScrollNext}
+      className={cn(
+        "absolute top-1/2 right-0 z-10 hidden h-8 w-8 -translate-y-1/2 translate-x-[calc(100%+10px)] items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition-[opacity,box-shadow,background-color,color] hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm sm:flex",
+        !canScrollNext && "pointer-events-none opacity-30"
+      )}
+      aria-label="Ir al siguiente partido"
+    >
+      <IconChevronRight size={15} />
+    </button>
+  )
+}
+
+const TeamBadge = ({
+  team,
+  align = "start",
+}: {
+  team: TeamSummary | null
+  align?: "start" | "end"
+}) => {
+  const name = team?.name ?? "Equipo"
   const imagePath = team?.imagePath ?? null
+  const isEnd = align === "end"
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="flex h-6 w-6 shrink-0 items-center justify-center">
-          {imagePath ? (
-            <img src={imagePath} alt={name} className="h-6 w-6 object-contain drop-shadow-sm" />
-          ) : (
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-[8px] font-bold text-white backdrop-blur-sm">
-              {name.slice(0, 2).toUpperCase()}
-            </div>
+        <div
+          className={cn(
+            "flex min-w-0 flex-1 items-center gap-3",
+            isEnd ? "flex-row-reverse text-right" : "text-left"
           )}
+        >
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center">
+            {imagePath ? (
+              <img
+                src={imagePath}
+                alt={name}
+                className="h-11 w-11 object-contain drop-shadow-sm"
+              />
+            ) : (
+              <IconShield className="h-10 w-10 text-white/85 drop-shadow-sm" />
+            )}
+          </div>
+
+          <p className="min-w-0 truncate text-[13px] font-semibold text-white">
+            {name}
+          </p>
         </div>
       </TooltipTrigger>
       <TooltipContent>
@@ -141,124 +228,148 @@ const MatchesCarousel = ({ matches, roundName }: MatchesCarouselProps) => {
   const sortedMatches = [...matches].sort((matchA, matchB) => {
     const orderA = statusOrder[getMatchStatus(matchA)]
     const orderB = statusOrder[getMatchStatus(matchB)]
+
     if (orderA !== orderB) return orderA - orderB
-    return new Date(matchA.kickoffAt ?? 0).getTime() - new Date(matchB.kickoffAt ?? 0).getTime()
+
+    return (
+      new Date(matchA.kickoffAt ?? 0).getTime() -
+      new Date(matchB.kickoffAt ?? 0).getTime()
+    )
   })
 
   return (
-    <div className="relative sm:px-8">
-    <Carousel opts={{ align: "start", loop: false, containScroll: "keepSnaps", skipSnaps: false, dragFree: false }}>
-      <CarouselContent className="-ml-2">
-        {sortedMatches.map((match) => {
-          const status = getMatchStatus(match)
-          const isLive = status === "live"
-          const isFinished = status === "finished"
-          const hasVenueImage = !!match.venue?.imagePath
-          const minutePill = isLive ? getMinutePill(match.stateCode, match.minute) : null
+    <Carousel
+      className="relative"
+      opts={{
+        align: "start",
+        loop: false,
+        containScroll: "keepSnaps",
+        dragFree: false,
+      }}
+    >
+      <CarouselPrevButton />
+      <CarouselContent className="-ml-3">
+          {sortedMatches.map((match) => {
+            const status = getMatchStatus(match)
+            const isLive = status === "live"
+            const isFinished = status === "finished"
+            const backgroundImage = match.venue?.imagePath
+              ? `url("${match.venue.imagePath}")`
+              : undefined
+            const statusBadge = getStatusBadge(
+              status,
+              match.stateCode,
+              match.minute
+            )
 
-          return (
-            <CarouselItem key={match.id} className="pl-2 basis-2/5 sm:basis-1/4 lg:basis-1/6">
-              <div className="relative h-24 overflow-hidden rounded-xl">
-
-                {/* Background */}
-                {hasVenueImage ? (
-                  <img
-                    src={match.venue!.imagePath!}
-                    alt={match.venue!.name}
-                    className="absolute inset-0 h-full w-full object-cover"
+            return (
+              <CarouselItem
+                key={match.id}
+                className="basis-1/2 pl-3 sm:basis-1/3 lg:basis-1/4"
+              >
+                <article className="group relative h-[188px] overflow-hidden rounded-[28px] bg-slate-900">
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                    style={{
+                      backgroundImage,
+                      backgroundColor: "#0f172a",
+                    }}
                   />
-                ) : null}
 
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: hasVenueImage
-                      ? "linear-gradient(to top, rgba(5,10,20,0.95) 0%, rgba(5,10,20,0.7) 50%, rgba(5,10,20,0.45) 100%)"
-                      : "linear-gradient(145deg, #0f172a 0%, #1e293b 60%, #0f172a 100%)",
-                  }}
-                />
-                {!hasVenueImage ? (
                   <div
                     className="absolute inset-0"
                     style={{
-                      background: "radial-gradient(ellipse at 50% 60%, rgba(255,255,255,0.04) 0%, transparent 70%)",
+                      background: backgroundImage
+                        ? "linear-gradient(145deg, rgba(2,6,23,0.84) 0%, rgba(15,23,42,0.54) 42%, rgba(6,95,70,0.42) 100%)"
+                        : "linear-gradient(145deg, #0f172a 0%, #123528 50%, #0b1b16 100%)",
                     }}
                   />
-                ) : null}
 
-                {/* Red pulse overlay for live */}
-                {isLive ? <div className="absolute inset-0 bg-red-950/25" /> : null}
-
-                {/* Content */}
-                <div className="absolute inset-0 flex flex-col justify-between p-2">
-
-                  {/* Top row: round badge + minute pill (live) or date */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="shrink-0 whitespace-nowrap rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold tracking-widest text-white/70 uppercase backdrop-blur-sm">
-                      {roundName ? `Fecha ${roundName}` : "Fecha"}
-                    </span>
-                    {isLive && minutePill ? (
-                      <span className="whitespace-nowrap rounded-full bg-red-500/80 px-2 py-0.5 text-[10px] font-bold tabular-nums text-white backdrop-blur-sm">
-                        {minutePill}
-                      </span>
-                    ) : (
-                      <span className="whitespace-nowrap text-[10px] text-white/50">
-                        {formatDate(match.kickoffAt)}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Score / time */}
-                  <div className="flex items-center justify-between gap-1">
-                    <TeamLogo team={match.homeTeam} />
-                    {isFinished || isLive ? (
-                      <div className="flex items-center gap-1">
-                        <span className="text-base font-black tabular-nums text-white">{match.homeScore}</span>
-                        <span className="text-[10px] font-medium text-white/30">—</span>
-                        <span className="text-base font-black tabular-nums text-white">{match.awayScore}</span>
+                  <div className="relative flex h-full flex-col justify-between p-4 sm:p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold tracking-[0.22em] text-white/80 uppercase backdrop-blur-sm">
+                          {roundName ? `Fecha ${roundName}` : "Última fecha"}
+                        </span>
                       </div>
-                    ) : (
-                      <span className="text-base font-black tabular-nums text-white/60">
-                        {formatTime(match.kickoffAt)}
+
+                      <span className="text-[11px] font-medium text-white/78">
+                        {formatMatchDay(match.kickoffAt)}
                       </span>
-                    )}
-                    <TeamLogo team={match.awayTeam} />
-                  </div>
+                    </div>
 
-                  {/* Status row */}
-                  <div className="flex items-center gap-1.5">
-                    {isLive ? (
-                      <>
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+                      <TeamBadge team={match.homeTeam} />
+
+                      <div className="flex min-w-[96px] flex-col items-center rounded-[22px] border border-white/10 bg-black/20 px-4 py-2 text-center backdrop-blur-sm">
+                        {isFinished || isLive ? (
+                          <div className="flex items-center gap-3 text-white">
+                            <span className="text-[1.65rem] leading-none font-black tabular-nums">
+                              {match.homeScore ?? 0}
+                            </span>
+                            <span className="text-sm leading-none font-medium text-white/35">
+                              —
+                            </span>
+                            <span className="text-[1.65rem] leading-none font-black tabular-nums">
+                              {match.awayScore ?? 0}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="text-[1.65rem] leading-none font-black tracking-tight text-white">
+                            {formatKickoffTime(match.kickoffAt)}
+                          </div>
+                        )}
+                      </div>
+
+                      <TeamBadge team={match.awayTeam} align="end" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div
+                        className={cn(
+                          "flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-sm",
+                          statusBadge.wrapperClassName
+                        )}
+                      >
                         <span className="relative flex h-2 w-2">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-                          <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                          {statusBadge.isLive ? (
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                          ) : null}
+                          <span
+                            className={cn(
+                              "relative inline-flex h-2 w-2 rounded-full",
+                              statusBadge.dotClassName
+                            )}
+                          />
                         </span>
-                        <span className="text-[10px] font-semibold text-red-400">
-                          {getLiveLabel(match.stateCode)}
+                        <span
+                          className={cn(
+                            "text-[11px] font-semibold",
+                            statusBadge.textClassName
+                          )}
+                        >
+                          {statusBadge.label}
                         </span>
-                      </>
-                    ) : isFinished ? (
-                      <>
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                        <span className="text-[10px] text-emerald-400/80">Finalizado</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className="h-1.5 w-1.5 rounded-full bg-white/30" />
-                        <span className="text-[10px] text-white/40">Por jugar</span>
-                      </>
-                    )}
-                  </div>
+                      </div>
 
-                </div>
-              </div>
-            </CarouselItem>
-          )
-        })}
-      </CarouselContent>
-      <CarouselArrows />
+                      {isLive && getMinutePill(match.stateCode, match.minute) ? (
+                        <span className="flex items-center gap-1.5 rounded-full border border-red-400/20 bg-red-500/16 px-3 py-1.5 backdrop-blur-sm">
+                          <IconClock size={11} className="text-red-300" />
+                          <span className="text-[11px] font-black tabular-nums text-red-200">
+                            {match.minute}
+                            <span className="animate-pulse">&apos;</span>
+                          </span>
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                </article>
+              </CarouselItem>
+            )
+          })}
+        </CarouselContent>
+      <CarouselNextButton />
     </Carousel>
-    </div>
   )
 }
 
