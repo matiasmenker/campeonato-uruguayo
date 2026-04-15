@@ -240,21 +240,7 @@ const HomePage = async () => {
             badge={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""} · Fecha ${overview?.currentRound?.name ?? "—"}`}
           />
           <MatchesCarousel
-            matches={[
-              ...(overview?.recentResults ?? []),
-              {
-                id: 99999,
-                kickoffAt: new Date().toISOString(),
-                minute: 67,
-                venue: (overview?.recentResults ?? [])[0]?.venue ?? null,
-                homeTeam: (overview?.recentResults ?? [])[0]?.homeTeam ?? null,
-                awayTeam: (overview?.recentResults ?? [])[0]?.awayTeam ?? null,
-                homeScore: 1,
-                awayScore: 2,
-                resultInfo: null,
-                stateCode: "INPLAY_2ND_HALF",
-              },
-            ]}
+            matches={overview?.recentResults ?? []}
             roundName={overview?.currentRound?.name}
           />
         </section>
