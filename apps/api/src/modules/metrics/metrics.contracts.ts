@@ -24,6 +24,7 @@ export interface LeaderCategory {
 }
 
 export interface LeadersContract {
+  topRated: LeaderCategory;
   topScorers: LeaderCategory;
   topAssists: LeaderCategory;
   topYellowCards: LeaderCategory;
