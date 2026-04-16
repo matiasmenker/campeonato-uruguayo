@@ -1,9 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import {
   IconChevronLeft,
   IconChevronRight,
   IconClock,
+  IconPlayerPlayFilled,
   IconShield,
 } from "@tabler/icons-react"
 import {
@@ -17,6 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { VideoModal } from "@/components/youtube-video-card"
 import type { DashboardFixtureSummary, TeamSummary } from "@/lib/dashboard"
 import { cn } from "@/lib/utils"
 
@@ -212,9 +215,11 @@ const TeamBadge = ({
 interface MatchesCarouselProps {
   matches: DashboardFixtureSummary[]
   roundName?: string | null
+  fixtureVideoMap?: Record<number, { videoId: string; title: string; thumbnailUrl: string; publishedAt: string }>
 }
 
-const MatchesCarousel = ({ matches, roundName }: MatchesCarouselProps) => {
+const MatchesCarousel = ({ matches, roundName, fixtureVideoMap = {} }: MatchesCarouselProps) => {
+  const [activeVideo, setActiveVideo] = useState<{ videoId: string; title: string; thumbnailUrl: string; publishedAt: string } | null>(null)
   if (!matches.length) {
     return (
       <div className="flex h-32 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
@@ -238,6 +243,7 @@ const MatchesCarousel = ({ matches, roundName }: MatchesCarouselProps) => {
   })
 
   return (
+    <>
     <Carousel
       className="relative"
       opts={{
@@ -261,6 +267,8 @@ const MatchesCarousel = ({ matches, roundName }: MatchesCarouselProps) => {
               match.stateCode,
               match.minute
             )
+
+            const matchVideo = fixtureVideoMap[match.id] ?? null
 
             return (
               <CarouselItem
@@ -361,6 +369,16 @@ const MatchesCarousel = ({ matches, roundName }: MatchesCarouselProps) => {
                           </span>
                         </span>
                       ) : null}
+
+                      {matchVideo ? (
+                        <button
+                          onClick={() => setActiveVideo(matchVideo)}
+                          className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-sm transition-all hover:border-primary/50 hover:bg-primary hover:scale-110"
+                          aria-label="Ver resumen del partido"
+                        >
+                          <IconPlayerPlayFilled size={13} className="translate-x-[1px]" />
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 </article>
@@ -370,6 +388,11 @@ const MatchesCarousel = ({ matches, roundName }: MatchesCarouselProps) => {
         </CarouselContent>
       <CarouselNextButton />
     </Carousel>
+
+    {activeVideo ? (
+      <VideoModal video={activeVideo} onClose={() => setActiveVideo(null)} />
+    ) : null}
+    </>
   )
 }
 

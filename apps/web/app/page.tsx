@@ -6,6 +6,10 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react"
 import MatchesCarousel from "@/components/matches-carousel"
+import {
+  YoutubeVideoCard,
+  type YoutubeVideo,
+} from "@/components/youtube-video-card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Table,
@@ -17,7 +21,6 @@ import {
 } from "@/components/ui/table"
 import {
   getDashboardOverview,
-  type DashboardFixtureSummary,
   type DashboardOverview,
 } from "@/lib/dashboard"
 import {
@@ -27,16 +30,6 @@ import {
 } from "@/lib/metrics"
 
 export const dynamic = "force-dynamic"
-
-const formatResultDate = (value: string | null) => {
-  if (!value) return "Sin fecha"
-
-  return new Intl.DateTimeFormat("es-UY", {
-    day: "numeric",
-    month: "short",
-    timeZone: "America/Montevideo",
-  }).format(new Date(value))
-}
 
 const formatRating = (value: number) => {
   return new Intl.NumberFormat("es-UY", {
@@ -49,119 +42,64 @@ const getPlayerName = (leader: LeaderEntry) => {
   return leader.player.displayName ?? leader.player.name
 }
 
-const MatchVideoCard = ({ match }: { match: DashboardFixtureSummary }) => (
-  <article className="group relative min-h-44 overflow-hidden rounded-[28px] bg-slate-950 shadow-[0_28px_65px_-38px_rgba(15,23,42,0.9)]">
-    {match.venue?.imagePath ? (
-      <div
-        className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-        style={{ backgroundImage: `url("${match.venue.imagePath}")` }}
-      />
-    ) : null}
-
-    <div
-      className="absolute inset-0"
-      style={{
-        background: match.venue?.imagePath
-          ? "linear-gradient(160deg, rgba(2,6,23,0.86) 0%, rgba(15,23,42,0.58) 48%, rgba(6,78,59,0.5) 100%)"
-          : "linear-gradient(150deg, #0a1628 0%, #0c2b1a 40%, #0a3320 70%, #050d1a 100%)",
-      }}
-    />
-
-    <div
-      className="absolute inset-0 opacity-[0.08]"
-      style={{
-        backgroundImage: `repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 19px,
-          rgba(255,255,255,0.7) 19px,
-          rgba(255,255,255,0.7) 20px
-        ),
-        repeating-linear-gradient(
-          90deg,
-          transparent,
-          transparent 19px,
-          rgba(255,255,255,0.28) 19px,
-          rgba(255,255,255,0.28) 20px
-        )`,
-      }}
-    />
-
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/15 backdrop-blur-sm transition-transform group-hover:scale-110">
-        <IconPlayerPlay className="h-5 w-5 translate-x-0.5 text-white" />
-      </div>
-    </div>
-
-    <div className="relative flex h-full flex-col justify-between p-4 pt-16">
-      <div className="flex items-center justify-between gap-3">
-        <p className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-semibold tracking-[0.2em] text-white/70 uppercase backdrop-blur-sm">
-          Resumen
-        </p>
-        <p className="text-xs text-white/55">
-          {formatResultDate(match.kickoffAt)}
-        </p>
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-sm leading-tight font-semibold text-white">
-          {match.homeTeam?.name ?? "Local"}{" "}
-          <span className="font-black text-emerald-300">
-            {match.homeScore ?? "-"} : {match.awayScore ?? "-"}
-          </span>{" "}
-          {match.awayTeam?.name ?? "Visitante"}
-        </p>
-        <p className="text-xs text-white/55">
-          {match.venue?.name ?? "Partido sin estadio asignado"}
-        </p>
-      </div>
-    </div>
-  </article>
-)
 
 const PlayerLeaderCard = ({ leader }: { leader: LeaderEntry }) => {
   const playerName = getPlayerName(leader)
 
   return (
-    <article className="group relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl">
-      <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.22),transparent_72%)]" />
+    <article className="group relative flex flex-col items-center gap-0 overflow-hidden rounded-2xl bg-slate-900 px-3 pb-4 pt-5 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_48px_-8px_rgba(16,185,129,0.22)]">
+      {/* Emerald top accent */}
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
 
-      <div className="relative flex items-start gap-4">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[22px] border border-slate-200 bg-slate-950">
+      {/* Subtle background glow */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(16,185,129,0.07),transparent)]" />
+
+      {/* Avatar */}
+      <div className="relative mb-3">
+        <div className="h-[72px] w-[72px] overflow-hidden rounded-full bg-slate-800 ring-2 ring-slate-700/80">
           {leader.player.imagePath ? (
             <img
               src={leader.player.imagePath}
               alt={playerName}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover object-top"
             />
           ) : (
-            <span className="text-lg font-black tracking-wide text-white">
-              {playerName.slice(0, 2).toUpperCase()}
-            </span>
+            <div className="flex h-full w-full items-center justify-center">
+              <span className="text-xl font-black text-slate-500">
+                {playerName.slice(0, 2).toUpperCase()}
+              </span>
+            </div>
           )}
         </div>
-
-        <div className="min-w-0 flex-1 space-y-1">
-          <p className="text-[10px] font-semibold tracking-[0.2em] text-slate-400 uppercase">
-            Rating promedio
-          </p>
-          <h3 className="truncate text-base font-bold text-slate-950">
-            {playerName}
-          </h3>
-          <p className="truncate text-sm text-slate-500">
-            {leader.team?.name ?? "Equipo sin asignar"}
-          </p>
-        </div>
-
-        <div className="rounded-[22px] bg-slate-950 px-3 py-2 text-right text-white shadow-lg shadow-slate-950/15">
-          <p className="text-[10px] font-semibold tracking-[0.16em] text-white/55 uppercase">
-            Score
-          </p>
-          <p className="text-2xl leading-none font-black">
-            {formatRating(leader.value)}
-          </p>
-        </div>
+        {leader.team?.imagePath ? (
+          <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-slate-800 ring-2 ring-slate-900">
+            <img
+              src={leader.team.imagePath}
+              alt={leader.team.name ?? ""}
+              className="h-4 w-4 object-contain"
+            />
+          </div>
+        ) : null}
       </div>
+
+      {/* Name + team */}
+      <p className="w-full truncate text-center text-[13px] font-bold leading-tight text-white">
+        {playerName}
+      </p>
+      <p className="mt-0.5 w-full truncate text-center text-[11px] text-slate-500">
+        {leader.team?.name ?? "—"}
+      </p>
+
+      {/* Divider */}
+      <div className="my-3 w-8 border-t border-slate-800" />
+
+      {/* Rating */}
+      <span className="text-[1.7rem] font-black leading-none tabular-nums text-emerald-400">
+        {formatRating(leader.value)}
+      </span>
+      <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600">
+        Rating
+      </span>
     </article>
   )
 }
@@ -187,6 +125,56 @@ const SectionTitle = ({
     ) : null}
   </div>
 )
+
+// MVP: hardcoded videos from Liga AUF Uruguaya playlist — replace with YouTube API fetch
+// Filter logic for production: include titles matching Apertura/Clausura/Liga AUF/HL Largo/Resumen/Fecha
+// Exclude: "Segunda Profesional", "Sub-", "Selección", "Femenin", "Copa AUF"
+const AUF_VIDEOS_MVP: YoutubeVideo[] = [
+  {
+    videoId: "rJSbulDa9QM",
+    title: "Show de goles | Liga AUF Uruguaya 2026 | Fecha 11 | Torneo Apertura",
+    thumbnailUrl: "https://i.ytimg.com/vi/rJSbulDa9QM/hqdefault.jpg",
+    publishedAt: "2026-04-13T12:00:00+00:00",
+  },
+  {
+    videoId: "cylnr4P_dwo",
+    title: "Peñarol 0-2 Liverpool | HL Largo | Fecha 11 | Torneo Apertura 2026",
+    thumbnailUrl: "https://i.ytimg.com/vi/cylnr4P_dwo/hqdefault.jpg",
+    publishedAt: "2026-04-12T20:00:00+00:00",
+  },
+  {
+    videoId: "wrPvnG_qgYs",
+    title: "Peñarol 0-2 Liverpool | Resumen | Fecha 11 | Torneo Apertura 2026",
+    thumbnailUrl: "https://i.ytimg.com/vi/wrPvnG_qgYs/hqdefault.jpg",
+    publishedAt: "2026-04-12T18:00:00+00:00",
+  },
+  {
+    videoId: "ZSpTEVmSW94",
+    title: "Racing 2-1 Juventud | HL Largo | Fecha 10 | Torneo Apertura 2026",
+    thumbnailUrl: "https://i.ytimg.com/vi/ZSpTEVmSW94/hqdefault.jpg",
+    publishedAt: "2026-04-07T20:00:00+00:00",
+  },
+  {
+    videoId: "oU_YPM3AhYs",
+    title: "Nota con el DT Gustavo Ferrín | Torneo Apertura 2026",
+    thumbnailUrl: "https://i.ytimg.com/vi/oU_YPM3AhYs/hqdefault.jpg",
+    publishedAt: "2026-04-06T18:00:00+00:00",
+  },
+  {
+    videoId: "4ytXIbkJa34",
+    title: "Gol de Ruben Bentancourt a Peñarol en la victoria de Liverpool en el CDS",
+    thumbnailUrl: "https://i.ytimg.com/vi/4ytXIbkJa34/hqdefault.jpg",
+    publishedAt: "2026-04-05T22:00:00+00:00",
+  },
+]
+
+// MVP: fixture ID → YouTube video mapping — populate with real IDs once YouTube API is integrated
+// Key: fixture ID from the API, Value: video data from AUF YouTube playlist
+const FIXTURE_VIDEO_MAP: Record<number, { videoId: string; title: string; thumbnailUrl: string; publishedAt: string }> = {
+  // Example entries — replace keys with real fixture IDs from the API:
+  // 12345: { videoId: "cylnr4P_dwo", title: "Peñarol 0-2 Liverpool | HL Largo | Fecha 11", thumbnailUrl: "https://i.ytimg.com/vi/cylnr4P_dwo/hqdefault.jpg", publishedAt: "2026-04-12T20:00:00+00:00" },
+  // 12346: { videoId: "ZSpTEVmSW94", title: "Racing 2-1 Juventud | HL Largo | Fecha 10", thumbnailUrl: "https://i.ytimg.com/vi/ZSpTEVmSW94/hqdefault.jpg", publishedAt: "2026-04-07T20:00:00+00:00" },
+}
 
 const HomePage = async () => {
   let overview: DashboardOverview | null = null
@@ -242,6 +230,7 @@ const HomePage = async () => {
           <MatchesCarousel
             matches={overview?.recentResults ?? []}
             roundName={overview?.currentRound?.name}
+            fixtureVideoMap={FIXTURE_VIDEO_MAP}
           />
         </section>
 
@@ -251,19 +240,13 @@ const HomePage = async () => {
               <SectionTitle
                 icon={IconPlayerPlay}
                 title="Últimos videos"
-                description="Resúmenes visuales de los partidos más recientes"
+                description="Resúmenes y entrevistas del campeonato"
               />
-              {(overview?.recentResults ?? []).length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {(overview?.recentResults ?? []).map((match) => (
-                    <MatchVideoCard key={match.id} match={match} />
-                  ))}
-                </div>
-              ) : (
-                <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
-                  No hay resúmenes disponibles
-                </div>
-              )}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {AUF_VIDEOS_MVP.map((video) => (
+                  <YoutubeVideoCard key={video.videoId} video={video} />
+                ))}
+              </div>
             </section>
 
             <section className="flex flex-col gap-4">
@@ -273,7 +256,7 @@ const HomePage = async () => {
                 description="Mejor rating promedio en la temporada actual"
               />
               {topRatedPlayers.length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-3 gap-3">
                   {topRatedPlayers.map((leader) => (
                     <PlayerLeaderCard
                       key={`${leader.player.id}-${leader.value}`}
