@@ -99,19 +99,20 @@ export const YoutubeVideoCard = ({ video }: { video: YoutubeVideo }) => {
         onClick={() => setIsModalOpen(true)}
       >
         <div className="relative aspect-video w-full overflow-hidden">
-          <img
-            src={video.thumbnailUrl}
-            alt={video.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          {/* Imagen + degradado escalan juntos — sin línea en hover */}
+          <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105">
+            <img
+              src={video.thumbnailUrl}
+              alt={video.title}
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+          </div>
 
-          {/* Fade que se une con el fondo de la card */}
-          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-
-          {/* Play button centrado en el thumbnail */}
+          {/* Play button — no escala con la imagen */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60 transition-all duration-200 group-hover:scale-110 group-hover:bg-black/80">
-              <IconPlayerPlayFilled size={22} className="translate-x-[2px] text-white" />
+              <IconPlayerPlayFilled size={20} className="text-white" />
             </div>
           </div>
         </div>
