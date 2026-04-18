@@ -284,48 +284,58 @@ const HomePage = async () => {
               <SectionTitle
                 icon={IconTrophy}
                 title="Tabla de posiciones"
-                description={overview?.currentStage?.name ?? "Apertura"}
+                description={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""}`}
               />
               <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      <TableHead className="w-10 text-center text-xs">
-                        #
-                      </TableHead>
+                      <TableHead className="w-8 text-center text-xs">#</TableHead>
                       <TableHead className="text-xs">Equipo</TableHead>
-                      <TableHead className="text-right text-xs">PJ</TableHead>
-                      <TableHead className="text-right text-xs">PTS</TableHead>
-                      <TableHead className="text-right text-xs">DG</TableHead>
+                      <TableHead className="text-right text-xs" title="Partidos jugados">PJ</TableHead>
+                      <TableHead className="text-right text-xs" title="Victorias">V</TableHead>
+                      <TableHead className="text-right text-xs" title="Empates">E</TableHead>
+                      <TableHead className="text-right text-xs" title="Derrotas">D</TableHead>
+                      <TableHead className="text-right text-xs" title="Goles marcados">GF</TableHead>
+                      <TableHead className="text-right text-xs" title="Goles en contra">GC</TableHead>
+                      <TableHead className="text-right text-xs" title="Diferencia de goles">DG</TableHead>
+                      <TableHead className="text-right text-xs" title="Puntos">PTS</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {(overview?.standings ?? []).map((standing, index) => (
                       <TableRow key={standing.id}>
                         <TableCell className="text-center">
-                          <span
-                            className={
-                              index < 3
-                                ? "text-xs font-bold text-emerald-600"
-                                : "text-xs font-medium text-slate-400"
-                            }
-                          >
+                          <span className="text-xs font-medium text-slate-400">
                             {standing.position}
                           </span>
                         </TableCell>
-                        <TableCell className="text-xs font-medium text-slate-950">
-                          {standing.team.name}
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {standing.team.imagePath ? (
+                              <img
+                                src={standing.team.imagePath}
+                                alt={standing.team.name}
+                                className="h-5 w-5 shrink-0 object-contain"
+                              />
+                            ) : (
+                              <div className="h-5 w-5 shrink-0 rounded-full bg-slate-200" />
+                            )}
+                            <span className="text-xs font-medium text-slate-950">
+                              {standing.team.name}
+                            </span>
+                          </div>
                         </TableCell>
+                        <TableCell className="text-right text-xs text-slate-500">{standing.played}</TableCell>
+                        <TableCell className="text-right text-xs text-emerald-600 font-medium">{standing.won}</TableCell>
+                        <TableCell className="text-right text-xs text-slate-500">{standing.draw}</TableCell>
+                        <TableCell className="text-right text-xs text-red-400">{standing.lost}</TableCell>
+                        <TableCell className="text-right text-xs text-slate-500">{standing.goalsFor}</TableCell>
+                        <TableCell className="text-right text-xs text-slate-500">{standing.goalsAgainst}</TableCell>
                         <TableCell className="text-right text-xs text-slate-500">
-                          {standing.played}
+                          {standing.goalDifference > 0 ? "+" : ""}{standing.goalDifference}
                         </TableCell>
-                        <TableCell className="text-right text-xs font-bold text-slate-950">
-                          {standing.points}
-                        </TableCell>
-                        <TableCell className="text-right text-xs text-slate-500">
-                          {standing.goalDifference > 0 ? "+" : ""}
-                          {standing.goalDifference}
-                        </TableCell>
+                        <TableCell className="text-right text-xs font-bold text-slate-950">{standing.points}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
