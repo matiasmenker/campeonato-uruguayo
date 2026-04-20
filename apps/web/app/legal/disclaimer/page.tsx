@@ -31,8 +31,8 @@ const DisclaimerPage = () => (
             displayed solely for identification and informational purposes within the scope of
             this academic project, with no commercial intent whatsoever. No ownership or licence
             over such content is claimed or granted by this platform. If you are a rights holder
-            and wish to request removal of any content, please contact us and it will be removed
-            promptly.
+            and wish to request removal of any content, please reach out via the university
+            channels associated with this TFG and it will be removed promptly.
           </p>
         </section>
 

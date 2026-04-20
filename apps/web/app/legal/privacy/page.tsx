@@ -21,8 +21,8 @@ const PrivacyPage = () => (
         <section>
           <h2 className="mb-2 font-semibold text-slate-950">Embedded videos</h2>
           <p>
-            Videos are embedded via YouTube's official player. When you watch a video,
-            YouTube may set its own cookies subject to{" "}
+            Videos are embedded via YouTube's official player. When a page with embedded
+            videos loads, YouTube may set its own cookies subject to{" "}
             <a
               href="https://policies.google.com/privacy"
               target="_blank"

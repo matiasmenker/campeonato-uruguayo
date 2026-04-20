@@ -15,8 +15,8 @@ const TermsPage = () => (
           <h2 className="mb-2 font-semibold text-slate-950">Use</h2>
           <p>
             You are free to browse and consult the information on this site for personal,
-            non-commercial purposes. You may not scrape, reproduce or redistribute the content
-            programmatically without permission.
+            non-commercial purposes. You may not reproduce or redistribute the content
+            for commercial purposes.
           </p>
         </section>
 
