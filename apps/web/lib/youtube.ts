@@ -1,18 +1,16 @@
 import type { YoutubeVideo } from "@/components/youtube-video-card"
 
-// Titles to exclude — other AUF competitions / categories
-const EXCLUDE_KEYWORDS = [
-  "segunda profesional",
-  "sub-",
-  "selección",
-  "femenin",
-  "copa auf",
-  "uruguay b",
-]
+// Only include Primera División content (Apertura / Clausura)
+const INCLUDE_KEYWORDS = ["apertura", "clausura"]
+
+// Exclude other AUF competitions even if they sneak through
+const EXCLUDE_KEYWORDS = ["segunda profesional", "sub-", "selección", "femenin"]
 
 const shouldInclude = (title: string) => {
   const lower = title.toLowerCase()
-  return !EXCLUDE_KEYWORDS.some((keyword) => lower.includes(keyword))
+  const hasTarget = INCLUDE_KEYWORDS.some((keyword) => lower.includes(keyword))
+  const isExcluded = EXCLUDE_KEYWORDS.some((keyword) => lower.includes(keyword))
+  return hasTarget && !isExcluded
 }
 
 interface YoutubeSearchItem {
