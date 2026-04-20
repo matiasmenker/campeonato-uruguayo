@@ -395,7 +395,7 @@ const HomePage = async () => {
                 description={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""}`}
               />
               {topScorers.length > 0 ? (
-                <div className="flex-1 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-slate-50">
