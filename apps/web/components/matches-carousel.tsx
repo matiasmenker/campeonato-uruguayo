@@ -228,18 +228,22 @@ const MatchesCarousel = ({ matches, roundName, fixtureVideoMap = {} }: MatchesCa
     )
   }
 
-  const statusOrder = { live: 0, upcoming: 1, finished: 2 } as const
+  // Finished first (most recent → oldest), then live, then upcoming (soonest first)
+  const statusOrder = { finished: 0, live: 1, upcoming: 2 } as const
 
   const sortedMatches = [...matches].sort((matchA, matchB) => {
-    const orderA = statusOrder[getMatchStatus(matchA)]
-    const orderB = statusOrder[getMatchStatus(matchB)]
+    const statusA = getMatchStatus(matchA)
+    const statusB = getMatchStatus(matchB)
+    const orderA = statusOrder[statusA]
+    const orderB = statusOrder[statusB]
 
     if (orderA !== orderB) return orderA - orderB
 
-    return (
-      new Date(matchA.kickoffAt ?? 0).getTime() -
-      new Date(matchB.kickoffAt ?? 0).getTime()
-    )
+    const timeA = new Date(matchA.kickoffAt ?? 0).getTime()
+    const timeB = new Date(matchB.kickoffAt ?? 0).getTime()
+
+    // Finished: most recent first; upcoming: soonest first
+    return statusA === "finished" ? timeB - timeA : timeA - timeB
   })
 
   return (

@@ -26,6 +26,7 @@ const buildLeaderCategory = async (
   developerName: string,
   seasonId: number | undefined,
   stageId: number | undefined,
+  roundId: number | undefined,
   limit: number,
   aggregation: LeaderAggregation = "sum"
 ): Promise<LeaderCategory> => {
@@ -46,6 +47,10 @@ const buildLeaderCategory = async (
 
   if (stageId) {
     whereFixture.stageId = stageId;
+  }
+
+  if (roundId) {
+    whereFixture.roundId = roundId;
   }
 
   const stats = await prisma.fixturePlayerStatistic.findMany({
@@ -148,24 +153,11 @@ const buildLeaderCategory = async (
 
 export const getLeaders = async (query: LeadersQuery): Promise<DetailResponse<LeadersContract>> => {
   const [topRated, topScorers, topAssists, topYellowCards, topRedCards] = await Promise.all([
-    buildLeaderCategory(
-      "topRated",
-      "rating",
-      query.seasonId,
-      query.stageId,
-      query.limit,
-      "average"
-    ),
-    buildLeaderCategory("topScorers", "goals", query.seasonId, query.stageId, query.limit),
-    buildLeaderCategory("topAssists", "assists", query.seasonId, query.stageId, query.limit),
-    buildLeaderCategory(
-      "topYellowCards",
-      "yellowcards",
-      query.seasonId,
-      query.stageId,
-      query.limit
-    ),
-    buildLeaderCategory("topRedCards", "redcards", query.seasonId, query.stageId, query.limit),
+    buildLeaderCategory("topRated", "RATING", query.seasonId, query.stageId, query.roundId, query.limit, "average"),
+    buildLeaderCategory("topScorers", "GOALS", query.seasonId, query.stageId, query.roundId, query.limit),
+    buildLeaderCategory("topAssists", "ASSISTS", query.seasonId, query.stageId, query.roundId, query.limit),
+    buildLeaderCategory("topYellowCards", "YELLOWCARDS", query.seasonId, query.stageId, query.roundId, query.limit),
+    buildLeaderCategory("topRedCards", "REDCARDS", query.seasonId, query.stageId, query.roundId, query.limit),
   ]);
 
   return {

@@ -32,6 +32,7 @@ export const getDashboardOverview = async (): Promise<
         season: null,
         currentStage: null,
         currentRound: null,
+        lastCompletedRound: null,
         totalTeams: 0,
         totalPlayers: 0,
         totalFixtures: 0,
@@ -79,6 +80,7 @@ export const getDashboardOverview = async (): Promise<
     completedFixtures,
     activeRoundFixturesRaw,
     standingsRaw,
+    lastCompletedRoundAnchor,
   ] = await Promise.all([
     prisma.squadMembership
       .findMany({
@@ -118,6 +120,21 @@ export const getDashboardOverview = async (): Promise<
       include: { season: true, stage: true, team: true },
       orderBy: { position: "asc" },
     }),
+    // Last round where every fixture has a score (fully completed)
+    prisma.fixture.findFirst({
+      where: {
+        seasonId: currentSeason.id,
+        homeScore: { not: null },
+        awayScore: { not: null },
+        round: {
+          fixtures: {
+            every: { homeScore: { not: null }, awayScore: { not: null } },
+          },
+        },
+      },
+      orderBy: { kickoffAt: "desc" },
+      select: { roundId: true },
+    }),
   ]);
   const mapVenueSummary = (venue: (typeof activeRoundFixturesRaw)[number]["venue"]): DashboardVenueSummary | null => {
     if (!venue) return null;
@@ -139,12 +156,17 @@ export const getDashboardOverview = async (): Promise<
     stateCode: fixture.stateId ? (stateNameById.get(fixture.stateId) ?? null) : null,
   });
 
+  const lastCompletedRound = lastCompletedRoundAnchor?.roundId
+    ? (allRounds.find((round) => round.id === lastCompletedRoundAnchor.roundId) ?? null)
+    : null;
+
   return {
     data: {
       league: toLeagueSummary(currentSeason.league),
       season: toSeasonSummary(currentSeason),
       currentStage: currentStage ? toStageSummary(currentStage) : null,
       currentRound: activeRound ? toRoundSummary(activeRound) : null,
+      lastCompletedRound: lastCompletedRound ? toRoundSummary(lastCompletedRound) : null,
       totalTeams,
       totalPlayers,
       totalFixtures,

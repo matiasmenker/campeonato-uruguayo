@@ -75,6 +75,7 @@ export interface DashboardOverview {
   season: SeasonSummary | null
   currentStage: StageSummary | null
   currentRound: RoundSummary | null
+  lastCompletedRound: RoundSummary | null
   totalTeams: number
   totalPlayers: number
   totalFixtures: number

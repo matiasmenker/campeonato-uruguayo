@@ -28,78 +28,111 @@ import {
   type LeaderEntry,
   type LeadersContract,
 } from "@/lib/metrics"
+import { fetchLatestAufVideos } from "@/lib/youtube"
 
 export const dynamic = "force-dynamic"
 
-const formatRating = (value: number) => {
-  return new Intl.NumberFormat("es-UY", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 2,
-  }).format(value)
+const getPlayerName = (leader: LeaderEntry) =>
+  leader.player.displayName ?? leader.player.name
+
+const POSITION_CONFIG: Record<number, { label: string; bg: string }> = {
+  24: { label: "AR", bg: "#f59e0b" },  // ámbar — arquero
+  25: { label: "DF", bg: "#3b82f6" },  // azul — defensa
+  26: { label: "MC", bg: "#10b981" },  // verde — mediocampista
+  27: { label: "DL", bg: "#ef4444" },  // rojo — delantero
 }
 
-const getPlayerName = (leader: LeaderEntry) => {
-  return leader.player.displayName ?? leader.player.name
+const getPositionConfig = (positionId: number | null) =>
+  positionId ? (POSITION_CONFIG[positionId] ?? { label: "—", bg: "#94a3b8" }) : { label: "—", bg: "#94a3b8" }
+
+const getRatingColor = (value: number) => {
+  if (value >= 8.0) return "#22c55e"
+  if (value >= 7.0) return "#38bdf8"
+  if (value >= 6.0) return "#f97316"
+  return "#ef4444"
 }
+
+const formatRating = (value: number) =>
+  new Intl.NumberFormat("es-UY", { minimumFractionDigits: 1, maximumFractionDigits: 2 }).format(value)
+
+const PlayerCirclePhoto = ({ src, alt }: { src: string | null; alt: string }) => (
+  <div style={{ width: 76, height: 76, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+    {src ? (
+      <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }} />
+    ) : (
+      <svg viewBox="0 0 80 80" fill="none" style={{ width: "100%", height: "100%", background: "#f1f5f9" }}>
+        <circle cx="40" cy="30" r="16" fill="#cbd5e1" />
+        <path d="M12 78c0-15.464 12.536-28 28-28s28 12.536 28 28" fill="#cbd5e1" />
+      </svg>
+    )}
+  </div>
+)
 
 
 const PlayerLeaderCard = ({ leader }: { leader: LeaderEntry }) => {
-  const playerName = getPlayerName(leader)
-
+  const name = getPlayerName(leader)
+  const parts = name.split(" ")
+  const first = parts[0]
+  const last = parts.slice(1).join(" ")
+  const positionConfig = getPositionConfig(leader.player.positionId ?? null)
+  const ratingColor = getRatingColor(leader.value)
   return (
-    <article className="group relative flex flex-col items-center gap-0 overflow-hidden rounded-2xl bg-slate-900 px-3 pb-4 pt-5 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_48px_-8px_rgba(16,185,129,0.22)]">
-      {/* Emerald top accent */}
-      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
-
-      {/* Subtle background glow */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(16,185,129,0.07),transparent)]" />
-
-      {/* Avatar */}
-      <div className="relative mb-3">
-        <div className="h-[72px] w-[72px] overflow-hidden rounded-full bg-slate-800 ring-2 ring-slate-700/80">
-          {leader.player.imagePath ? (
-            <img
-              src={leader.player.imagePath}
-              alt={playerName}
-              className="h-full w-full object-cover object-top"
-            />
+    <article className="relative flex flex-col overflow-hidden rounded-2xl"
+      style={{ aspectRatio: "2.5/3.5", background: "#f8fafc", boxShadow: "0 2px 12px rgba(15,23,42,0.07)", border: "1px solid #e2e8f0" }}>
+      {/* Nombre */}
+      <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-center px-3 pt-2.5" style={{ height: 40 }}>
+        <div className="text-center">
+          {last ? (
+            <>
+              <p className="text-[9px] font-black uppercase tracking-wide leading-tight text-slate-600">{first}</p>
+              <p className="text-[11px] font-black uppercase tracking-wide leading-tight text-slate-600">{last}</p>
+            </>
           ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <span className="text-xl font-black text-slate-500">
-                {playerName.slice(0, 2).toUpperCase()}
-              </span>
-            </div>
+            <p className="text-[11px] font-black uppercase leading-tight text-slate-600">{first}</p>
           )}
         </div>
-        {leader.team?.imagePath ? (
-          <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-slate-800 ring-2 ring-slate-900">
-            <img
-              src={leader.team.imagePath}
-              alt={leader.team.name ?? ""}
-              className="h-4 w-4 object-contain"
-            />
-          </div>
-        ) : null}
       </div>
-
-      {/* Name + team */}
-      <p className="w-full truncate text-center text-[13px] font-bold leading-tight text-white">
-        {playerName}
-      </p>
-      <p className="mt-0.5 w-full truncate text-center text-[11px] text-slate-500">
-        {leader.team?.name ?? "—"}
-      </p>
-
-      {/* Divider */}
-      <div className="my-3 w-8 border-t border-slate-800" />
-
-      {/* Rating */}
-      <span className="text-[1.7rem] font-black leading-none tabular-nums text-emerald-400">
-        {formatRating(leader.value)}
-      </span>
-      <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600">
-        Rating
-      </span>
+      {/* Foto circular + badge posición */}
+      <div className="absolute inset-x-0 z-20 flex items-center justify-center" style={{ top: 42, bottom: 50 }}>
+        <div className="relative">
+          <PlayerCirclePhoto src={leader.player.imagePath} alt={name} />
+          {/* Position badge — bottom-left of photo circle */}
+          <div style={{
+            position: "absolute",
+            bottom: 0,
+            left: -4,
+            width: 24,
+            height: 24,
+            borderRadius: "50%",
+            background: positionConfig.bg,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "2px solid #f8fafc",
+            zIndex: 10,
+          }}>
+            <span style={{ fontSize: 8, fontWeight: 900, color: "white", letterSpacing: 0, lineHeight: 1 }}>
+              {positionConfig.label}
+            </span>
+          </div>
+        </div>
+      </div>
+      {/* Strip blanco con línea divisora */}
+      <div className="absolute inset-x-0 bottom-0 z-30" style={{ height: 48 }}>
+        <div className="absolute inset-0 bg-white" />
+        <div className="absolute inset-x-0 top-0 h-px bg-slate-200" />
+        <div className="relative z-10 flex h-full items-center justify-between px-3">
+          <div className="flex items-center gap-1">
+            <span className="text-xl font-black tabular-nums" style={{ color: ratingColor }}>{leader.value.toFixed(1)}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: ratingColor, opacity: 0.75, flexShrink: 0 }}>
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+          </div>
+          {leader.team?.imagePath && (
+            <img src={leader.team.imagePath} alt="" className="h-8 w-8 object-contain" />
+          )}
+        </div>
+      </div>
     </article>
   )
 }
@@ -126,10 +159,8 @@ const SectionTitle = ({
   </div>
 )
 
-// MVP: hardcoded videos from Liga AUF Uruguaya playlist — replace with YouTube API fetch
-// Filter logic for production: include titles matching Apertura/Clausura/Liga AUF/HL Largo/Resumen/Fecha
-// Exclude: "Segunda Profesional", "Sub-", "Selección", "Femenin", "Copa AUF"
-const AUF_VIDEOS_MVP: YoutubeVideo[] = [
+// Fallback videos used when YOUTUBE_API_KEY / YOUTUBE_CHANNEL_ID are not configured
+const AUF_VIDEOS_FALLBACK: YoutubeVideo[] = [
   {
     videoId: "rJSbulDa9QM",
     title: "Show de goles | Liga AUF Uruguaya 2026 | Fecha 11 | Torneo Apertura",
@@ -180,6 +211,7 @@ const HomePage = async () => {
   let overview: DashboardOverview | null = null
   let leaders: LeadersContract | null = null
   let errorMessage: string | null = null
+  let aufVideos: YoutubeVideo[] = AUF_VIDEOS_FALLBACK
 
   try {
     overview = await getDashboardOverview()
@@ -195,11 +227,19 @@ const HomePage = async () => {
       leaders = await getLeaders({
         seasonId: overview.season.id,
         stageId: overview.currentStage?.id,
-        limit: 6,
+        roundId: overview.lastCompletedRound?.id,
+        limit: 10,
       })
     } catch {
       leaders = null
     }
+  }
+
+  try {
+    const fetched = await fetchLatestAufVideos(6)
+    if (fetched.length > 0) aufVideos = fetched
+  } catch {
+    // silently keep fallback
   }
 
   const topRatedPlayers = leaders?.topRated.leaders ?? []
@@ -243,7 +283,7 @@ const HomePage = async () => {
                 description="Resúmenes y entrevistas del campeonato"
               />
               <div className="grid gap-3 sm:grid-cols-2">
-                {AUF_VIDEOS_MVP.map((video) => (
+                {aufVideos.map((video) => (
                   <YoutubeVideoCard key={video.videoId} video={video} />
                 ))}
               </div>
@@ -253,10 +293,10 @@ const HomePage = async () => {
               <SectionTitle
                 icon={IconUsersGroup}
                 title="Mejores jugadores"
-                description="Mejor rating promedio en la temporada actual"
+                description={`Fecha ${overview?.lastCompletedRound?.name ?? "—"} · mejor rating de la jornada`}
               />
               {topRatedPlayers.length > 0 ? (
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-5 gap-3">
                   {topRatedPlayers.map((leader) => (
                     <PlayerLeaderCard
                       key={`${leader.player.id}-${leader.value}`}
@@ -299,7 +339,7 @@ const HomePage = async () => {
                       <TableHead className="text-right text-xs" title="Goles marcados">GF</TableHead>
                       <TableHead className="text-right text-xs" title="Goles en contra">GC</TableHead>
                       <TableHead className="text-right text-xs" title="Diferencia de goles">DG</TableHead>
-                      <TableHead className="text-right text-xs" title="Puntos">PTS</TableHead>
+                      <TableHead className="text-center text-xs" title="Puntos">PTS</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -335,7 +375,7 @@ const HomePage = async () => {
                         <TableCell className="text-right text-xs text-slate-500">
                           {standing.goalDifference > 0 ? "+" : ""}{standing.goalDifference}
                         </TableCell>
-                        <TableCell className="text-right text-xs font-bold text-slate-950">{standing.points}</TableCell>
+                        <TableCell className="text-center text-xs font-bold text-slate-950">{standing.points}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -347,7 +387,7 @@ const HomePage = async () => {
               <SectionTitle
                 icon={IconBallFootball}
                 title="Goleadores"
-                description="Máximos anotadores de la temporada"
+                description="Máximos goleadores del campeonato"
               />
               {topScorers.length > 0 ? (
                 <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
@@ -359,7 +399,7 @@ const HomePage = async () => {
                         </TableHead>
                         <TableHead className="text-xs">Jugador</TableHead>
                         <TableHead className="text-xs">Equipo</TableHead>
-                        <TableHead className="text-right text-xs">
+                        <TableHead className="text-center text-xs">
                           Goles
                         </TableHead>
                       </TableRow>
@@ -370,13 +410,41 @@ const HomePage = async () => {
                           <TableCell className="text-center text-xs font-medium text-slate-400">
                             {index + 1}
                           </TableCell>
-                          <TableCell className="text-xs font-medium text-slate-950">
-                            {getPlayerName(leader)}
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
+                                {leader.player.imagePath ? (
+                                  <img
+                                    src={leader.player.imagePath}
+                                    alt={getPlayerName(leader)}
+                                    className="h-full w-full object-cover object-top"
+                                  />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center text-[10px] font-bold text-slate-400">
+                                    {getPlayerName(leader).slice(0, 2).toUpperCase()}
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-xs font-medium text-slate-950">
+                                {getPlayerName(leader)}
+                              </span>
+                            </div>
                           </TableCell>
-                          <TableCell className="text-xs text-slate-500">
-                            {leader.team?.name ?? "Sin equipo"}
+                          <TableCell>
+                            <div className="flex items-center gap-1.5">
+                              {leader.team?.imagePath ? (
+                                <img
+                                  src={leader.team.imagePath}
+                                  alt={leader.team.name ?? ""}
+                                  className="h-4 w-4 shrink-0 object-contain"
+                                />
+                              ) : null}
+                              <span className="text-xs text-slate-500">
+                                {leader.team?.name ?? "Sin equipo"}
+                              </span>
+                            </div>
                           </TableCell>
-                          <TableCell className="text-right text-xs font-bold text-emerald-600">
+                          <TableCell className="text-center text-xs font-bold text-slate-950">
                             {leader.value}
                           </TableCell>
                         </TableRow>

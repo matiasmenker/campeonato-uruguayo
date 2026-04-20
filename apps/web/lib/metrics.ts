@@ -42,6 +42,7 @@ export interface LeadersContract {
 interface GetLeadersOptions {
   seasonId?: number
   stageId?: number
+  roundId?: number
   limit?: number
 }
 
@@ -58,7 +59,11 @@ export const getLeaders = async (
     searchParams.set("stageId", String(options.stageId))
   }
 
-  searchParams.set("limit", String(options.limit ?? 6))
+  if (options.roundId) {
+    searchParams.set("roundId", String(options.roundId))
+  }
+
+  searchParams.set("limit", String(options.limit ?? 10))
 
   const response = await apiFetch<DetailResponse<LeadersContract>>(
     `/api/v1/metrics/leaders?${searchParams.toString()}`

@@ -6,6 +6,7 @@ import type { StatTypeSummary } from "../stat-types/stat-types.contracts.js";
 export const leadersQuerySchema = z.object({
   seasonId: z.coerce.number().int().positive().optional(),
   stageId: z.coerce.number().int().positive().optional(),
+  roundId: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().max(50).default(10),
 });
 
