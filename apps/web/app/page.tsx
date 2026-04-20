@@ -251,7 +251,7 @@ const HomePage = async () => {
     // silently keep fallback
   }
 
-  const topRatedPlayers = (leaders?.topRated.leaders ?? []).slice(0, 5)
+  const topRatedPlayers = leaders?.topRated.leaders ?? []
   const topScorers = seasonLeaders?.topScorers.leaders ?? []
 
   return (
@@ -283,7 +283,7 @@ const HomePage = async () => {
           />
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+        <div className="grid items-start gap-6 lg:grid-cols-[3fr_2fr]">
           <div className="flex flex-col gap-8">
             <section className="flex flex-col gap-4">
               <SectionTitle
