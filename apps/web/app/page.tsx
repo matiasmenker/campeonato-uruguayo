@@ -2,6 +2,7 @@ import type { ComponentType } from "react"
 import {
   IconBallFootball,
   IconPlayerPlay,
+  IconStar,
   IconTrophy,
   IconUsersGroup,
 } from "@tabler/icons-react"
@@ -53,7 +54,7 @@ const getRatingColor = (value: number) => {
 }
 
 const formatRating = (value: number) =>
-  new Intl.NumberFormat("es-UY", { minimumFractionDigits: 1, maximumFractionDigits: 2 }).format(value)
+  new Intl.NumberFormat("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 2 }).format(value)
 
 const PlayerCirclePhoto = ({ src, alt }: { src: string | null; alt: string }) => (
   <div style={{ width: 76, height: 76, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
@@ -219,7 +220,7 @@ const HomePage = async () => {
     errorMessage =
       error instanceof Error
         ? error.message
-        : "No se pudo cargar la portada desde la API."
+        : "Could not load the dashboard from the API."
   }
 
   // Two separate calls: round-scoped for ratings, season-scoped for scorers
@@ -258,13 +259,13 @@ const HomePage = async () => {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-8 sm:px-8 lg:px-10">
         {errorMessage ? (
           <Alert className="border-amber-300 bg-amber-50 text-amber-950">
-            <AlertTitle>No pudimos cargar la API</AlertTitle>
+            <AlertTitle>Could not load the API</AlertTitle>
             <AlertDescription>
-              {errorMessage}. Si estás en local, levantá la API con{" "}
+              {errorMessage}. If running locally, start the API with{" "}
               <code className="rounded bg-amber-100 px-1.5 py-0.5 text-sm">
                 PORT=3001 pnpm dev:api
               </code>{" "}
-              y recargá la página.
+              and reload the page.
             </AlertDescription>
           </Alert>
         ) : null}
@@ -272,8 +273,8 @@ const HomePage = async () => {
         <section className="flex flex-col gap-4">
           <SectionTitle
             icon={IconBallFootball}
-            title="Partidos"
-            badge={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""} · Fecha ${overview?.currentRound?.name ?? "—"}`}
+            title="Matches"
+            badge={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""} · Round ${overview?.currentRound?.name ?? "—"}`}
           />
           <MatchesCarousel
             matches={overview?.recentResults ?? []}
@@ -287,8 +288,8 @@ const HomePage = async () => {
             <section className="flex flex-col gap-4">
               <SectionTitle
                 icon={IconPlayerPlay}
-                title="Últimos videos"
-                description="Resúmenes y entrevistas del campeonato"
+                title="Latest videos"
+                description="Highlights and interviews"
               />
               <div className="grid gap-3 sm:grid-cols-2">
                 {aufVideos.map((video) => (
@@ -299,9 +300,9 @@ const HomePage = async () => {
 
             <section className="flex flex-col gap-4">
               <SectionTitle
-                icon={IconUsersGroup}
-                title="Mejores jugadores"
-                description={`Fecha ${overview?.lastCompletedRound?.name ?? "—"} · mejor rating de la jornada`}
+                icon={IconStar}
+                title="Best Players"
+                description={`Round ${overview?.lastCompletedRound?.name ?? "—"}`}
               />
               {topRatedPlayers.length > 0 ? (
                 <div className="grid grid-cols-5 gap-3">
@@ -314,13 +315,9 @@ const HomePage = async () => {
                 </div>
               ) : (
                 <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 text-center">
-                  <IconUsersGroup className="h-8 w-8 text-slate-300" />
+                  <IconStar className="h-8 w-8 text-slate-300" />
                   <p className="text-sm font-medium text-slate-400">
-                    Todavía no hay ratings disponibles
-                  </p>
-                  <p className="text-xs text-slate-300">
-                    Esta sección se llenará cuando la API exponga puntuaciones
-                    suficientes
+                    No ratings available yet
                   </p>
                 </div>
               )}
@@ -331,7 +328,7 @@ const HomePage = async () => {
             <section className="flex flex-col gap-4">
               <SectionTitle
                 icon={IconTrophy}
-                title="Tabla de posiciones"
+                title="Standings"
                 description={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""}`}
               />
               <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
@@ -339,15 +336,15 @@ const HomePage = async () => {
                   <TableHeader>
                     <TableRow className="bg-slate-50">
                       <TableHead className="w-8 text-center text-xs">#</TableHead>
-                      <TableHead className="text-xs">Equipo</TableHead>
-                      <TableHead className="text-right text-xs" title="Partidos jugados">PJ</TableHead>
-                      <TableHead className="text-right text-xs" title="Victorias">V</TableHead>
-                      <TableHead className="text-right text-xs" title="Empates">E</TableHead>
-                      <TableHead className="text-right text-xs" title="Derrotas">D</TableHead>
-                      <TableHead className="text-right text-xs" title="Goles marcados">GF</TableHead>
-                      <TableHead className="text-right text-xs" title="Goles en contra">GC</TableHead>
-                      <TableHead className="text-right text-xs" title="Diferencia de goles">DG</TableHead>
-                      <TableHead className="text-center text-xs" title="Puntos">PTS</TableHead>
+                      <TableHead className="text-xs">Team</TableHead>
+                      <TableHead className="text-right text-xs" title="Matches played">MP</TableHead>
+                      <TableHead className="text-right text-xs" title="Wins">W</TableHead>
+                      <TableHead className="text-right text-xs" title="Draws">D</TableHead>
+                      <TableHead className="text-right text-xs" title="Losses">L</TableHead>
+                      <TableHead className="text-right text-xs" title="Goals for">GF</TableHead>
+                      <TableHead className="text-right text-xs" title="Goals against">GA</TableHead>
+                      <TableHead className="text-right text-xs" title="Goal difference">GD</TableHead>
+                      <TableHead className="text-center text-xs" title="Points">PTS</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -394,8 +391,8 @@ const HomePage = async () => {
             <section className="flex flex-col gap-4">
               <SectionTitle
                 icon={IconBallFootball}
-                title="Goleadores"
-                description="Máximos goleadores del campeonato"
+                title="Top Scorers"
+                description={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""}`}
               />
               {topScorers.length > 0 ? (
                 <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
@@ -405,11 +402,9 @@ const HomePage = async () => {
                         <TableHead className="w-10 text-center text-xs">
                           #
                         </TableHead>
-                        <TableHead className="text-xs">Jugador</TableHead>
-                        <TableHead className="text-xs">Equipo</TableHead>
-                        <TableHead className="text-center text-xs">
-                          Goles
-                        </TableHead>
+                        <TableHead className="text-xs">Player</TableHead>
+                        <TableHead className="text-xs">Team</TableHead>
+                        <TableHead className="text-center text-xs">Goals</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -448,7 +443,7 @@ const HomePage = async () => {
                                 />
                               ) : null}
                               <span className="text-xs text-slate-500">
-                                {leader.team?.name ?? "Sin equipo"}
+                                {leader.team?.name ?? "No team"}
                               </span>
                             </div>
                           </TableCell>
@@ -462,7 +457,7 @@ const HomePage = async () => {
                 </div>
               ) : (
                 <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
-                  No hay goleadores disponibles todavía
+                  No scorers available yet
                 </div>
               )}
             </section>

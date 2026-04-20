@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
+import Footer from "@/components/footer"
 import Header from "@/components/header"
 const roboto = Roboto({ subsets: ["latin"], variable: "--font-sans" })
 const fontMono = Geist_Mono({
@@ -13,7 +14,7 @@ const fontMono = Geist_Mono({
 })
 export const metadata: Metadata = {
   title: "Campeonato Uruguayo",
-  description: "Estadísticas y datos del fútbol uruguayo",
+  description: "Statistics and data for the Uruguayan Primera División",
   robots: {
     index: false,
     follow: false,
@@ -27,7 +28,7 @@ const RootLayout = ({
 }>) => {
   return (
     <html
-      lang="es"
+      lang="en"
       suppressHydrationWarning
       className={cn(
         "antialiased",
@@ -41,6 +42,7 @@ const RootLayout = ({
           <TooltipProvider>
             <Header />
             {children}
+            <Footer />
             <Toaster />
           </TooltipProvider>
         </ThemeProvider>
