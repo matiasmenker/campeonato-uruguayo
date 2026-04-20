@@ -30,9 +30,7 @@ const DisclaimerPage = () => (
             property of their respective owners — including football clubs and AUF. They are
             displayed solely for identification and informational purposes within the scope of
             this academic project, with no commercial intent whatsoever. No ownership or licence
-            over such content is claimed or granted by this platform. If you are a rights holder
-            and wish to request removal of any content, please reach out via the university
-            channels associated with this TFG and it will be removed promptly.
+            over such content is claimed or granted by this platform.
           </p>
         </section>
 
@@ -41,8 +39,7 @@ const DisclaimerPage = () => (
           <p>
             Videos shown on this site are embedded directly from YouTube via the official YouTube
             player. This platform does not host, download or store any video files. All video
-            content is © its respective copyright holders. By watching embedded videos you are
-            subject to YouTube's Terms of Service and Google's Privacy Policy.
+            content is © its respective copyright holders.
           </p>
         </section>
 

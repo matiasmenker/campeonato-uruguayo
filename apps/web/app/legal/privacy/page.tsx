@@ -35,13 +35,6 @@ const PrivacyPage = () => (
           </p>
         </section>
 
-        <section>
-          <h2 className="mb-2 font-semibold text-slate-950">Hosting</h2>
-          <p>
-            The site is hosted on Vercel and Render, which may log standard server access
-            data (IP, path, timestamp) for operational purposes per their own privacy policies.
-          </p>
-        </section>
       </div>
     </div>
   </main>
