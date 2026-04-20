@@ -5,48 +5,41 @@ const PrivacyPage = () => (
       <p className="mt-2 text-sm text-slate-500">Last updated: April 2026</p>
 
       <div className="mt-8 flex flex-col gap-6 text-sm leading-relaxed text-slate-700">
+        <p>
+          This platform does not collect any personal data. There are no accounts,
+          no registration, no login, and no contact forms.
+        </p>
+
         <section>
-          <h2 className="mb-2 font-semibold text-slate-950">1. No personal data collected</h2>
+          <h2 className="mb-2 font-semibold text-slate-950">Cookies</h2>
           <p>
-            Campeonato Uruguayo does not collect, store or process any personal data from visitors.
-            There are no user accounts, no registration forms, and no login functionality.
+            No tracking or advertising cookies are used. The only data stored locally
+            in your browser is your light/dark theme preference — it never leaves your device.
           </p>
         </section>
 
         <section>
-          <h2 className="mb-2 font-semibold text-slate-950">2. No cookies</h2>
+          <h2 className="mb-2 font-semibold text-slate-950">Embedded videos</h2>
           <p>
-            This site does not use tracking cookies or any form of persistent browser storage
-            for analytics or advertising purposes. A theme preference (light/dark) may be stored
-            locally in your browser using <code className="rounded bg-slate-100 px-1">localStorage</code> — this
-            data never leaves your device.
+            Videos are embedded via YouTube's official player. When you watch a video,
+            YouTube may set its own cookies subject to{" "}
+            <a
+              href="https://policies.google.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-slate-950"
+            >
+              Google's Privacy Policy
+            </a>
+            .
           </p>
         </section>
 
         <section>
-          <h2 className="mb-2 font-semibold text-slate-950">3. Third-party services</h2>
+          <h2 className="mb-2 font-semibold text-slate-950">Hosting</h2>
           <p>
-            This site embeds videos via the YouTube Data API (Google LLC). When you interact with
-            embedded YouTube content, Google's own privacy policy and cookie policy apply.
-            Statistical data is fetched server-side from SportMonks and SofaScore — your browser
-            does not connect to these services directly.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="mb-2 font-semibold text-slate-950">4. Hosting</h2>
-          <p>
-            The site is hosted on Vercel (frontend) and Render (API). These providers may log
-            standard server access logs (IP address, request path, timestamp) for operational
-            purposes. These logs are governed by Vercel's and Render's respective privacy policies.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="mb-2 font-semibold text-slate-950">5. Contact</h2>
-          <p>
-            For any privacy-related questions, contact the project author through the university
-            academic channels associated with this TFG.
+            The site is hosted on Vercel and Render, which may log standard server access
+            data (IP, path, timestamp) for operational purposes per their own privacy policies.
           </p>
         </section>
       </div>
