@@ -251,11 +251,11 @@ const HomePage = async () => {
     // silently keep fallback
   }
 
-  const topRatedPlayers = leaders?.topRated.leaders ?? []
+  const topRatedPlayers = (leaders?.topRated.leaders ?? []).slice(0, 5)
   const topScorers = seasonLeaders?.topScorers.leaders ?? []
 
   return (
-    <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
+    <main className="bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-8 sm:px-8 lg:px-10">
         {errorMessage ? (
           <Alert className="border-amber-300 bg-amber-50 text-amber-950">
