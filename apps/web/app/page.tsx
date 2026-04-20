@@ -237,7 +237,7 @@ const HomePage = async () => {
       getLeaders({
         seasonId: overview.season.id,
         stageId: overview.currentStage?.id,
-        limit: 10,
+        limit: 8,
       }),
     ])
     leaders = roundResult.status === "fulfilled" ? roundResult.value : null
@@ -283,7 +283,7 @@ const HomePage = async () => {
           />
         </section>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[3fr_2fr]">
+        <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
           <div className="flex flex-col gap-8">
             <section className="flex flex-col gap-4">
               <SectionTitle
@@ -324,7 +324,7 @@ const HomePage = async () => {
             </section>
           </div>
 
-          <div className="flex flex-col gap-8">
+          <div className="flex h-full flex-col gap-8">
             <section className="flex flex-col gap-4">
               <SectionTitle
                 icon={IconTrophy}
@@ -388,14 +388,14 @@ const HomePage = async () => {
               </div>
             </section>
 
-            <section className="flex flex-col gap-4">
+            <section className="flex flex-1 flex-col gap-4">
               <SectionTitle
                 icon={IconBallFootball}
                 title="Top Scorers"
                 description={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""}`}
               />
               {topScorers.length > 0 ? (
-                <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                <div className="flex-1 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-slate-50">
