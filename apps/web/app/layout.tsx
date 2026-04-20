@@ -14,6 +14,11 @@ const fontMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Campeonato Uruguayo",
   description: "Estadísticas y datos del fútbol uruguayo",
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: { index: false, follow: false },
+  },
 }
 const RootLayout = ({
   children,
