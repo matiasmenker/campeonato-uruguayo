@@ -395,8 +395,8 @@ const HomePage = async () => {
                 description={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""}`}
               />
               {topScorers.length > 0 ? (
-                <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-                  <Table>
+                <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                  <Table className="h-full">
                     <TableHeader>
                       <TableRow className="bg-slate-50">
                         <TableHead className="w-10 text-center text-xs">
@@ -409,7 +409,7 @@ const HomePage = async () => {
                     </TableHeader>
                     <TableBody>
                       {topScorers.map((leader, index) => (
-                        <TableRow key={`${leader.player.id}-${leader.value}`}>
+                        <TableRow key={`${leader.player.id}-${leader.value}`} className="h-px">
                           <TableCell className="text-center text-xs font-medium text-slate-400">
                             {index + 1}
                           </TableCell>
