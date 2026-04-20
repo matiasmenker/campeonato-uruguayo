@@ -27,13 +27,12 @@ const Footer = () => {
             </nav>
           </div>
 
-          {/* Data sources */}
+          {/* Official */}
           <div className="flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Data sources</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Official</p>
             <div className="flex flex-col gap-2">
-              <a href="https://www.sportmonks.com" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-500 hover:text-slate-950 transition-colors">SportMonks API</a>
-              <a href="https://www.auf.org.uy" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-500 hover:text-slate-950 transition-colors">AUF (Asociación Uruguaya de Fútbol)</a>
-              <a href="https://www.youtube.com/@AUFoficial" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-500 hover:text-slate-950 transition-colors">AUFTV (YouTube)</a>
+              <a href="https://www.auf.org.uy" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-500 hover:text-slate-950 transition-colors">AUF — Asociación Uruguaya de Fútbol</a>
+              <a href="https://www.youtube.com/@AUFoficial" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-500 hover:text-slate-950 transition-colors">AUFTV on YouTube</a>
             </div>
           </div>
         </div>
