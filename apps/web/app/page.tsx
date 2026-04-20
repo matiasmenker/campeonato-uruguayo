@@ -283,7 +283,7 @@ const HomePage = async () => {
           />
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+        <div className="grid items-start gap-6 lg:grid-cols-[3fr_2fr]">
           <div className="flex flex-col gap-8">
             <section className="flex flex-col gap-4">
               <SectionTitle
@@ -324,7 +324,7 @@ const HomePage = async () => {
             </section>
           </div>
 
-          <div className="flex h-full flex-col gap-8">
+          <div className="flex flex-col gap-8">
             <section className="flex flex-col gap-4">
               <SectionTitle
                 icon={IconTrophy}
@@ -388,15 +388,15 @@ const HomePage = async () => {
               </div>
             </section>
 
-            <section className="flex flex-1 flex-col gap-4">
+            <section className="flex flex-col gap-4">
               <SectionTitle
                 icon={IconBallFootball}
                 title="Top Scorers"
                 description={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""}`}
               />
               {topScorers.length > 0 ? (
-                <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-                  <Table className="h-full">
+                <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                  <Table>
                     <TableHeader>
                       <TableRow className="bg-slate-50">
                         <TableHead className="w-10 text-center text-xs">
@@ -409,7 +409,7 @@ const HomePage = async () => {
                     </TableHeader>
                     <TableBody>
                       {topScorers.map((leader, index) => (
-                        <TableRow key={`${leader.player.id}-${leader.value}`} className="h-px">
+                        <TableRow key={`${leader.player.id}-${leader.value}`}>
                           <TableCell className="text-center text-xs font-medium text-slate-400">
                             {index + 1}
                           </TableCell>
