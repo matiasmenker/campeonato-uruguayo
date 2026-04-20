@@ -222,17 +222,25 @@ const HomePage = async () => {
         : "No se pudo cargar la portada desde la API."
   }
 
+  // Two separate calls: round-scoped for ratings, season-scoped for scorers
+  let seasonLeaders: LeadersContract | null = null
+
   if (overview?.season?.id) {
-    try {
-      leaders = await getLeaders({
+    const [roundResult, seasonResult] = await Promise.allSettled([
+      getLeaders({
         seasonId: overview.season.id,
         stageId: overview.currentStage?.id,
         roundId: overview.lastCompletedRound?.id,
         limit: 10,
-      })
-    } catch {
-      leaders = null
-    }
+      }),
+      getLeaders({
+        seasonId: overview.season.id,
+        stageId: overview.currentStage?.id,
+        limit: 10,
+      }),
+    ])
+    leaders = roundResult.status === "fulfilled" ? roundResult.value : null
+    seasonLeaders = seasonResult.status === "fulfilled" ? seasonResult.value : null
   }
 
   try {
@@ -243,7 +251,7 @@ const HomePage = async () => {
   }
 
   const topRatedPlayers = leaders?.topRated.leaders ?? []
-  const topScorers = leaders?.topScorers.leaders ?? []
+  const topScorers = seasonLeaders?.topScorers.leaders ?? []
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
