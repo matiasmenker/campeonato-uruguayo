@@ -64,17 +64,22 @@ const formatKickoffTime = (kickoffAt: string | null): string => {
 }
 
 // ─── Substitution pairing ─────────────────────────────────────────────────────
-// SportMonks sends consecutive events (by sortOrder) at the same minute as pairs.
-// First of pair = player going OUT, second = player coming IN.
+// SportMonks encodes substitutions in two ways depending on the fixture:
+//   A) Pairs: two consecutive events at the same minute → first = OUT, second = IN
+//   B) Singles: one event per substitution → player is the one coming IN (bench → pitch)
+//
+// For case B we use starterIds to determine direction:
+//   - player in starterIds → going OUT (playerOut set, playerIn null)
+//   - player NOT in starterIds → coming IN (playerIn set, playerOut null)
 
 interface SubstitutionPair {
   minute: number | null
   extraMinute: number | null
-  playerOut: FixtureEvent["player"]
-  playerIn: FixtureEvent["player"] | null  // null when data is incomplete
+  playerOut: FixtureEvent["player"] | null
+  playerIn: FixtureEvent["player"] | null
 }
 
-const buildSubstitutionPairs = (events: FixtureEvent[]): SubstitutionPair[] => {
+const buildSubstitutionPairs = (events: FixtureEvent[], starterIds: Set<number>): SubstitutionPair[] => {
   const subs = events
     .filter(e => e.typeId === EVENT_SUBSTITUTION)
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
@@ -84,12 +89,20 @@ const buildSubstitutionPairs = (events: FixtureEvent[]): SubstitutionPair[] => {
   while (i < subs.length) {
     const current = subs[i]
     const next = subs[i + 1]
-    // Pair if the next event is at the same minute and consecutive sortOrder
+    // Case A: two events at the same minute → true pair (out + in)
     if (next && current.minute === next.minute) {
       pairs.push({ minute: current.minute, extraMinute: current.extraMinute, playerOut: current.player, playerIn: next.player })
       i += 2
     } else {
-      pairs.push({ minute: current.minute, extraMinute: current.extraMinute, playerOut: current.player, playerIn: null })
+      // Case B: single event — determine direction from lineup
+      const playerId = current.player?.id
+      const isStarter = playerId != null && starterIds.has(playerId)
+      pairs.push({
+        minute: current.minute,
+        extraMinute: current.extraMinute,
+        playerOut: isStarter ? current.player : null,
+        playerIn:  isStarter ? null : current.player,
+      })
       i += 1
     }
   }
@@ -114,7 +127,6 @@ const BallIcon = ({ size = 14, variant = "goal" }: { size?: number; variant?: "g
   const fill = variant === "own" ? "#b91c1c" : "#1a1a1a"
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="12" r="11" fill="#fff" />
       <path fill={fill} d="M12 0a12 12 0 1 0 12 12A12 12 0 0 0 12 0Zm8.42 6.63-.48 1.74-4.18 1.36-2.76-2v-4.4l1.5-1a10 10 0 0 1 5.92 4.3ZM9.5 2.33l1.5 1v4.4l-2.76 2-4.18-1.36-.48-1.74a10 10 0 0 1 5.92-4.3ZM2 12v-.49l1.55-1.21 4.11 1.34 1 3.2-2.54 3.5-1.94-.08A9.89 9.89 0 0 1 2 12Zm6.24 9.26-.58-1.58L10.33 16h3.34l2.67 3.68-.58 1.58a9.92 9.92 0 0 1-7.52 0Zm11.54-3-1.94.08-2.54-3.5 1-3.2 4.11-1.34L22 11.51V12a9.89 9.89 0 0 1-2.22 6.26Z" />
     </svg>
   )
@@ -159,7 +171,7 @@ const CardRect = ({ color }: { color: string }) => (
 const DoubleCard = () => (
   <span style={{ position: "relative", display: "inline-flex", alignItems: "center", width: 13, height: 11, flexShrink: 0 }}>
     <span style={{ position: "absolute", left: 0, width: 8, height: 11, borderRadius: 2, background: "#facc15" }} />
-    <span style={{ position: "absolute", left: 5, width: 8, height: 11, borderRadius: 2, background: "#991b1b" }} />
+    <span style={{ position: "absolute", left: 5, width: 8, height: 11, borderRadius: 2, background: "#ff0000" }} />
   </span>
 )
 
@@ -205,7 +217,7 @@ const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: Ev
       ))}
       {Array.from({ length: yellows }).map((_, i) => <CardRect key={`y${i}`} color="#facc15" />)}
       {Array.from({ length: yellowReds }).map((_, i) => <DoubleCard key={`yr${i}`} />)}
-      {Array.from({ length: reds }).map((_, i) => <CardRect key={`r${i}`} color="#991b1b" />)}
+      {Array.from({ length: reds }).map((_, i) => <CardRect key={`r${i}`} color="#ff0000" />)}
       {subEvents.map((sub, i) => (
         <span
           key={`s${i}`}
@@ -407,7 +419,7 @@ const BenchPlayer = ({ player, events, rating, assists }: {
         ))}
         {Array.from({ length: yellows }).map((_, i) => <CardRect key={`y${i}`} color="#facc15" />)}
         {Array.from({ length: yellowReds }).map((_, i) => <DoubleCard key={`yr${i}`} />)}
-        {Array.from({ length: reds }).map((_, i) => <CardRect key={`r${i}`} color="#991b1b" />)}
+        {Array.from({ length: reds }).map((_, i) => <CardRect key={`r${i}`} color="#ff0000" />)}
         {subEvents.map((sub, i) => (
           <span
             key={`s${i}`}
@@ -537,7 +549,7 @@ const CardRow = ({ event }: { event: FixtureEvent }) => {
         {isDouble ? (
           <DoubleCard />
         ) : (
-          <CardRect color={event.typeId === EVENT_YELLOW ? "#facc15" : "#991b1b"} />
+          <CardRect color={event.typeId === EVENT_YELLOW ? "#facc15" : "#ff0000"} />
         )}
       </div>
       <span className="w-9 text-xs font-bold text-slate-400 tabular-nums shrink-0">{minute}</span>
@@ -547,8 +559,8 @@ const CardRow = ({ event }: { event: FixtureEvent }) => {
 }
 
 const SubstitutionRow = ({ pair }: { pair: SubstitutionPair }) => {
-  const minute = pair.minute != null ? `${pair.minute}${pair.extraMinute != null ? `+${pair.extraMinute}` : ""}'` : "—"
-  const nameOut = pair.playerOut?.displayName ?? pair.playerOut?.name ?? "—"
+  const minute  = pair.minute != null ? `${pair.minute}${pair.extraMinute != null ? `+${pair.extraMinute}` : ""}'` : "—"
+  const nameOut = pair.playerOut?.displayName ?? pair.playerOut?.name ?? null
   const nameIn  = pair.playerIn?.displayName  ?? pair.playerIn?.name  ?? null
 
   return (
@@ -559,8 +571,8 @@ const SubstitutionRow = ({ pair }: { pair: SubstitutionPair }) => {
       {/* Icon column */}
       <div className="flex w-6 items-center justify-center shrink-0 pt-0.5">
         <div className="flex flex-col items-center gap-0.5">
-          <SubOutIcon size={13} />
-          {pair.playerIn && <SubInIcon size={13} />}
+          {nameOut && <SubOutIcon size={13} />}
+          {nameIn  && <SubInIcon  size={13} />}
         </div>
       </div>
 
@@ -570,10 +582,12 @@ const SubstitutionRow = ({ pair }: { pair: SubstitutionPair }) => {
       {/* Players */}
       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
         {/* Out */}
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#dc2626", flexShrink: 0 }} />
-          <span className="text-sm font-medium text-slate-500 truncate">{nameOut}</span>
-        </div>
+        {nameOut && (
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#dc2626", flexShrink: 0 }} />
+            <span className="text-sm font-medium text-slate-500 truncate">{nameOut}</span>
+          </div>
+        )}
         {/* In */}
         {nameIn && (
           <div className="flex items-center gap-1.5 min-w-0">
@@ -640,10 +654,14 @@ const MatchPage = async ({ params }: MatchPageProps) => {
     if (typeof value === "number" && value > 0) assistsByPlayer.set(stat.player.id, value)
   }
 
+  // Set of starter player IDs — used to determine substitution direction when SportMonks
+  // only records one player per sub event (the player coming IN from the bench).
+  const starterIds = new Set(lineups.filter(p => p.formationPosition !== null).map(p => p.player.id))
+
   // Build ordered timeline events
   const goalEvents  = events.filter(e => GOAL_TYPES.has(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0))
   const cardEvents  = events.filter(e => [EVENT_YELLOW, EVENT_RED, EVENT_YELLOW_RED].includes(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0))
-  const subPairs    = buildSubstitutionPairs(events)
+  const subPairs    = buildSubstitutionPairs(events, starterIds)
 
   // Interleave all event types sorted by minute
   type TimelineItem =
