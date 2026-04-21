@@ -29,7 +29,8 @@
     "sync:health": "tsx src/cli.ts sync:health",
     "sync:fill-stats": "tsx src/cli.ts sync:fill-stats",
     "report:fixture-players": "tsx src/cli.ts report:fixture-players",
-    "report:data-status": "tsx src/cli.ts report:data-status"
+    "report:data-status": "tsx src/cli.ts report:data-status",
+    "evidence:team-details": "tsx src/scripts/report-team-details-coverage.ts"
   },
   "dependencies": {
     "db": "workspace:*",

@@ -41,7 +41,8 @@
     "start:api": "pnpm --filter api start",
     "dev:web": "pnpm --filter web dev",
     "build:web": "pnpm --filter web build",
-    "start:web": "pnpm --filter web start"
+    "start:web": "pnpm --filter web start",
+    "evidence:team-details": "pnpm --filter data-sync evidence:team-details"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
