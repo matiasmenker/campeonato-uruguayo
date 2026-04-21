@@ -305,13 +305,13 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
           <div className="flex flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
             {/* Table header */}
             {squad.length > 0 && (
-              <div className="grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center border-b border-slate-200 bg-slate-50 px-4 py-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">#</span>
+              <div className="grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center border-b border-slate-100 px-4 py-2.5">
+                <span className="text-xs text-slate-400">#</span>
                 <span />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Player</span>
-                <span className="text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">Nat.</span>
-                <span className="text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">Height</span>
-                <span className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Age</span>
+                <span className="text-xs font-semibold text-slate-500">Player</span>
+                <span className="text-center text-xs font-semibold text-slate-500">Nat.</span>
+                <span className="text-center text-xs font-semibold text-slate-500">Height</span>
+                <span className="text-right text-xs font-semibold text-slate-500">Age</span>
               </div>
             )}
             {squad.length === 0 ? (
@@ -369,20 +369,15 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                             {displayName}
                           </span>
 
-                          {/* Nationality flag + code */}
-                          <div className="flex flex-col items-center gap-0.5">
+                          {/* Nationality flag */}
+                          <div className="flex justify-center">
                             {member.player.nationality?.imageUrl ? (
-                              <>
-                                <img
-                                  src={member.player.nationality.imageUrl}
-                                  alt={member.player.nationality.name}
-                                  className="h-4 w-6 rounded object-cover shadow-sm ring-1 ring-slate-200"
-                                  title={member.player.nationality.name}
-                                />
-                                <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">
-                                  {member.player.nationality.name.slice(0, 3)}
-                                </span>
-                              </>
+                              <img
+                                src={member.player.nationality.imageUrl}
+                                alt={member.player.nationality.name}
+                                className="h-[14px] w-[22px] rounded-[2px] object-cover ring-1 ring-black/10"
+                                title={member.player.nationality.name}
+                              />
                             ) : (
                               <span className="text-xs text-slate-300">—</span>
                             )}
