@@ -95,6 +95,7 @@ const FixtureCard = ({ fixture, teamId }: { fixture: TeamFixture; teamId: number
                 {result.label}
               </span>
             )}
+            <p className="text-[10px] font-medium text-slate-400">{formatKickoff(fixture.kickoffAt)}</p>
           </>
         ) : (
           <>
@@ -206,6 +207,13 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     return groups
   }, {})
 
+  // Average age across squad members who have a date of birth
+  const now = Date.now()
+  const ages = squad
+    .map((member) => member.player.dateOfBirth ? Math.floor((now - new Date(member.player.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null)
+    .filter((age): age is number => age !== null)
+  const averageAge = ages.length > 0 ? (ages.reduce((sum, age) => sum + age, 0) / ages.length).toFixed(1) : null
+
   // Fixtures sorted desc (most recent first) from API
   const recentFixtures = allFixtures
     .filter((fixture) => fixture.homeScore !== null && fixture.awayScore !== null)
@@ -293,13 +301,25 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
           </div>
         </div>
 
-        {/* Squad heading — full width, above the grid */}
-        <div className="flex items-center gap-2 px-1">
-          <h2 className="text-sm font-bold text-slate-700">Squad</h2>
-          <span className="text-sm font-normal text-slate-400">· {selectedSeason.name}</span>
-        </div>
+        <div className="grid gap-x-6 gap-y-3 lg:grid-cols-[1fr_340px]">
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+          {/* Squad column heading */}
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold text-slate-700">Squad</h2>
+              <span className="text-sm font-normal text-slate-400">· {selectedSeason.name}</span>
+            </div>
+            {averageAge && (
+              <span className="text-xs text-slate-400">
+                Avg. age <span className="font-semibold text-slate-600">{averageAge} yrs</span>
+              </span>
+            )}
+          </div>
+
+          {/* Fixtures column heading */}
+          <div className="px-1">
+            <h2 className="text-sm font-bold text-slate-700">Matches</h2>
+          </div>
 
           {/* Squad table */}
           <div className="flex flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
@@ -357,9 +377,9 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                                 className="h-full w-full object-cover object-top"
                               />
                             ) : (
-                              <svg viewBox="0 0 32 32" fill="none" className="h-full w-full">
-                                <circle cx="16" cy="12" r="6" fill="#cbd5e1" />
-                                <path d="M4 30c0-6.627 5.373-12 12-12s12 5.373 12 12" fill="#cbd5e1" />
+                              <svg viewBox="0 0 32 32" fill="none" className="h-full w-full bg-slate-100">
+                                <circle cx="16" cy="11" r="6" fill="#cbd5e1" />
+                                <path d="M2 34c0-7.732 6.268-14 14-14s14 6.268 14 14" fill="#cbd5e1" />
                               </svg>
                             )}
                           </div>
@@ -406,7 +426,7 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 
             {recentFixtures.length > 0 && (
               <div className="flex flex-col gap-2">
-                <h2 className="px-1 text-sm font-bold text-slate-700">Last 5 results</h2>
+                <p className="px-1 text-xs font-semibold text-slate-400">Last 5 results</p>
                 <div className="flex flex-col gap-2">
                   {recentFixtures.map((fixture) => (
                     <FixtureCard key={fixture.id} fixture={fixture} teamId={teamId} />
@@ -417,7 +437,7 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 
             {nextFixture && (
               <div className="flex flex-col gap-2">
-                <h2 className="px-1 text-sm font-bold text-slate-700">Next match</h2>
+                <p className="px-1 text-xs font-semibold text-slate-400">Next match</p>
                 <FixtureCard fixture={nextFixture} teamId={teamId} />
               </div>
             )}
