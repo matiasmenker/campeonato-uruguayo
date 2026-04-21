@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -178,32 +179,64 @@ const TeamBadge = ({
   const name = team?.name ?? "Equipo"
   const imagePath = team?.imagePath ?? null
   const isEnd = align === "end"
+  const teamHref = team?.id ? `/teams/${team.id}` : null
+
+  const inner = (
+    <div
+      className={cn(
+        "flex min-w-0 flex-1 items-center gap-3",
+        isEnd ? "flex-row-reverse text-right" : "text-left",
+        teamHref ? "cursor-pointer" : undefined
+      )}
+    >
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center">
+        {imagePath ? (
+          <img
+            src={imagePath}
+            alt={name}
+            className="h-11 w-11 object-contain drop-shadow-sm transition-transform duration-150 group-hover:scale-110"
+          />
+        ) : (
+          <IconShield className="h-10 w-10 text-white/85 drop-shadow-sm" />
+        )}
+      </div>
+
+      <p className="min-w-0 truncate text-[13px] font-semibold text-white">
+        {name}
+      </p>
+    </div>
+  )
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div
-          className={cn(
-            "flex min-w-0 flex-1 items-center gap-3",
-            isEnd ? "flex-row-reverse text-right" : "text-left"
-          )}
-        >
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center">
-            {imagePath ? (
-              <img
-                src={imagePath}
-                alt={name}
-                className="h-11 w-11 object-contain drop-shadow-sm"
-              />
-            ) : (
-              <IconShield className="h-10 w-10 text-white/85 drop-shadow-sm" />
+        {teamHref ? (
+          <Link
+            href={teamHref}
+            className={cn(
+              "group flex min-w-0 flex-1 items-center gap-3",
+              isEnd ? "flex-row-reverse text-right" : "text-left"
             )}
-          </div>
-
-          <p className="min-w-0 truncate text-[13px] font-semibold text-white">
-            {name}
-          </p>
-        </div>
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center">
+              {imagePath ? (
+                <img
+                  src={imagePath}
+                  alt={name}
+                  className="h-11 w-11 object-contain drop-shadow-sm transition-transform duration-150 group-hover:scale-110"
+                />
+              ) : (
+                <IconShield className="h-10 w-10 text-white/85 drop-shadow-sm" />
+              )}
+            </div>
+            <p className="min-w-0 truncate text-[13px] font-semibold text-white">
+              {name}
+            </p>
+          </Link>
+        ) : (
+          inner
+        )}
       </TooltipTrigger>
       <TooltipContent>
         <p>{name}</p>

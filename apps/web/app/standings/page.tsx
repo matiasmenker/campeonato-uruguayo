@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import Link from "next/link"
 import { IconBallFootball, IconStar, IconTrophy, IconUsers } from "@tabler/icons-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
@@ -44,7 +45,7 @@ const PositionIndicator = ({ position, total }: { position: number; total: numbe
   )
 }
 
-const StandingsTable = ({ standings }: { standings: StandingEntry[] }) => {
+const StandingsTable = ({ standings, seasonId }: { standings: StandingEntry[]; seasonId: number }) => {
   const total = standings.length
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
@@ -72,14 +73,17 @@ const StandingsTable = ({ standings }: { standings: StandingEntry[] }) => {
                   <PositionIndicator position={standing.position} total={total} />
                 </TableCell>
                 <TableCell className="py-3">
-                  <div className="flex items-center gap-3">
+                  <Link
+                    href={`/teams/${standing.team.id}?seasonId=${seasonId}`}
+                    className="flex items-center gap-3 hover:opacity-80"
+                  >
                     {standing.team.imagePath ? (
                       <img src={standing.team.imagePath} alt={standing.team.name} className="h-6 w-6 shrink-0 object-contain" />
                     ) : (
                       <div className="h-6 w-6 shrink-0 rounded-full bg-slate-200" />
                     )}
                     <span className="text-sm font-medium text-slate-950">{standing.team.name}</span>
-                  </div>
+                  </Link>
                 </TableCell>
                 <TableCell className="py-3 text-center text-sm text-slate-500">{standing.played}</TableCell>
                 <TableCell className="py-3 text-center text-sm font-medium text-emerald-600">{standing.won}</TableCell>
@@ -102,23 +106,25 @@ const StandingsTable = ({ standings }: { standings: StandingEntry[] }) => {
 
 // ─── Stat cards ───────────────────────────────────────────────────────────────
 
-const ChampionCard = ({ champion, seasonName }: { champion: SeasonChampion; seasonName: string }) => (
-  <div className="overflow-hidden rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-800 to-slate-950 shadow-lg">
-    <div className="flex items-center gap-4 px-5 py-4">
-      <ChampionBadge year={seasonName} size={64} />
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Champion</p>
-        <p className="mt-1 truncate text-xl font-black text-white leading-tight">{champion.team.name}</p>
-        <p className="mt-0.5 text-xs font-semibold text-slate-400">{seasonName}</p>
+const ChampionCard = ({ champion, seasonName, seasonId }: { champion: SeasonChampion; seasonName: string; seasonId: number }) => (
+  <Link href={`/teams/${champion.team.id}?seasonId=${seasonId}`} className="block hover:opacity-90 transition-opacity">
+    <div className="overflow-hidden rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-800 to-slate-950 shadow-lg">
+      <div className="flex items-center gap-4 px-5 py-4">
+        <ChampionBadge year={seasonName} size={64} />
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Champion</p>
+          <p className="mt-1 truncate text-xl font-black text-white leading-tight">{champion.team.name}</p>
+          <p className="mt-0.5 text-xs font-semibold text-slate-400">{seasonName}</p>
+        </div>
+        {champion.team.imagePath && (
+          <img src={champion.team.imagePath} alt={champion.team.name} className="h-14 w-14 shrink-0 object-contain opacity-90 drop-shadow-md" />
+        )}
       </div>
-      {champion.team.imagePath && (
-        <img src={champion.team.imagePath} alt={champion.team.name} className="h-14 w-14 shrink-0 object-contain opacity-90 drop-shadow-md" />
-      )}
     </div>
-  </div>
+  </Link>
 )
 
-const LeaderCard = ({ standing, stageName, isWinner }: { standing: StandingEntry; stageName: string; isWinner: boolean }) => (
+const LeaderCard = ({ standing, stageName, isWinner, seasonId }: { standing: StandingEntry; stageName: string; isWinner: boolean; seasonId: number }) => (
   <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
     <div className="px-4 py-3 border-b border-slate-100">
       <div className="flex items-center gap-1.5">
@@ -129,7 +135,7 @@ const LeaderCard = ({ standing, stageName, isWinner }: { standing: StandingEntry
       </div>
     </div>
     <div className="p-4">
-      <div className="flex items-center gap-4">
+      <Link href={`/teams/${standing.team.id}?seasonId=${seasonId}`} className="flex items-center gap-4 hover:opacity-80">
         {standing.team.imagePath && (
           <img src={standing.team.imagePath} alt={standing.team.name} className="h-14 w-14 shrink-0 object-contain drop-shadow-sm" />
         )}
@@ -137,7 +143,7 @@ const LeaderCard = ({ standing, stageName, isWinner }: { standing: StandingEntry
           <p className="truncate text-base font-bold text-slate-950">{standing.team.name}</p>
           <p className="text-xs text-slate-400">{standing.played} matches played</p>
         </div>
-      </div>
+      </Link>
       <div className="mt-4 grid grid-cols-3 divide-x divide-slate-100 rounded-xl bg-slate-50 py-3">
         <div className="flex flex-col items-center gap-0.5">
           <p className="text-2xl font-black text-slate-950">{standing.points}</p>
@@ -339,7 +345,7 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
                 </div>
               ) : (
                 <>
-                  <StandingsTable standings={standings} />
+                  <StandingsTable standings={standings} seasonId={selectedSeasonId} />
                   <div className="flex items-center gap-1.5 px-1 text-xs text-slate-400">
                     <div className="h-3 w-1 rounded-full bg-red-400" />
                     <span>Relegation zone</span>
@@ -350,13 +356,14 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
 
             <div className="flex flex-col gap-3">
               {champion && (
-                <ChampionCard champion={champion} seasonName={selectedSeason?.name ?? "—"} />
+                <ChampionCard champion={champion} seasonName={selectedSeason?.name ?? "—"} seasonId={selectedSeasonId} />
               )}
               {leaderStanding && (
                 <LeaderCard
                   standing={leaderStanding}
                   stageName={selectedStage?.name ?? "Stage"}
                   isWinner={isStageOver}
+                  seasonId={selectedSeasonId}
                 />
               )}
               {topScorer && (

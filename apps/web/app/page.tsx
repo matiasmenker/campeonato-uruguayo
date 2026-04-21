@@ -1,4 +1,5 @@
 import type { ComponentType } from "react"
+import Link from "next/link"
 import {
   IconBallFootball,
   IconPlayerPlay,
@@ -268,7 +269,10 @@ const HomePage = async () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          <Link
+                            href={`/teams/${standing.team.id}${overview?.season?.id ? `?seasonId=${overview.season.id}` : ""}`}
+                            className="flex items-center gap-2 hover:opacity-80"
+                          >
                             {standing.team.imagePath ? (
                               <img
                                 src={standing.team.imagePath}
@@ -281,7 +285,7 @@ const HomePage = async () => {
                             <span className="text-xs font-medium text-slate-950">
                               {standing.team.name}
                             </span>
-                          </div>
+                          </Link>
                         </TableCell>
                         <TableCell className="text-right text-xs text-slate-500">{standing.played}</TableCell>
                         <TableCell className="text-right text-xs text-emerald-600 font-medium">{standing.won}</TableCell>
@@ -334,12 +338,19 @@ const HomePage = async () => {
                         </div>
                         <span className="text-xs font-medium text-slate-950">{getPlayerName(leader)}</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        {leader.team?.imagePath ? (
-                          <img src={leader.team.imagePath} alt={leader.team.name ?? ""} className="h-4 w-4 shrink-0 object-contain" />
-                        ) : null}
-                        <span className="text-xs text-slate-500">{leader.team?.name ?? "No team"}</span>
-                      </div>
+                      {leader.team?.id ? (
+                        <Link
+                          href={`/teams/${leader.team.id}${overview?.season?.id ? `?seasonId=${overview.season.id}` : ""}`}
+                          className="flex items-center gap-1.5 hover:opacity-80"
+                        >
+                          {leader.team.imagePath ? (
+                            <img src={leader.team.imagePath} alt={leader.team.name ?? ""} className="h-4 w-4 shrink-0 object-contain" />
+                          ) : null}
+                          <span className="text-xs text-slate-500">{leader.team.name ?? "No team"}</span>
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-slate-500">No team</span>
+                      )}
                       <span className="text-center text-xs font-bold text-slate-950">{leader.value}</span>
                     </div>
                   ))}
