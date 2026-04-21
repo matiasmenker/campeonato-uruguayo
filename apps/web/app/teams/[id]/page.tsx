@@ -300,18 +300,19 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
           </div>
         </div>
 
-        {/* Section headings row — Squad left, Last 5 / Next match right */}
-        <div className="grid gap-6 lg:grid-cols-[1fr_340px] px-1">
-          <div className="flex items-center gap-2">
+        {/* Single grid — headings row + content row share the same column widths */}
+        <div className="grid gap-x-6 gap-y-3 lg:grid-cols-[1fr_340px]">
+
+          {/* Heading: Squad */}
+          <div className="flex items-center gap-2 px-1">
             <h2 className="text-sm font-bold text-slate-700">Squad</h2>
             <span className="text-sm font-normal text-slate-400">· {selectedSeason.name}</span>
           </div>
-          <h2 className="text-sm font-bold text-slate-700">
+
+          {/* Heading: Matches */}
+          <h2 className="px-1 text-sm font-bold text-slate-700">
             {recentFixtures.length > 0 ? "Last 5 results" : nextFixture ? "Next match" : "Matches"}
           </h2>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
 
           {/* Squad table */}
           <div className="flex flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
