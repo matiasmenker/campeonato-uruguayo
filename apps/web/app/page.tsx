@@ -331,7 +331,7 @@ const HomePage = async () => {
                 title="Standings"
                 description={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""}`}
               />
-              <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+              <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm [&_td]:py-2.5 [&_th]:py-2">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
@@ -407,7 +407,7 @@ const HomePage = async () => {
                   {topScorers.map((leader, index) => (
                     <div
                       key={`${leader.player.id}-${leader.value}`}
-                      className="grid flex-1 grid-cols-[36px_1fr_1fr_48px] items-center border-b border-slate-100 px-3 last:border-0"
+                      className="grid flex-1 grid-cols-[36px_1fr_1fr_48px] items-center border-b border-slate-100 px-3 py-1.5 last:border-0"
                     >
                       <span className="text-center text-xs font-medium text-slate-400">{index + 1}</span>
                       <div className="flex items-center gap-2">

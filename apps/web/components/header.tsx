@@ -3,6 +3,7 @@
 import {
   IconBallFootball,
   IconHomeFilled,
+  IconMail,
   IconRun,
   IconShieldFilled,
   IconTrophy,
@@ -24,8 +25,8 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white shadow-sm">
-      <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-6 px-6 sm:px-8 lg:px-10">
-        <div className="shrink-0">
+      <div className="mx-auto flex h-14 w-full max-w-7xl items-center px-6 sm:px-8 lg:px-10">
+        <div className="flex w-40 shrink-0 items-center">
           <Link href="/">
             <Image src="/logo.png" alt="Campeonato Uruguayo" width={200} height={134} className="h-10 w-auto" />
           </Link>
@@ -54,6 +55,16 @@ const Header = () => {
             )
           })}
         </nav>
+
+        <div className="flex w-40 items-center justify-end">
+          <a
+            href="mailto:campeonatouruguayo@proton.me"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          >
+            <IconMail size={15} />
+            Contact
+          </a>
+        </div>
       </div>
     </header>
   )
