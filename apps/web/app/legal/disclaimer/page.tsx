@@ -56,7 +56,7 @@ const DisclaimerPage = () => (
         <section>
           <h2 className="mb-2 font-semibold text-slate-950">6. Limitation of liability</h2>
           <p>
-            This platform is provided "as is" without any warranties. The author accepts no
+            This platform is provided &ldquo;as is&rdquo; without any warranties. The author accepts no
             liability for any direct or indirect damages arising from the use of this site or
             reliance on its content.
           </p>
