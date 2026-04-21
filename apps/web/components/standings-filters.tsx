@@ -36,7 +36,7 @@ const StandingsFilters = ({ seasons, stages, selectedSeasonId, selectedStageId }
       <select
         value={selectedSeasonId}
         onChange={(event) => updateParam("seasonId", event.target.value)}
-        className={selectClassName}
+        className={`w-28 ${selectClassName}`}
       >
         {seasons.map((season) => (
           <option key={season.id} value={season.id}>
@@ -49,7 +49,7 @@ const StandingsFilters = ({ seasons, stages, selectedSeasonId, selectedStageId }
         <select
           value={selectedStageId ?? ""}
           onChange={(event) => updateParam("stageId", event.target.value)}
-          className={selectClassName}
+          className={`w-48 ${selectClassName}`}
         >
           {visibleStages.map((stage) => (
             <option key={stage.id} value={stage.id}>

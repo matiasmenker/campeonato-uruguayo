@@ -9,15 +9,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import ChampionBadge from "@/components/champion-badge"
 import StandingsFilters from "@/components/standings-filters"
 import { getLeaders, type LeadersContract } from "@/lib/metrics"
 import { getStandings, type StandingEntry } from "@/lib/standings"
-import { getSeasons, getStages, type Season, type Stage } from "@/lib/seasons"
+import { getSeasons, getStages, getSeasonChampion, type Season, type Stage, type SeasonChampion } from "@/lib/seasons"
 
 export const dynamic = "force-dynamic"
 
 const RELEGATION_ZONE_SIZE = 3
 const MAIN_STAGE_NAMES = ["apertura", "clausura", "intermediate round"]
+const CHAMPIONSHIP_FINALS_NAME = "championship - finals"
 
 const isMainStage = (stageName: string) =>
   MAIN_STAGE_NAMES.some((name) => stageName.toLowerCase() === name)
@@ -91,6 +93,26 @@ const StandingsTable = ({ standings }: { standings: StandingEntry[] }) => {
 }
 
 // ─── Stat cards ───────────────────────────────────────────────────────────────
+
+const ChampionCard = ({ champion, seasonName }: { champion: SeasonChampion; seasonName: string }) => (
+  <div className="overflow-hidden rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-800 to-slate-950 shadow-lg">
+    <div className="flex items-center gap-4 p-4">
+      <ChampionBadge year={seasonName} size={72} />
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Season Champion</p>
+        <p className="mt-0.5 truncate text-lg font-black text-white">{champion.team.name}</p>
+        <p className="text-xs text-slate-500">{seasonName} · Primera División</p>
+      </div>
+      {champion.team.imagePath && (
+        <img
+          src={champion.team.imagePath}
+          alt={champion.team.name}
+          className="h-12 w-12 shrink-0 object-contain opacity-90"
+        />
+      )}
+    </div>
+  </div>
+)
 
 const LeaderCard = ({ standing, stageName }: { standing: StandingEntry; stageName: string }) => (
   <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
@@ -235,10 +257,9 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
   let stages: Stage[] = []
   let standings: StandingEntry[] = []
   let leaders: LeadersContract | null = null
+  let champion: SeasonChampion | null = null
   let errorMessage: string | null = null
 
-  // If seasonId is in the URL we know it upfront — fetch seasons + stages in parallel.
-  // Otherwise fetch seasons first to resolve the current season default.
   if (seasonIdParam) {
     const [seasonsResult, stagesResult] = await Promise.allSettled([
       getSeasons(),
@@ -254,25 +275,33 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
 
   const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]
   const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? 1)
+  const selectedSeason = seasons.find((season) => season.id === selectedSeasonId)
 
   const visibleStages = stages.filter((stage) => isMainStage(stage.name))
   const currentStage = visibleStages.find((stage) => stage.isCurrent) ?? visibleStages[0]
   const selectedStageId = stageIdParam ? Number(stageIdParam) : (currentStage?.id ?? null)
+  const selectedStage = stages.find((stage) => stage.id === selectedStageId)
 
-  // Standings + leaders share the same params — fetch in parallel
-  const [standingsResult, leadersResult] = await Promise.allSettled([
+  // Championship Finals stage for this season (used to resolve the champion)
+  const championshipFinalsStage = stages.find((stage) =>
+    stage.name.toLowerCase() === CHAMPIONSHIP_FINALS_NAME
+  )
+
+  // Fetch standings, leaders, and champion in parallel
+  const [standingsResult, leadersResult, championResult] = await Promise.allSettled([
     getStandings({ seasonId: selectedSeasonId, stageId: selectedStageId ?? undefined }),
     getLeaders({ seasonId: selectedSeasonId, stageId: selectedStageId ?? undefined, limit: 1 }),
+    championshipFinalsStage && !selectedSeason?.isCurrent
+      ? getSeasonChampion(championshipFinalsStage.id)
+      : Promise.resolve(null),
   ])
 
   if (standingsResult.status === "fulfilled") standings = standingsResult.value
   else errorMessage = "Could not load standings."
   if (leadersResult.status === "fulfilled") leaders = leadersResult.value
+  if (championResult.status === "fulfilled") champion = championResult.value
 
-  const selectedSeason = seasons.find((season) => season.id === selectedSeasonId)
-  const selectedStage = stages.find((stage) => stage.id === selectedStageId)
   const leaderStanding = standings[0] ?? null
-
   const topScorer = leaders?.topScorers.leaders[0] ?? null
   const topAssist = leaders?.topAssists.leaders[0] ?? null
   const bestAttack = standings.length > 0
@@ -331,6 +360,9 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
             </div>
 
             <div className="flex flex-col gap-3">
+              {champion && (
+                <ChampionCard champion={champion} seasonName={selectedSeason?.name ?? "—"} />
+              )}
               {leaderStanding && (
                 <LeaderCard standing={leaderStanding} stageName={selectedStage?.name ?? "Stage"} />
               )}
