@@ -300,10 +300,15 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
           </div>
         </div>
 
-        {/* Squad heading — full width */}
-        <div className="flex items-center gap-2 px-1">
-          <h2 className="text-sm font-bold text-slate-700">Squad</h2>
-          <span className="text-sm font-normal text-slate-400">· {selectedSeason.name}</span>
+        {/* Section headings row — Squad left, Last 5 / Next match right */}
+        <div className="grid gap-6 lg:grid-cols-[1fr_340px] px-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold text-slate-700">Squad</h2>
+            <span className="text-sm font-normal text-slate-400">· {selectedSeason.name}</span>
+          </div>
+          <h2 className="text-sm font-bold text-slate-700">
+            {recentFixtures.length > 0 ? "Last 5 results" : nextFixture ? "Next match" : "Matches"}
+          </h2>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
@@ -416,25 +421,18 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
               </div>
             ) : (
               <>
-                {recentFixtures.length > 0 && (
-                  <>
-                    <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 rounded-t-2xl border border-slate-200/80">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Last 5 results</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {recentFixtures.map((fixture) => (
-                        <FixtureCard key={fixture.id} fixture={fixture} teamId={teamId} />
-                      ))}
-                    </div>
-                  </>
-                )}
+                <div className="flex flex-col gap-2">
+                  {recentFixtures.map((fixture) => (
+                    <FixtureCard key={fixture.id} fixture={fixture} teamId={teamId} />
+                  ))}
+                </div>
                 {nextFixture && (
-                  <>
-                    <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 rounded-t-2xl border border-slate-200/80 mt-2">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Next match</p>
-                    </div>
+                  <div className="flex flex-col gap-2">
+                    {recentFixtures.length > 0 && (
+                      <p className="px-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Next match</p>
+                    )}
                     <FixtureCard fixture={nextFixture} teamId={teamId} />
-                  </>
+                  </div>
                 )}
               </>
             )}
