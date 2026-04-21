@@ -15,7 +15,7 @@ import { usePathname } from "next/navigation"
 const NAV_ITEMS = [
   { label: "Home", href: "/", icon: IconHomeFilled },
   { label: "Matches", href: "/partidos", icon: IconBallFootball },
-  { label: "Standings", href: "/tabla", icon: IconTrophy },
+  { label: "Standings", href: "/standings", icon: IconTrophy },
   { label: "Players", href: "/jugadores", icon: IconRun },
   { label: "Teams", href: "/equipos", icon: IconShieldFilled },
 ]

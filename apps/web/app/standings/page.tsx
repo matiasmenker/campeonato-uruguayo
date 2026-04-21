@@ -22,6 +22,8 @@ const MAIN_STAGE_NAMES = ["apertura", "clausura", "intermediate round"]
 const isMainStage = (stageName: string) =>
   MAIN_STAGE_NAMES.some((name) => stageName.toLowerCase() === name)
 
+// ─── Table ────────────────────────────────────────────────────────────────────
+
 const PositionIndicator = ({ position, total }: { position: number; total: number }) => {
   const isRelegation = position > total - RELEGATION_ZONE_SIZE
   return (
@@ -62,11 +64,7 @@ const StandingsTable = ({ standings }: { standings: StandingEntry[] }) => {
                 <TableCell className="py-3">
                   <div className="flex items-center gap-3">
                     {standing.team.imagePath ? (
-                      <img
-                        src={standing.team.imagePath}
-                        alt={standing.team.name}
-                        className="h-6 w-6 shrink-0 object-contain"
-                      />
+                      <img src={standing.team.imagePath} alt={standing.team.name} className="h-6 w-6 shrink-0 object-contain" />
                     ) : (
                       <div className="h-6 w-6 shrink-0 rounded-full bg-slate-200" />
                     )}
@@ -92,39 +90,40 @@ const StandingsTable = ({ standings }: { standings: StandingEntry[] }) => {
   )
 }
 
+// ─── Stat cards ───────────────────────────────────────────────────────────────
+
 const LeaderCard = ({ standing, stageName }: { standing: StandingEntry; stageName: string }) => (
   <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-    <div className="border-b border-slate-100 bg-slate-50 px-4 py-2.5">
+    <div className="bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-3">
       <div className="flex items-center gap-1.5">
-        <IconTrophy size={13} className="text-slate-400" />
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{stageName} leader</span>
+        <IconTrophy size={13} className="text-amber-500" />
+        <span className="text-xs font-bold uppercase tracking-wide text-amber-600">{stageName} leader</span>
       </div>
     </div>
-    <div className="flex items-center gap-4 p-4">
-      {standing.team.imagePath && (
-        <img
-          src={standing.team.imagePath}
-          alt={standing.team.name}
-          className="h-16 w-16 shrink-0 object-contain"
-        />
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-lg font-bold text-slate-950">{standing.team.name}</p>
-        <div className="mt-1 flex items-center gap-3">
-          <div className="text-center">
-            <p className="text-xl font-black text-slate-950">{standing.points}</p>
-            <p className="text-[10px] uppercase tracking-wide text-slate-400">pts</p>
-          </div>
-          <div className="h-8 w-px bg-slate-100" />
-          <div className="text-center">
-            <p className="text-xl font-black text-emerald-600">{standing.won}</p>
-            <p className="text-[10px] uppercase tracking-wide text-slate-400">wins</p>
-          </div>
-          <div className="h-8 w-px bg-slate-100" />
-          <div className="text-center">
-            <p className="text-xl font-black text-slate-950">{standing.goalDifference > 0 ? `+${standing.goalDifference}` : standing.goalDifference}</p>
-            <p className="text-[10px] uppercase tracking-wide text-slate-400">GD</p>
-          </div>
+    <div className="p-4">
+      <div className="flex items-center gap-4">
+        {standing.team.imagePath && (
+          <img src={standing.team.imagePath} alt={standing.team.name} className="h-14 w-14 shrink-0 object-contain drop-shadow-sm" />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-base font-bold text-slate-950">{standing.team.name}</p>
+          <p className="text-xs text-slate-400">{standing.played} matches played</p>
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-3 divide-x divide-slate-100 rounded-xl bg-slate-50 py-3">
+        <div className="flex flex-col items-center gap-0.5">
+          <p className="text-2xl font-black text-slate-950">{standing.points}</p>
+          <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">PTS</p>
+        </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <p className="text-2xl font-black text-emerald-600">{standing.won}</p>
+          <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">W</p>
+        </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <p className="text-2xl font-black text-slate-700">
+            {standing.goalDifference > 0 ? `+${standing.goalDifference}` : standing.goalDifference}
+          </p>
+          <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">GD</p>
         </div>
       </div>
     </div>
@@ -133,6 +132,7 @@ const LeaderCard = ({ standing, stageName }: { standing: StandingEntry; stageNam
 
 const PlayerStatCard = ({
   icon: Icon,
+  accentColor,
   label,
   playerName,
   playerImage,
@@ -141,6 +141,7 @@ const PlayerStatCard = ({
   unit,
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>
+  accentColor: string
   label: string
   playerName: string
   playerImage: string | null
@@ -149,15 +150,9 @@ const PlayerStatCard = ({
   unit: string
 }) => (
   <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-    <div className="border-b border-slate-100 bg-slate-50 px-4 py-2.5">
-      <div className="flex items-center gap-1.5">
-        <Icon size={13} className="text-slate-400" />
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</span>
-      </div>
-    </div>
-    <div className="flex items-center gap-3 p-4">
+    <div className="flex items-center gap-4 p-4">
       <div className="relative shrink-0">
-        <div className="h-11 w-11 overflow-hidden rounded-full bg-slate-100 ring-2 ring-slate-200">
+        <div className="h-12 w-12 overflow-hidden rounded-full bg-slate-100 ring-2 ring-slate-100">
           {playerImage ? (
             <img src={playerImage} alt={playerName} className="h-full w-full object-cover object-top" />
           ) : (
@@ -168,18 +163,18 @@ const PlayerStatCard = ({
           )}
         </div>
         {teamImage && (
-          <img
-            src={teamImage}
-            alt=""
-            className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border border-white bg-white object-contain"
-          />
+          <img src={teamImage} alt="" className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-white bg-white object-contain" />
         )}
       </div>
       <div className="min-w-0 flex-1">
+        <div className="mb-0.5 flex items-center gap-1.5">
+          <Icon size={12} className={accentColor} />
+          <p className={`text-[10px] font-bold uppercase tracking-wide ${accentColor}`}>{label}</p>
+        </div>
         <p className="truncate text-sm font-semibold text-slate-950">{playerName}</p>
       </div>
       <div className="shrink-0 text-right">
-        <p className="text-xl font-black text-slate-950">{value}</p>
+        <p className="text-2xl font-black text-slate-950 tabular-nums">{value}</p>
         <p className="text-[10px] uppercase tracking-wide text-slate-400">{unit}</p>
       </div>
     </div>
@@ -188,6 +183,7 @@ const PlayerStatCard = ({
 
 const TeamStatCard = ({
   icon: Icon,
+  accentColor,
   label,
   teamName,
   teamImage,
@@ -195,6 +191,7 @@ const TeamStatCard = ({
   unit,
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>
+  accentColor: string
   label: string
   teamName: string
   teamImage: string | null
@@ -202,26 +199,30 @@ const TeamStatCard = ({
   unit: string
 }) => (
   <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-    <div className="border-b border-slate-100 bg-slate-50 px-4 py-2.5">
-      <div className="flex items-center gap-1.5">
-        <Icon size={13} className="text-slate-400" />
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</span>
+    <div className="flex items-center gap-4 p-4">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-50">
+        {teamImage ? (
+          <img src={teamImage} alt={teamName} className="h-9 w-9 object-contain" />
+        ) : (
+          <div className="h-9 w-9 rounded-full bg-slate-200" />
+        )}
       </div>
-    </div>
-    <div className="flex items-center gap-3 p-4">
-      {teamImage && (
-        <img src={teamImage} alt={teamName} className="h-10 w-10 shrink-0 object-contain" />
-      )}
       <div className="min-w-0 flex-1">
+        <div className="mb-0.5 flex items-center gap-1.5">
+          <Icon size={12} className={accentColor} />
+          <p className={`text-[10px] font-bold uppercase tracking-wide ${accentColor}`}>{label}</p>
+        </div>
         <p className="truncate text-sm font-semibold text-slate-950">{teamName}</p>
       </div>
       <div className="shrink-0 text-right">
-        <p className="text-xl font-black text-slate-950">{value}</p>
+        <p className="text-2xl font-black text-slate-950 tabular-nums">{value}</p>
         <p className="text-[10px] uppercase tracking-wide text-slate-400">{unit}</p>
       </div>
     </div>
   </div>
 )
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 interface StandingsPageProps {
   searchParams: Promise<{ seasonId?: string; stageId?: string }>
@@ -236,36 +237,41 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
   let leaders: LeadersContract | null = null
   let errorMessage: string | null = null
 
-  try {
+  // If seasonId is in the URL we know it upfront — fetch seasons + stages in parallel.
+  // Otherwise fetch seasons first to resolve the current season default.
+  if (seasonIdParam) {
+    const [seasonsResult, stagesResult] = await Promise.allSettled([
+      getSeasons(),
+      getStages(Number(seasonIdParam)),
+    ])
+    if (seasonsResult.status === "fulfilled") seasons = seasonsResult.value
+    if (stagesResult.status === "fulfilled") stages = stagesResult.value
+  } else {
     seasons = await getSeasons()
-  } catch {
-    errorMessage = "Could not load seasons."
+    const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]
+    if (currentSeason) stages = await getStages(currentSeason.id)
   }
 
   const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]
   const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? 1)
 
-  const [stagesResult, leadersResult] = await Promise.allSettled([
-    getStages(selectedSeasonId),
-    getLeaders({ seasonId: selectedSeasonId, limit: 1 }),
-  ])
-
-  if (stagesResult.status === "fulfilled") stages = stagesResult.value
-  if (leadersResult.status === "fulfilled") leaders = leadersResult.value
-
   const visibleStages = stages.filter((stage) => isMainStage(stage.name))
   const currentStage = visibleStages.find((stage) => stage.isCurrent) ?? visibleStages[0]
   const selectedStageId = stageIdParam ? Number(stageIdParam) : (currentStage?.id ?? null)
 
-  try {
-    standings = await getStandings({ seasonId: selectedSeasonId, stageId: selectedStageId ?? undefined })
-  } catch (error) {
-    errorMessage = error instanceof Error ? error.message : "Could not load standings."
-  }
+  // Standings + leaders share the same params — fetch in parallel
+  const [standingsResult, leadersResult] = await Promise.allSettled([
+    getStandings({ seasonId: selectedSeasonId, stageId: selectedStageId ?? undefined }),
+    getLeaders({ seasonId: selectedSeasonId, stageId: selectedStageId ?? undefined, limit: 1 }),
+  ])
+
+  if (standingsResult.status === "fulfilled") standings = standingsResult.value
+  else errorMessage = "Could not load standings."
+  if (leadersResult.status === "fulfilled") leaders = leadersResult.value
 
   const selectedSeason = seasons.find((season) => season.id === selectedSeasonId)
   const selectedStage = stages.find((stage) => stage.id === selectedStageId)
-  const leader = standings[0] ?? null
+  const leaderStanding = standings[0] ?? null
 
   const topScorer = leaders?.topScorers.leaders[0] ?? null
   const topAssist = leaders?.topAssists.leaders[0] ?? null
@@ -289,7 +295,6 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
               </p>
             </div>
           </div>
-
           {seasons.length > 0 && (
             <Suspense>
               <StandingsFilters
@@ -326,12 +331,13 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
             </div>
 
             <div className="flex flex-col gap-3">
-              {leader && (
-                <LeaderCard standing={leader} stageName={selectedStage?.name ?? "Stage"} />
+              {leaderStanding && (
+                <LeaderCard standing={leaderStanding} stageName={selectedStage?.name ?? "Stage"} />
               )}
               {topScorer && (
                 <PlayerStatCard
                   icon={IconBallFootball}
+                  accentColor="text-emerald-500"
                   label="Top scorer"
                   playerName={getPlayerName(topScorer.player.displayName, topScorer.player.name)}
                   playerImage={topScorer.player.imagePath}
@@ -343,6 +349,7 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
               {topAssist && (
                 <PlayerStatCard
                   icon={IconUsers}
+                  accentColor="text-sky-500"
                   label="Top assists"
                   playerName={getPlayerName(topAssist.player.displayName, topAssist.player.name)}
                   playerImage={topAssist.player.imagePath}
@@ -354,6 +361,7 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
               {bestAttack && (
                 <TeamStatCard
                   icon={IconStar}
+                  accentColor="text-orange-500"
                   label="Best attack"
                   teamName={bestAttack.team.name}
                   teamImage={bestAttack.team.imagePath ?? null}

@@ -26,7 +26,7 @@ const StandingsFilters = ({ seasons, stages, selectedSeasonId, selectedStageId }
     const params = new URLSearchParams(searchParams.toString())
     params.set(key, value)
     if (key === "seasonId") params.delete("stageId")
-    router.push(`/tabla?${params.toString()}`)
+    router.push(`/standings?${params.toString()}`)
   }
 
   const visibleStages = stages.filter((stage) => isMainStage(stage.name))
