@@ -10,6 +10,7 @@ import {
   type LineupPlayer,
   type FixtureEvent,
 } from "@/lib/matches"
+import { getRatingFill } from "@/lib/rating"
 
 export const dynamic = "force-dynamic"
 
@@ -42,15 +43,6 @@ const yPositions = (count: number): number[] => {
   return Array.from({ length: count }, (_, i) => top + i * step)
 }
 
-// ─── Rating helpers — same thresholds as player-card.tsx ─────────────────────
-// ≥8.0 green · ≥7.0 celeste · ≥6.0 orange · <6.0 red
-
-const ratingBg = (rating: number): string => {
-  if (rating >= 8.0) return "#16a34a"  // green-600
-  if (rating >= 7.0) return "#0ea5e9"  // sky-500 (celeste)
-  if (rating >= 6.0) return "#ea580c"  // orange-600
-  return "#dc2626"                      // red-600
-}
 
 const formatRating = (rating: number): string => {
   const s = rating.toFixed(1)
@@ -219,7 +211,7 @@ const PlayerToken = ({ player, events, rating, assists, x, y }: PlayerTokenProps
           className="flex items-center justify-center rounded font-black text-white leading-none shrink-0"
           style={{
             fontSize: 9,
-            background: rating !== null ? ratingBg(rating) : "rgba(255,255,255,0.18)",
+            background: rating !== null ? getRatingFill(rating) : "rgba(255,255,255,0.18)",
             minWidth: 22, height: 14,
             paddingLeft: 3, paddingRight: 3,
           }}
@@ -327,7 +319,7 @@ const BenchPlayer = ({
 
       <span
         className="flex items-center justify-center rounded-md font-black text-white leading-none"
-        style={{ fontSize: 10, background: rating !== null ? ratingBg(rating) : "#94a3b8", minWidth: 28, height: 16, paddingLeft: 5, paddingRight: 5, marginTop: -4 }}
+        style={{ fontSize: 10, background: rating !== null ? getRatingFill(rating) : "#94a3b8", minWidth: 28, height: 16, paddingLeft: 5, paddingRight: 5, marginTop: -4 }}
       >
         {rating !== null ? formatRating(rating) : "—"}
       </span>

@@ -1,6 +1,8 @@
 // Shared player card component — same design as home page top players.
 // Used in: home page leaders, team detail squad grid.
 
+import { getRatingFill } from "@/lib/rating"
+
 const POSITION_CONFIG: Record<number, { label: string; bg: string }> = {
   24: { label: "AR", bg: "#f59e0b" },
   25: { label: "DF", bg: "#3b82f6" },
@@ -11,12 +13,6 @@ const POSITION_CONFIG: Record<number, { label: string; bg: string }> = {
 const getPositionConfig = (positionId: number | null) =>
   positionId ? (POSITION_CONFIG[positionId] ?? { label: "—", bg: "#94a3b8" }) : { label: "—", bg: "#94a3b8" }
 
-const getRatingColor = (value: number) => {
-  if (value >= 8.0) return "#22c55e"
-  if (value >= 7.0) return "#38bdf8"
-  if (value >= 6.0) return "#f97316"
-  return "#ef4444"
-}
 
 interface PlayerCardProps {
   name: string
@@ -44,7 +40,7 @@ const PlayerCard = ({ name, imagePath, positionId, teamImagePath, rating }: Play
   const first = parts[0]
   const last = parts.slice(1).join(" ")
   const positionConfig = getPositionConfig(positionId)
-  const ratingColor = rating != null ? getRatingColor(rating) : "#94a3b8"
+  const ratingColor = rating != null ? getRatingFill(rating) : "#94a3b8"
 
   return (
     <article
