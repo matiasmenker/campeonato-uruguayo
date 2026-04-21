@@ -20,6 +20,7 @@ export const dynamic = "force-dynamic"
 const RELEGATION_ZONE_SIZE = 3
 const MAIN_STAGE_NAMES = ["apertura", "clausura", "intermediate round"]
 const CHAMPIONSHIP_FINALS_NAME = "championship - finals"
+const INTERMEDIATE_ROUND_FINAL_NAME = "intermediate round - final"
 
 const getRatingColor = (value: number): string => {
   if (value >= 8.0) return "#22c55e"
@@ -256,24 +257,36 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
   const selectedStageId = stageIdParam ? Number(stageIdParam) : (currentStage?.id ?? null)
   const selectedStage = stages.find((stage) => stage.id === selectedStageId)
 
-  // Championship Finals stage for this season (used to resolve the champion)
+  // Find the decisive stage for champion resolution.
+  // Priority: Championship Finals → Intermediate Round Final (fallback for seasons where
+  // the championship was decided before the finals stage, e.g. 2024).
   const championshipFinalsStage = stages.find((stage) =>
     stage.name.toLowerCase() === CHAMPIONSHIP_FINALS_NAME
   )
+  const intermediateRoundFinalStage = stages.find((stage) =>
+    stage.name.toLowerCase() === INTERMEDIATE_ROUND_FINAL_NAME
+  )
 
-  // Fetch standings, leaders, and champion in parallel
-  const [standingsResult, leadersResult, championResult] = await Promise.allSettled([
+  // Fetch standings and leaders in parallel, then resolve the champion sequentially
+  // so we can fall back to the intermediate round final if the championship finals
+  // stage has no fixture data.
+  const [standingsResult, leadersResult] = await Promise.allSettled([
     getStandings({ seasonId: selectedSeasonId, stageId: selectedStageId ?? undefined }),
     getLeaders({ seasonId: selectedSeasonId, stageId: selectedStageId ?? undefined, limit: 1 }),
-    championshipFinalsStage && !selectedSeason?.isCurrent
-      ? getSeasonChampion(championshipFinalsStage.id)
-      : Promise.resolve(null),
   ])
 
   if (standingsResult.status === "fulfilled") standings = standingsResult.value
   else errorMessage = "Could not load standings."
   if (leadersResult.status === "fulfilled") leaders = leadersResult.value
-  if (championResult.status === "fulfilled") champion = championResult.value
+
+  if (!selectedSeason?.isCurrent) {
+    if (championshipFinalsStage) {
+      champion = await getSeasonChampion(championshipFinalsStage.id).catch(() => null)
+    }
+    if (!champion && intermediateRoundFinalStage) {
+      champion = await getSeasonChampion(intermediateRoundFinalStage.id).catch(() => null)
+    }
+  }
 
   const leaderStanding = standings[0] ?? null
   const topScorer = leaders?.topScorers.leaders[0] ?? null
