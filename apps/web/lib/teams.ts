@@ -99,8 +99,10 @@ export const getTeam = async (id: number): Promise<Team> => {
   return response.data
 }
 
-export const getTeams = async (): Promise<Team[]> => {
-  const response = await apiFetch<ListResponse<Team>>("/api/v1/teams?pageSize=100")
+export const getTeams = async (seasonId?: number): Promise<Team[]> => {
+  const params = new URLSearchParams({ pageSize: "100" })
+  if (seasonId) params.set("seasonId", String(seasonId))
+  const response = await apiFetch<ListResponse<Team>>(`/api/v1/teams?${params}`)
   return response.data
 }
 

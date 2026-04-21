@@ -3,6 +3,7 @@ import { paginationQuerySchema } from "../../contracts/pagination.js";
 
 export const teamsQuerySchema = paginationQuerySchema.extend({
   search: z.string().optional(),
+  seasonId: z.coerce.number().int().positive().optional(),
 });
 
 export type TeamsQuery = z.infer<typeof teamsQuerySchema>;

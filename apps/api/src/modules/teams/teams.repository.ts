@@ -9,6 +9,9 @@ export const findTeams = async (
 }> => {
   const prisma = getPrisma();
   const where: Prisma.TeamWhereInput = {};
+  if (query.seasonId) {
+    where.squadMemberships = { some: { seasonId: query.seasonId } };
+  }
   if (query.search) {
     const pattern = `%${query.search}%`;
     const matchingIds = await prisma.$queryRaw<

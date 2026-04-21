@@ -63,18 +63,18 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
   let teams: Team[] = []
   let errorMessage: string | null = null
 
-  const [teamsResult, seasonsResult] = await Promise.allSettled([
-    getTeams(),
-    getSeasons(),
+  const seasonsResult = await Promise.allSettled([getSeasons()])
+  const seasons = seasonsResult[0].status === "fulfilled" ? seasonsResult[0].value : []
+  const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]
+  const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? null)
+  const selectedSeason = seasons.find((season) => season.id === selectedSeasonId) ?? currentSeason
+
+  const [teamsResult] = await Promise.allSettled([
+    getTeams(selectedSeasonId ?? undefined),
   ])
 
   if (teamsResult.status === "fulfilled") teams = teamsResult.value
   else errorMessage = "Could not load teams."
-
-  const seasons = seasonsResult.status === "fulfilled" ? seasonsResult.value : []
-  const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]
-  const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? null)
-  const selectedSeason = seasons.find((season) => season.id === selectedSeasonId) ?? currentSeason
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
