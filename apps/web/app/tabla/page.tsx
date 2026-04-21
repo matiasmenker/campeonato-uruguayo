@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { IconTrophy } from "@tabler/icons-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
@@ -8,8 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getDashboardOverview } from "@/lib/dashboard"
+import StandingsFilters from "@/components/standings-filters"
 import { getStandings, type StandingEntry } from "@/lib/standings"
+import { getSeasons, getStages, type Season, type Stage } from "@/lib/seasons"
 
 export const dynamic = "force-dynamic"
 
@@ -19,11 +21,7 @@ const PositionIndicator = ({ position, total }: { position: number; total: numbe
   const isRelegation = position > total - RELEGATION_ZONE_SIZE
   return (
     <div className="flex items-center gap-2">
-      {isRelegation ? (
-        <div className="h-3.5 w-1 rounded-full bg-red-400" />
-      ) : (
-        <div className="h-3.5 w-1 rounded-full bg-transparent" />
-      )}
+      <div className={`h-3.5 w-1 rounded-full ${isRelegation ? "bg-red-400" : "bg-transparent"}`} />
       <span className="text-sm font-medium text-slate-400">{position}</span>
     </div>
   )
@@ -52,10 +50,7 @@ const StandingsTable = ({ standings }: { standings: StandingEntry[] }) => {
           {standings.map((standing) => {
             const isRelegation = standing.position > total - RELEGATION_ZONE_SIZE
             return (
-              <TableRow
-                key={standing.id}
-                className={isRelegation ? "bg-red-50/40" : undefined}
-              >
+              <TableRow key={standing.id} className={isRelegation ? "bg-red-50/40" : undefined}>
                 <TableCell className="py-3">
                   <PositionIndicator position={standing.position} total={total} />
                 </TableCell>
@@ -92,31 +87,70 @@ const StandingsTable = ({ standings }: { standings: StandingEntry[] }) => {
   )
 }
 
-const StandingsPage = async () => {
+interface StandingsPageProps {
+  searchParams: Promise<{ seasonId?: string; stageId?: string }>
+}
+
+const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
+  const { seasonId: seasonIdParam, stageId: stageIdParam } = await searchParams
+
+  let seasons: Season[] = []
+  let stages: Stage[] = []
   let standings: StandingEntry[] = []
   let errorMessage: string | null = null
-  let seasonName = "2026"
-  let stageName = "Apertura"
 
   try {
-    const overview = await getDashboardOverview()
-    seasonName = overview.season?.name ?? seasonName
-    stageName = overview.currentStage?.name ?? stageName
-    standings = await getStandings({ seasonId: overview.season?.id })
+    seasons = await getSeasons()
+  } catch {
+    errorMessage = "Could not load seasons."
+  }
+
+  const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]
+  const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? 1)
+
+  try {
+    stages = await getStages(selectedSeasonId)
+  } catch {
+    // stages are optional — proceed without them
+  }
+
+  const currentStage = stages.find((stage) => stage.isCurrent) ?? stages[0]
+  const selectedStageId = stageIdParam ? Number(stageIdParam) : (currentStage?.id ?? null)
+
+  try {
+    standings = await getStandings({ seasonId: selectedSeasonId, stageId: selectedStageId ?? undefined })
   } catch (error) {
     errorMessage = error instanceof Error ? error.message : "Could not load standings."
   }
+
+  const selectedSeason = seasons.find((season) => season.id === selectedSeasonId)
+  const selectedStage = stages.find((stage) => stage.id === selectedStageId)
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
-        <div className="flex items-center gap-3">
-          <IconTrophy size={20} className="text-slate-400" />
-          <div>
-            <h1 className="text-xl font-bold text-slate-950">Standings</h1>
-            <p className="text-sm text-slate-400">{stageName} {seasonName}</p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <IconTrophy size={20} className="text-slate-400" />
+            <div>
+              <h1 className="text-xl font-bold text-slate-950">Standings</h1>
+              <p className="text-sm text-slate-400">
+                {selectedStage?.name ?? "—"} · {selectedSeason?.name ?? "—"}
+              </p>
+            </div>
           </div>
+
+          {seasons.length > 0 && (
+            <Suspense>
+              <StandingsFilters
+                seasons={seasons}
+                stages={stages}
+                selectedSeasonId={selectedSeasonId}
+                selectedStageId={selectedStageId}
+              />
+            </Suspense>
+          )}
         </div>
 
         {errorMessage ? (
@@ -126,7 +160,7 @@ const StandingsPage = async () => {
           </Alert>
         ) : standings.length === 0 ? (
           <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
-            No standings available yet
+            No standings available for this selection
           </div>
         ) : (
           <>
