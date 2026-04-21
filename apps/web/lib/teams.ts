@@ -48,6 +48,14 @@ interface TeamState {
   developerName: string
 }
 
+export interface TeamVenue {
+  id: number
+  name: string
+  city: string | null
+  capacity: number | null
+  imagePath: string | null
+}
+
 export interface TeamFixture {
   id: number
   kickoffAt: string | null
@@ -58,6 +66,7 @@ export interface TeamFixture {
   season: TeamSeason
   stage: TeamStage | null
   round: TeamRound | null
+  venue: TeamVenue | null
   homeTeam: Team | null
   awayTeam: Team | null
 }
