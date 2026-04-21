@@ -101,9 +101,9 @@ export const getTeams = async (): Promise<Team[]> => {
   return response.data
 }
 
-export const getTeamFixtures = async (teamId: number, seasonId: number, limit = 6): Promise<TeamFixture[]> => {
+export const getTeamFixtures = async (teamId: number, seasonId: number, limit = 15): Promise<TeamFixture[]> => {
   const response = await apiFetch<ListResponse<TeamFixture>>(
-    `/api/v1/fixtures?teamId=${teamId}&seasonId=${seasonId}&limit=${limit}`
+    `/api/v1/fixtures?teamId=${teamId}&seasonId=${seasonId}&limit=${limit}&sort=kickoffAt&order=desc`
   )
   return response.data
 }

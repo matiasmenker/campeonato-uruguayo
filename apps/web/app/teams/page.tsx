@@ -1,30 +1,53 @@
+import { Suspense } from "react"
 import Link from "next/link"
 import { IconShieldFilled } from "@tabler/icons-react"
 import { getTeams, type Team } from "@/lib/teams"
+import { getSeasons } from "@/lib/seasons"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import TeamsSeasonSelector from "@/components/teams-season-selector"
 
 export const dynamic = "force-dynamic"
 
-const TeamsPage = async () => {
+interface TeamsPageProps {
+  searchParams: Promise<{ seasonId?: string }>
+}
+
+const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
+  const { seasonId: seasonIdParam } = await searchParams
+
   let teams: Team[] = []
   let errorMessage: string | null = null
 
-  try {
-    teams = await getTeams()
-  } catch {
-    errorMessage = "Could not load teams."
-  }
+  const [teamsResult, seasonsResult] = await Promise.allSettled([
+    getTeams(),
+    getSeasons(),
+  ])
+
+  if (teamsResult.status === "fulfilled") teams = teamsResult.value
+  else errorMessage = "Could not load teams."
+
+  const seasons = seasonsResult.status === "fulfilled" ? seasonsResult.value : []
+  const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]
+  const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? null)
+  const selectedSeason = seasons.find((season) => season.id === selectedSeasonId) ?? currentSeason
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
-        <div className="flex items-center gap-3">
-          <IconShieldFilled size={20} className="text-slate-400" />
-          <div>
-            <h1 className="text-xl font-bold text-slate-950">Teams</h1>
-            <p className="text-sm text-slate-400">Uruguayan Primera División</p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <IconShieldFilled size={20} className="text-slate-400" />
+            <div>
+              <h1 className="text-xl font-bold text-slate-950">Teams</h1>
+              <p className="text-sm text-slate-400">Uruguayan Primera División</p>
+            </div>
           </div>
+          {seasons.length > 0 && (
+            <Suspense>
+              <TeamsSeasonSelector seasons={seasons} selectedSeasonId={selectedSeason?.id ?? 0} />
+            </Suspense>
+          )}
         </div>
 
         {errorMessage ? (
@@ -37,7 +60,7 @@ const TeamsPage = async () => {
             {teams.map((team) => (
               <Link
                 key={team.id}
-                href={`/teams/${team.id}`}
+                href={`/teams/${team.id}${selectedSeasonId ? `?seasonId=${selectedSeasonId}` : ""}`}
                 className="group flex flex-col items-center gap-3 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-150 hover:border-slate-300 hover:shadow-md active:scale-95"
               >
                 {team.imagePath ? (
