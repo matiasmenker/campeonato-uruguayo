@@ -17,10 +17,14 @@ export const dynamic = "force-dynamic"
 // ─── Event type IDs ───────────────────────────────────────────────────────────
 
 const EVENT_GOAL         = 14
+const EVENT_GOAL_PENALTY = 16
+const EVENT_GOAL_OWN     = 15
 const EVENT_SUBSTITUTION = 18
 const EVENT_YELLOW       = 19
 const EVENT_RED          = 20
 const EVENT_YELLOW_RED   = 21
+
+const GOAL_TYPES = new Set([EVENT_GOAL, EVENT_GOAL_PENALTY, EVENT_GOAL_OWN])
 
 // ─── Formation helpers ────────────────────────────────────────────────────────
 
@@ -178,7 +182,7 @@ interface EventBadgesProps {
 }
 
 const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: EventBadgesProps) => {
-  const goals      = events.filter(e => e.typeId === EVENT_GOAL).length
+  const goals      = events.filter(e => GOAL_TYPES.has(e.typeId ?? -1)).length
   const yellows    = events.filter(e => e.typeId === EVENT_YELLOW).length
   const yellowReds = events.filter(e => e.typeId === EVENT_YELLOW_RED).length
   const reds       = events.filter(e => e.typeId === EVENT_RED).length
@@ -363,7 +367,7 @@ const BenchPlayer = ({ player, events, rating, assists }: {
   assists: number
 }) => {
   const name = player.player.displayName ?? player.player.name
-  const goals      = events.filter(e => e.typeId === EVENT_GOAL).length
+  const goals      = events.filter(e => GOAL_TYPES.has(e.typeId ?? -1)).length
   const yellows    = events.filter(e => e.typeId === EVENT_YELLOW).length
   const yellowReds = events.filter(e => e.typeId === EVENT_YELLOW_RED).length
   const reds       = events.filter(e => e.typeId === EVENT_RED).length
@@ -499,16 +503,22 @@ const BenchSection = ({
 const GoalRow = ({ event }: { event: FixtureEvent }) => {
   const name = event.player?.displayName ?? event.player?.name ?? "—"
   const minute = event.minute != null ? `${event.minute}${event.extraMinute != null ? `+${event.extraMinute}` : ""}'` : "—"
+  const isPenalty = event.typeId === EVENT_GOAL_PENALTY
+  const isOwnGoal = event.typeId === EVENT_GOAL_OWN
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-slate-100 last:border-0">
       <div className="flex w-6 items-center justify-center shrink-0">
-        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "50%", background: "#dcfce7" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "50%", background: isOwnGoal ? "#fee2e2" : "#dcfce7" }}>
           <BallIcon size={13} />
         </span>
       </div>
       <span className="w-9 text-xs font-bold text-slate-400 tabular-nums shrink-0">{minute}</span>
       <span className="text-sm font-semibold text-slate-900 flex-1 min-w-0 truncate">{name}</span>
-      {event.result && <span className="text-xs font-bold text-emerald-600 tabular-nums shrink-0">{event.result}</span>}
+      <div className="flex items-center gap-2 shrink-0">
+        {isPenalty && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Pen</span>}
+        {isOwnGoal && <span className="text-[10px] font-bold text-red-400 uppercase tracking-wide">A.G.</span>}
+        {event.result && <span className="text-xs font-bold text-emerald-600 tabular-nums">{event.result}</span>}
+      </div>
     </div>
   )
 }
@@ -628,7 +638,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   }
 
   // Build ordered timeline events
-  const goalEvents  = events.filter(e => e.typeId === EVENT_GOAL).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0))
+  const goalEvents  = events.filter(e => GOAL_TYPES.has(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0))
   const cardEvents  = events.filter(e => [EVENT_YELLOW, EVENT_RED, EVENT_YELLOW_RED].includes(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0))
   const subPairs    = buildSubstitutionPairs(events)
 
