@@ -122,12 +122,16 @@ const PlayerAvatar = ({ player, size }: { player: LineupPlayer["player"]; size: 
 // ─── Event icon SVGs ──────────────────────────────────────────────────────────
 
 // Football (goal) — official soccer ball pattern
-const BallIcon = ({ size = 14 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="11" fill="#fff" />
-    <path d="M12 0a12 12 0 1 0 12 12A12 12 0 0 0 12 0Zm8.42 6.63-.48 1.74-4.18 1.36-2.76-2v-4.4l1.5-1a10 10 0 0 1 5.92 4.3ZM9.5 2.33l1.5 1v4.4l-2.76 2-4.18-1.36-.48-1.74a10 10 0 0 1 5.92-4.3ZM2 12v-.49l1.55-1.21 4.11 1.34 1 3.2-2.54 3.5-1.94-.08A9.89 9.89 0 0 1 2 12Zm6.24 9.26-.58-1.58L10.33 16h3.34l2.67 3.68-.58 1.58a9.92 9.92 0 0 1-7.52 0Zm11.54-3-1.94.08-2.54-3.5 1-3.2 4.11-1.34L22 11.51V12a9.89 9.89 0 0 1-2.22 6.26Z" />
-  </svg>
-)
+// variant "own" renders in red for own goals
+const BallIcon = ({ size = 14, variant = "goal" }: { size?: number; variant?: "goal" | "own" }) => {
+  const fill = variant === "own" ? "#b91c1c" : "#1a1a1a"
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="11" fill="#fff" />
+      <path fill={fill} d="M12 0a12 12 0 1 0 12 12A12 12 0 0 0 12 0Zm8.42 6.63-.48 1.74-4.18 1.36-2.76-2v-4.4l1.5-1a10 10 0 0 1 5.92 4.3ZM9.5 2.33l1.5 1v4.4l-2.76 2-4.18-1.36-.48-1.74a10 10 0 0 1 5.92-4.3ZM2 12v-.49l1.55-1.21 4.11 1.34 1 3.2-2.54 3.5-1.94-.08A9.89 9.89 0 0 1 2 12Zm6.24 9.26-.58-1.58L10.33 16h3.34l2.67 3.68-.58 1.58a9.92 9.92 0 0 1-7.52 0Zm11.54-3-1.94.08-2.54-3.5 1-3.2 4.11-1.34L22 11.51V12a9.89 9.89 0 0 1-2.22 6.26Z" />
+    </svg>
+  )
+}
 
 // Assist — blue circle with white arrow
 const AssistIcon = ({ size = 14 }: { size?: number }) => (
@@ -168,7 +172,7 @@ const CardRect = ({ color }: { color: string }) => (
 const DoubleCard = () => (
   <span style={{ position: "relative", display: "inline-flex", alignItems: "center", width: 13, height: 11, flexShrink: 0 }}>
     <span style={{ position: "absolute", left: 0, width: 8, height: 11, borderRadius: 2, background: "#facc15" }} />
-    <span style={{ position: "absolute", left: 5, width: 8, height: 11, borderRadius: 2, background: "#ef4444" }} />
+    <span style={{ position: "absolute", left: 5, width: 8, height: 11, borderRadius: 2, background: "#991b1b" }} />
   </span>
 )
 
@@ -182,23 +186,29 @@ interface EventBadgesProps {
 }
 
 const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: EventBadgesProps) => {
-  const goals      = events.filter(e => GOAL_TYPES.has(e.typeId ?? -1)).length
-  const yellows    = events.filter(e => e.typeId === EVENT_YELLOW).length
-  const yellowReds = events.filter(e => e.typeId === EVENT_YELLOW_RED).length
-  const reds       = events.filter(e => e.typeId === EVENT_RED).length
+  const regularGoals = events.filter(e => e.typeId === EVENT_GOAL || e.typeId === EVENT_GOAL_PENALTY)
+  const ownGoals     = events.filter(e => e.typeId === EVENT_GOAL_OWN)
+  const yellows      = events.filter(e => e.typeId === EVENT_YELLOW).length
+  const yellowReds   = events.filter(e => e.typeId === EVENT_YELLOW_RED).length
+  const reds         = events.filter(e => e.typeId === EVENT_RED).length
   // For starters: subs are shown as a badge on the avatar corner, not here
-  const subEvents  = isStarter ? [] : events.filter(e => e.typeId === EVENT_SUBSTITUTION)
+  const subEvents    = isStarter ? [] : events.filter(e => e.typeId === EVENT_SUBSTITUTION)
 
-  if (!goals && !assists && !yellows && !yellowReds && !reds && !subEvents.length) return null
+  if (!regularGoals.length && !ownGoals.length && !assists && !yellows && !yellowReds && !reds && !subEvents.length) return null
 
   return (
     <div
       className="absolute flex items-center justify-center gap-0.5"
       style={{ bottom: `calc(100% + ${offsetBottom}px)`, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap" }}
     >
-      {Array.from({ length: goals }).map((_, i) => (
+      {regularGoals.map((_, i) => (
         <span key={`g${i}`} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <BallIcon size={13} />
+        </span>
+      ))}
+      {ownGoals.map((_, i) => (
+        <span key={`og${i}`} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <BallIcon size={13} variant="own" />
         </span>
       ))}
       {Array.from({ length: assists }).map((_, i) => (
@@ -208,7 +218,7 @@ const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: Ev
       ))}
       {Array.from({ length: yellows }).map((_, i) => <CardRect key={`y${i}`} color="#facc15" />)}
       {Array.from({ length: yellowReds }).map((_, i) => <DoubleCard key={`yr${i}`} />)}
-      {Array.from({ length: reds }).map((_, i) => <CardRect key={`r${i}`} color="#ef4444" />)}
+      {Array.from({ length: reds }).map((_, i) => <CardRect key={`r${i}`} color="#991b1b" />)}
       {subEvents.map((sub, i) => (
         <span
           key={`s${i}`}
@@ -264,13 +274,13 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut, su
             {player.jerseyNumber}
           </span>
         )}
-        {/* Sub out icon — bottom right */}
+        {/* Sub out icon — bottom right, mirrored to jersey badge */}
         {substitutedOut && (
           <span
             title={subMinute != null ? `Sale en el minuto ${subMinute}${subExtraMinute != null ? `+${subExtraMinute}` : ""}'` : "Sale"}
-            style={{ position: "absolute", bottom: -3, right: -3, width: 18, height: 18, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.5)", cursor: "default" }}
+            style={{ position: "absolute", bottom: -3, right: -3, width: 18, height: 18, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.7)", cursor: "default" }}
           >
-            <SubOutIcon size={14} />
+            <SubOutIcon size={16} />
           </span>
         )}
       </div>
@@ -367,11 +377,12 @@ const BenchPlayer = ({ player, events, rating, assists }: {
   assists: number
 }) => {
   const name = player.player.displayName ?? player.player.name
-  const goals      = events.filter(e => GOAL_TYPES.has(e.typeId ?? -1)).length
-  const yellows    = events.filter(e => e.typeId === EVENT_YELLOW).length
-  const yellowReds = events.filter(e => e.typeId === EVENT_YELLOW_RED).length
-  const reds       = events.filter(e => e.typeId === EVENT_RED).length
-  const subEvents  = events.filter(e => e.typeId === EVENT_SUBSTITUTION)
+  const regularGoals = events.filter(e => e.typeId === EVENT_GOAL || e.typeId === EVENT_GOAL_PENALTY)
+  const ownGoals     = events.filter(e => e.typeId === EVENT_GOAL_OWN)
+  const yellows      = events.filter(e => e.typeId === EVENT_YELLOW).length
+  const yellowReds   = events.filter(e => e.typeId === EVENT_YELLOW_RED).length
+  const reds         = events.filter(e => e.typeId === EVENT_RED).length
+  const subEvents    = events.filter(e => e.typeId === EVENT_SUBSTITUTION)
 
   return (
     <div className="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0">
@@ -392,9 +403,14 @@ const BenchPlayer = ({ player, events, rating, assists }: {
       <span className="flex-1 min-w-0 truncate text-sm font-medium text-slate-800" title={name}>{name}</span>
 
       <div className="flex items-center gap-1 shrink-0">
-        {Array.from({ length: goals }).map((_, i) => (
+        {regularGoals.map((_, i) => (
           <span key={`g${i}`} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
             <BallIcon size={13} />
+          </span>
+        ))}
+        {ownGoals.map((_, i) => (
+          <span key={`og${i}`} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+            <BallIcon size={13} variant="own" />
           </span>
         ))}
         {Array.from({ length: assists }).map((_, i) => (
@@ -404,7 +420,7 @@ const BenchPlayer = ({ player, events, rating, assists }: {
         ))}
         {Array.from({ length: yellows }).map((_, i) => <CardRect key={`y${i}`} color="#facc15" />)}
         {Array.from({ length: yellowReds }).map((_, i) => <DoubleCard key={`yr${i}`} />)}
-        {Array.from({ length: reds }).map((_, i) => <CardRect key={`r${i}`} color="#ef4444" />)}
+        {Array.from({ length: reds }).map((_, i) => <CardRect key={`r${i}`} color="#991b1b" />)}
         {subEvents.map((sub, i) => (
           <span
             key={`s${i}`}
@@ -534,7 +550,7 @@ const CardRow = ({ event }: { event: FixtureEvent }) => {
         {isDouble ? (
           <DoubleCard />
         ) : (
-          <CardRect color={event.typeId === EVENT_YELLOW ? "#facc15" : "#ef4444"} />
+          <CardRect color={event.typeId === EVENT_YELLOW ? "#facc15" : "#991b1b"} />
         )}
       </div>
       <span className="w-9 text-xs font-bold text-slate-400 tabular-nums shrink-0">{minute}</span>
