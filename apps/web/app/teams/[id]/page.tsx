@@ -1,13 +1,12 @@
 import { Suspense } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { IconArrowLeft, IconShieldFilled } from "@tabler/icons-react"
+import { IconArrowLeft, IconShieldFilled, IconTrophy } from "@tabler/icons-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import PlayerCard from "@/components/player-card"
 import TeamSeasonSelector from "@/components/team-season-selector"
 import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, type SquadMember, type TeamFixture } from "@/lib/teams"
-import { getSeasons } from "@/lib/seasons"
-import { getStandings } from "@/lib/standings"
+import { getSeasons, getStages, getSeasonChampion } from "@/lib/seasons"
 import { getPlayerRatingMap } from "@/lib/metrics"
 
 export const dynamic = "force-dynamic"
@@ -19,6 +18,9 @@ const POSITION_LABELS: Record<number, string> = {
   26: "Midfielders",
   27: "Forwards",
 }
+
+const CHAMPIONSHIP_FINALS_NAME = "championship - finals"
+const INTERMEDIATE_ROUND_FINAL_NAME = "intermediate round - final"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -161,17 +163,47 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     )
   }
 
+  // Fetch stages first — stageId is required for the ratings API
+  const stages = await getStages(selectedSeason.id).catch(() => [] as Awaited<ReturnType<typeof getStages>>)
+
+  // For ratings: use the Apertura/Clausura stage (first regular stage), not finals
+  const regularStage = stages.find((stage) =>
+    !stage.name.toLowerCase().includes("final") &&
+    !stage.name.toLowerCase().includes("semi")
+  ) ?? stages[0] ?? null
+
+  // For champion detection: use Championship Finals → fallback to Intermediate Round Final
+  const championshipFinalsStage = stages.find((stage) =>
+    stage.name.toLowerCase() === CHAMPIONSHIP_FINALS_NAME
+  ) ?? null
+  const intermediateRoundFinalStage = stages.find((stage) =>
+    stage.name.toLowerCase() === INTERMEDIATE_ROUND_FINAL_NAME
+  ) ?? null
+
   const [squadResult, fixturesResult, coachResult, ratingMapResult] = await Promise.allSettled([
     getTeamSquad(teamId, selectedSeason.id),
     getTeamFixtures(teamId, selectedSeason.id, 15),
     getTeamCoach(teamId, selectedSeason.id),
-    getPlayerRatingMap(selectedSeason.id),
+    regularStage ? getPlayerRatingMap(selectedSeason.id, regularStage.id) : Promise.resolve(new Map<number, number>()),
   ])
 
   const squad = squadResult.status === "fulfilled" ? squadResult.value : []
   const allFixtures = fixturesResult.status === "fulfilled" ? fixturesResult.value : []
   const coach = coachResult.status === "fulfilled" ? coachResult.value : null
   const ratingMap = ratingMapResult.status === "fulfilled" ? ratingMapResult.value : new Map<number, number>()
+
+  // Resolve champion sequentially: Championship Finals → Intermediate Round Final fallback
+  let isChampion = false
+  if (!selectedSeason.isCurrent) {
+    let champion = null
+    if (championshipFinalsStage) {
+      champion = await getSeasonChampion(championshipFinalsStage.id).catch(() => null)
+    }
+    if (!champion && intermediateRoundFinalStage) {
+      champion = await getSeasonChampion(intermediateRoundFinalStage.id).catch(() => null)
+    }
+    if (champion?.team?.id === teamId) isChampion = true
+  }
 
   // Home venue from first home fixture that has a non-empty image
   const homeVenue = allFixtures
@@ -219,13 +251,12 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                 : undefined
             }
           >
-            {/* Texture for teams without stadium photo */}
             {!homeVenue?.imagePath && <HeroTexture />}
 
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/55 to-black/85" />
 
-            {/* Season selector — top right, aligned with team name */}
+            {/* Season selector — top right */}
             {seasons.length > 1 && (
               <div className="absolute right-5 top-5">
                 <Suspense>
@@ -235,36 +266,53 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
             )}
 
             {/* Team info — bottom left */}
-            <div className="absolute bottom-0 left-0 right-0 flex items-end gap-5 p-6">
-              {team.imagePath && (
-                <img
-                  src={team.imagePath}
-                  alt={team.name}
-                  className="h-20 w-20 shrink-0 object-contain drop-shadow-xl"
-                />
-              )}
-              <div className="min-w-0 flex flex-col gap-2 pb-1">
-                <h1 className="text-3xl font-black text-white leading-none drop-shadow">{team.name}</h1>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/70">
-                  {homeVenue?.name && <span>{homeVenue.name}</span>}
+            <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-5 p-6">
+              <div className="flex items-end gap-5 min-w-0">
+                {team.imagePath && (
+                  <img
+                    src={team.imagePath}
+                    alt={team.name}
+                    className="h-20 w-20 shrink-0 object-contain drop-shadow-xl"
+                  />
+                )}
+                <div className="min-w-0 flex flex-col gap-1 pb-1">
+                  <h1 className="text-3xl font-black text-white leading-none drop-shadow">{team.name}</h1>
+                  {homeVenue?.name && (
+                    <p className="text-sm text-white/70">{homeVenue.name}</p>
+                  )}
                   {coach && (
-                    <span>
+                    <p className="text-sm text-white/70">
                       Coach: <span className="font-semibold text-white/90">{coach.name}</span>
-                    </span>
+                    </p>
                   )}
                 </div>
               </div>
+
+              {/* Champion trophy — bottom right */}
+              {isChampion && (
+                <div className="flex shrink-0 flex-col items-center gap-1 pb-1">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-400/20 ring-2 ring-amber-400/60 backdrop-blur-sm">
+                    <IconTrophy size={28} className="text-amber-300 drop-shadow" />
+                  </div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">
+                    {selectedSeason.name} Champion
+                  </p>
+                </div>
+              )}
             </div>
           </div>
+        </div>
+
+        {/* Squad heading — full width, above the grid */}
+        <div className="flex items-center gap-2 px-1">
+          <h2 className="text-sm font-bold text-slate-700">Squad</h2>
+          <span className="text-sm font-normal text-slate-400">· {selectedSeason.name}</span>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
 
           {/* Squad */}
           <div className="flex flex-col gap-6">
-            <h2 className="px-1 text-sm font-bold text-slate-700">
-              Squad · <span className="font-normal text-slate-400">{selectedSeason.name}</span>
-            </h2>
             {squad.length === 0 ? (
               <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
                 No squad data available for {selectedSeason.name}
@@ -278,7 +326,7 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">
                       {POSITION_LABELS[positionId]}
                     </p>
-                    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5">
                       {members.map((member) => (
                         <PlayerCard
                           key={member.id}

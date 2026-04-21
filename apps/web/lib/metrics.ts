@@ -72,9 +72,10 @@ export const getLeaders = async (
   return response.data
 }
 
-// Returns a map of playerId → average rating for fast lookup in squad lists
-export const getPlayerRatingMap = async (seasonId: number): Promise<Map<number, number>> => {
-  const leaders = await getLeaders({ seasonId, limit: 100 })
+// Returns a map of playerId → average rating for fast lookup in squad lists.
+// stageId is required by the API to return topRated leaders.
+export const getPlayerRatingMap = async (seasonId: number, stageId: number): Promise<Map<number, number>> => {
+  const leaders = await getLeaders({ seasonId, stageId, limit: 100 })
   const ratingMap = new Map<number, number>()
   for (const entry of leaders.topRated.leaders) {
     ratingMap.set(entry.player.id, entry.value)
