@@ -5,7 +5,7 @@ import {
   getFixture,
   getFixtureEvents,
   getFixtureLineups,
-  getFixturePlayerStats,
+  getFixturePlayerRatings,
   STAT_TYPE_RATING,
   type LineupPlayer,
   type FixtureEvent,
@@ -415,7 +415,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
     getFixture(fixtureId),
     getFixtureEvents(fixtureId),
     getFixtureLineups(fixtureId),
-    getFixturePlayerStats(fixtureId),
+    getFixturePlayerRatings(fixtureId),
   ])
 
   if (fixtureResult.status === "rejected") notFound()
@@ -442,7 +442,6 @@ const MatchPage = async ({ params }: MatchPageProps) => {
 
   const ratingByPlayer = new Map<number, number>()
   for (const stat of stats) {
-    if (stat.typeId !== STAT_TYPE_RATING) continue
     const value = stat.value.normalizedValue
     if (typeof value === "number") ratingByPlayer.set(stat.player.id, value)
   }

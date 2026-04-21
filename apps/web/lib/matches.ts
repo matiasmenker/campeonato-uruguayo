@@ -133,9 +133,9 @@ export interface FixturePlayerStat {
   value: { normalizedValue: number | string | boolean | null }
 }
 
-export const getFixturePlayerStats = async (id: number): Promise<FixturePlayerStat[]> => {
+export const getFixturePlayerRatings = async (id: number): Promise<FixturePlayerStat[]> => {
   const response = await apiFetch<ListResponse<FixturePlayerStat>>(
-    `/api/v1/fixtures/${id}/player-statistics?pageSize=500`
+    `/api/v1/fixtures/${id}/player-statistics?typeId=${STAT_TYPE_RATING}&pageSize=100`
   )
   return response.data
 }
