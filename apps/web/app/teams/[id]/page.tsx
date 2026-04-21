@@ -216,12 +216,6 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     return groups
   }, {})
 
-  // Average age across squad members who have a date of birth
-  const now = Date.now()
-  const ages = squad
-    .map((member) => member.player.dateOfBirth ? Math.floor((now - new Date(member.player.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null)
-    .filter((age): age is number => age !== null)
-  const averageAge = ages.length > 0 ? (ages.reduce((sum, age) => sum + age, 0) / ages.length).toFixed(1) : null
 
   // Fixtures sorted desc (most recent first) from API
   const recentFixtures = allFixtures
