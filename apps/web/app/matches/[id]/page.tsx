@@ -174,11 +174,10 @@ interface EventBadgesProps {
   events: FixtureEvent[]
   assists: number
   offsetBottom?: number
-  // minute info for subs (from eventsByPlayer data)
-  minuteByEventType?: Map<number, number | null>
+  isStarter?: boolean  // true = player went OUT; false = player came IN
 }
 
-const EventBadges = ({ events, assists, offsetBottom = 0 }: EventBadgesProps) => {
+const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: EventBadgesProps) => {
   const goals      = events.filter(e => e.typeId === EVENT_GOAL).length
   const yellows    = events.filter(e => e.typeId === EVENT_YELLOW).length
   const yellowReds = events.filter(e => e.typeId === EVENT_YELLOW_RED).length
@@ -209,10 +208,10 @@ const EventBadges = ({ events, assists, offsetBottom = 0 }: EventBadgesProps) =>
       {subEvents.map((sub, i) => (
         <span
           key={`s${i}`}
-          title={sub.minute != null ? `Cambio en el minuto ${sub.minute}${sub.extraMinute != null ? `+${sub.extraMinute}` : ""}'` : "Cambio"}
+          title={sub.minute != null ? `${isStarter ? "Sale" : "Entra"} en el minuto ${sub.minute}${sub.extraMinute != null ? `+${sub.extraMinute}` : ""}'` : "Cambio"}
           style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "default" }}
         >
-          <SubOutIcon size={13} />
+          {isStarter ? <SubOutIcon size={13} /> : <SubInIcon size={13} />}
         </span>
       ))}
     </div>
@@ -241,7 +240,7 @@ const PlayerToken = ({ player, events, rating, assists, x, y }: PlayerTokenProps
       style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: 120, gap: 4 }}
     >
       <div className="relative" style={{ width: 56, height: 56 }}>
-        <EventBadges events={events} assists={assists} offsetBottom={2} />
+        <EventBadges events={events} assists={assists} offsetBottom={2} isStarter={true} />
         <div
           className="overflow-hidden rounded-full"
           style={{ width: 56, height: 56, background: "#fff", border: "2.5px solid rgba(255,255,255,0.95)", boxShadow: "0 4px 14px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.4)" }}
@@ -376,10 +375,10 @@ const BenchPlayer = ({ player, events, rating, assists }: {
         {subEvents.map((sub, i) => (
           <span
             key={`s${i}`}
-            title={sub.minute != null ? `Cambio en el minuto ${sub.minute}${sub.extraMinute != null ? `+${sub.extraMinute}` : ""}'` : "Cambio"}
+            title={sub.minute != null ? `Entra en el minuto ${sub.minute}${sub.extraMinute != null ? `+${sub.extraMinute}` : ""}'` : "Entra"}
             style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "default" }}
           >
-            <SubOutIcon size={13} />
+            <SubInIcon size={13} />
           </span>
         ))}
       </div>
