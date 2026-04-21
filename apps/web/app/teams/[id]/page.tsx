@@ -6,7 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamSeasonSelector from "@/components/team-season-selector"
 import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, type SquadMember, type TeamFixture } from "@/lib/teams"
 import { getSeasons, getStages, getSeasonChampion } from "@/lib/seasons"
-import { getPlayerRatingMap } from "@/lib/metrics"
+import { getSquadRatingMap } from "@/lib/metrics"
 
 export const dynamic = "force-dynamic"
 
@@ -162,14 +162,8 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     )
   }
 
-  // Fetch stages first — stageId is required for the ratings API
+  // Fetch stages only for champion detection — ratings now use the squad-ratings endpoint
   const stages = await getStages(selectedSeason.id).catch(() => [] as Awaited<ReturnType<typeof getStages>>)
-
-  // For ratings: use the Apertura/Clausura stage (first regular stage), not finals
-  const regularStage = stages.find((stage) =>
-    !stage.name.toLowerCase().includes("final") &&
-    !stage.name.toLowerCase().includes("semi")
-  ) ?? stages[0] ?? null
 
   // For champion detection: use Championship Finals → fallback to Intermediate Round Final
   const championshipFinalsStage = stages.find((stage) =>
@@ -183,7 +177,7 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     getTeamSquad(teamId, selectedSeason.id),
     getTeamFixtures(teamId, selectedSeason.id, 15),
     getTeamCoach(teamId, selectedSeason.id),
-    regularStage ? getPlayerRatingMap(selectedSeason.id, regularStage.id) : Promise.resolve(new Map<number, number>()),
+    getSquadRatingMap(teamId, selectedSeason.id),
   ])
 
   const squad = squadResult.status === "fulfilled" ? squadResult.value : []

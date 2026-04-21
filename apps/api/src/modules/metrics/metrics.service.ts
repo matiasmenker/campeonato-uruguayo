@@ -8,6 +8,8 @@ import type {
   LeaderEntry,
   LeadersContract,
   LeadersQuery,
+  SquadPlayerRating,
+  SquadRatingsQuery,
 } from "./metrics.contracts.js";
 
 type LeaderAggregation = "sum" | "average";
@@ -149,6 +151,63 @@ const buildLeaderCategory = async (
     statType: toStatTypeSummary(statType),
     leaders,
   };
+};
+
+// Returns average rating per player for all squad members of a team in a given season.
+// Unlike the leaders endpoint (top-N only), this covers every player who appeared in a match.
+export const getSquadRatings = async (query: SquadRatingsQuery): Promise<SquadPlayerRating[]> => {
+  const prisma = getPrisma();
+
+  const ratingStatType = await prisma.statType.findFirst({
+    where: { developerName: "RATING" },
+    select: { id: true },
+  });
+
+  if (!ratingStatType) return [];
+
+  const squadMemberships = await prisma.squadMembership.findMany({
+    where: { teamId: query.teamId, seasonId: query.seasonId },
+    select: { playerId: true },
+  });
+
+  const playerIds = squadMemberships.map((membership) => membership.playerId);
+
+  if (playerIds.length === 0) return [];
+
+  const stats = await prisma.fixturePlayerStatistic.findMany({
+    where: {
+      typeId: ratingStatType.id,
+      playerId: { in: playerIds },
+      fixture: { seasonId: query.seasonId },
+    },
+    select: { playerId: true, value: true },
+  });
+
+  const playerAggregates = new Map<number, { total: number; appearances: number }>();
+
+  for (const stat of stats) {
+    const numericValue = toNumericStatValue(stat.value);
+    if (numericValue === null) continue;
+
+    const existing = playerAggregates.get(stat.playerId);
+    if (existing) {
+      existing.total += numericValue;
+      existing.appearances += 1;
+    } else {
+      playerAggregates.set(stat.playerId, { total: numericValue, appearances: 1 });
+    }
+  }
+
+  const result: SquadPlayerRating[] = []
+  for (const [playerId, aggregate] of playerAggregates.entries()) {
+    result.push({
+      playerId,
+      averageRating: Number((aggregate.total / aggregate.appearances).toFixed(2)),
+      appearances: aggregate.appearances,
+    })
+  }
+
+  return result;
 };
 
 export const getLeaders = async (query: LeadersQuery): Promise<DetailResponse<LeadersContract>> => {

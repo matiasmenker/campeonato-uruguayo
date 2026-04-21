@@ -72,13 +72,21 @@ export const getLeaders = async (
   return response.data
 }
 
-// Returns a map of playerId → average rating for fast lookup in squad lists.
-// stageId is required by the API to return topRated leaders.
-export const getPlayerRatingMap = async (seasonId: number, stageId: number): Promise<Map<number, number>> => {
-  const leaders = await getLeaders({ seasonId, stageId, limit: 100 })
+interface SquadPlayerRating {
+  playerId: number
+  averageRating: number
+  appearances: number
+}
+
+// Returns a map of playerId → average rating for all squad members who have played.
+// Uses the squad-ratings endpoint which covers every player, not just the top-N.
+export const getSquadRatingMap = async (teamId: number, seasonId: number): Promise<Map<number, number>> => {
+  const response = await apiFetch<{ data: SquadPlayerRating[] }>(
+    `/api/v1/metrics/squad-ratings?teamId=${teamId}&seasonId=${seasonId}`
+  )
   const ratingMap = new Map<number, number>()
-  for (const entry of leaders.topRated.leaders) {
-    ratingMap.set(entry.player.id, entry.value)
+  for (const entry of response.data) {
+    ratingMap.set(entry.playerId, entry.averageRating)
   }
   return ratingMap
 }

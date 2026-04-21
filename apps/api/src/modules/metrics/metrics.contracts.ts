@@ -10,6 +10,19 @@ export const leadersQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(50).default(10),
 });
 
+export const squadRatingsQuerySchema = z.object({
+  teamId: z.coerce.number().int().positive(),
+  seasonId: z.coerce.number().int().positive(),
+});
+
+export type SquadRatingsQuery = z.infer<typeof squadRatingsQuerySchema>;
+
+export interface SquadPlayerRating {
+  playerId: number;
+  averageRating: number;
+  appearances: number;
+}
+
 export type LeadersQuery = z.infer<typeof leadersQuerySchema>;
 
 export interface LeaderEntry {
