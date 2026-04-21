@@ -312,7 +312,8 @@ const MatchesCarousel = ({ matches, roundName, fixtureVideoMap = {} }: MatchesCa
                 key={match.id}
                 className="basis-1/2 pl-3 sm:basis-1/3 lg:basis-1/4"
               >
-                <article className="group relative h-[188px] overflow-hidden rounded-[28px] bg-slate-900">
+                <Link href={`/matches/${match.id}`} className="block">
+                <article className="group relative h-[188px] overflow-hidden rounded-[28px] bg-slate-900 cursor-pointer">
                   <div
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
                     style={{
@@ -409,7 +410,7 @@ const MatchesCarousel = ({ matches, roundName, fixtureVideoMap = {} }: MatchesCa
 
                       {matchVideo ? (
                         <button
-                          onClick={() => setActiveVideo(matchVideo)}
+                          onClick={(event) => { event.preventDefault(); event.stopPropagation(); setActiveVideo(matchVideo) }}
                           className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-sm transition-all hover:border-primary/50 hover:bg-primary hover:scale-110"
                           aria-label="Ver resumen del partido"
                         >
@@ -419,6 +420,7 @@ const MatchesCarousel = ({ matches, roundName, fixtureVideoMap = {} }: MatchesCa
                     </div>
                   </div>
                 </article>
+                </Link>
               </CarouselItem>
             )
           })}
