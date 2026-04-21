@@ -17,7 +17,7 @@ const NAV_ITEMS = [
   { label: "Matches", href: "/partidos", icon: IconBallFootball },
   { label: "Standings", href: "/standings", icon: IconTrophy },
   { label: "Players", href: "/jugadores", icon: IconRun },
-  { label: "Teams", href: "/equipos", icon: IconShieldFilled },
+  { label: "Teams", href: "/teams", icon: IconShieldFilled },
 ]
 
 const Header = () => {
