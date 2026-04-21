@@ -32,6 +32,7 @@ import {
   type LeadersContract,
 } from "@/lib/metrics"
 import { fetchLatestAufVideos } from "@/lib/youtube"
+import { resolvePlayerImageUrl } from "@/lib/player"
 
 export const dynamic = "force-dynamic"
 
@@ -328,13 +329,7 @@ const HomePage = async () => {
                       <span className="text-center text-xs font-medium text-slate-400">{index + 1}</span>
                       <div className="flex items-center gap-2">
                         <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
-                          {leader.player.imagePath ? (
-                            <img src={leader.player.imagePath} alt={getPlayerName(leader)} className="h-full w-full object-cover object-top" />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-[10px] font-bold text-slate-400">
-                              {getPlayerName(leader).slice(0, 2).toUpperCase()}
-                            </div>
-                          )}
+                          <img src={resolvePlayerImageUrl(leader.player.imagePath)} alt={getPlayerName(leader)} className="h-full w-full object-cover object-top" />
                         </div>
                         <span className="text-xs font-medium text-slate-950">{getPlayerName(leader)}</span>
                       </div>

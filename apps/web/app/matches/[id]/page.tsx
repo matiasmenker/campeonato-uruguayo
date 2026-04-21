@@ -11,6 +11,7 @@ import {
   type FixtureEvent,
 } from "@/lib/matches"
 import { getRatingFill } from "@/lib/rating"
+import { resolvePlayerImageUrl } from "@/lib/player"
 
 export const dynamic = "force-dynamic"
 
@@ -95,29 +96,15 @@ const buildSubstitutionPairs = (events: FixtureEvent[]): SubstitutionPair[] => {
   return pairs
 }
 
-// ─── Shared player silhouette ─────────────────────────────────────────────────
+// ─── Shared player avatar ─────────────────────────────────────────────────────
 
-const PlayerSilhouette = ({ size }: { size: number }) => (
-  <div style={{ width: size, height: size, background: "#f1f5f9", borderRadius: "50%", display: "flex", alignItems: "flex-end", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-    <svg viewBox="0 0 40 46" fill="none" style={{ width: "78%", height: "78%" }}>
-      <ellipse cx="20" cy="13" rx="9" ry="10" fill="#cbd5e1" />
-      <path d="M0 46c0-11.046 8.954-20 20-20s20 8.954 20 20" fill="#cbd5e1" />
-    </svg>
-  </div>
+const PlayerAvatar = ({ player, size }: { player: LineupPlayer["player"]; size: number }) => (
+  <img
+    src={resolvePlayerImageUrl(player.imagePath)}
+    alt={player.displayName ?? player.name}
+    style={{ width: size, height: size, objectFit: "cover", objectPosition: "top", borderRadius: "50%", background: "#f1f5f9", flexShrink: 0 }}
+  />
 )
-
-const PlayerAvatar = ({ player, size }: { player: LineupPlayer["player"]; size: number }) => {
-  if (player.imagePath && !player.imagePath.includes("placeholder")) {
-    return (
-      <img
-        src={player.imagePath}
-        alt={player.displayName ?? player.name}
-        style={{ width: size, height: size, objectFit: "cover", objectPosition: "top", borderRadius: "50%", background: "#fff", flexShrink: 0 }}
-      />
-    )
-  }
-  return <PlayerSilhouette size={size} />
-}
 
 // ─── Event icon SVGs ──────────────────────────────────────────────────────────
 
@@ -459,7 +446,7 @@ const TeamBench = ({ bench, teamName, teamImage, eventsByPlayer, ratingByPlayer,
       {teamImage ? (
         <img src={teamImage} alt={teamName} className="h-5 w-5 object-contain shrink-0" />
       ) : (
-        <PlayerSilhouette size={20} />
+        <div className="h-5 w-5 shrink-0 rounded-full bg-slate-200" />
       )}
       <span className="text-xs font-bold text-slate-600 truncate">{teamName}</span>
     </div>
@@ -708,7 +695,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                 <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
                   {homeTeam?.imagePath
                     ? <img src={homeTeam.imagePath} alt={homeTeam.name} className="h-16 w-16 object-contain drop-shadow-xl" />
-                    : <PlayerSilhouette size={64} />}
+                    : <div className="h-16 w-16 rounded-full bg-white/20" />}
                   <Link href={`/teams/${homeTeam?.id}`} className="hover:opacity-80">
                     <h2 className="text-right text-xl font-black text-white leading-tight drop-shadow">{homeTeam?.name ?? "Local"}</h2>
                   </Link>
@@ -725,7 +712,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                 <div className="flex min-w-0 flex-1 flex-col items-start gap-2">
                   {awayTeam?.imagePath
                     ? <img src={awayTeam.imagePath} alt={awayTeam.name} className="h-16 w-16 object-contain drop-shadow-xl" />
-                    : <PlayerSilhouette size={64} />}
+                    : <div className="h-16 w-16 rounded-full bg-white/20" />}
                   <Link href={`/teams/${awayTeam?.id}`} className="hover:opacity-80">
                     <h2 className="text-left text-xl font-black text-white leading-tight drop-shadow">{awayTeam?.name ?? "Visitante"}</h2>
                   </Link>

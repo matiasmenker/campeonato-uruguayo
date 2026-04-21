@@ -5,6 +5,7 @@ import { IconArrowLeft, IconShieldFilled, IconTrophy } from "@tabler/icons-react
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamSeasonSelector from "@/components/team-season-selector"
 import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, type SquadMember, type TeamFixture } from "@/lib/teams"
+import { resolvePlayerImageUrl } from "@/lib/player"
 import { getSeasons, getStages, getSeasonChampion } from "@/lib/seasons"
 
 export const dynamic = "force-dynamic"
@@ -370,18 +371,11 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 
                           {/* Photo */}
                           <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
-                            {member.player.imagePath && !member.player.imagePath.includes("placeholder") ? (
-                              <img
-                                src={member.player.imagePath}
-                                alt={displayName}
-                                className="h-full w-full object-cover object-top"
-                              />
-                            ) : (
-                              <svg viewBox="0 0 32 32" fill="none" className="h-full w-full bg-slate-100">
-                                <circle cx="16" cy="11" r="6" fill="#cbd5e1" />
-                                <path d="M2 34c0-7.732 6.268-14 14-14s14 6.268 14 14" fill="#cbd5e1" />
-                              </svg>
-                            )}
+                            <img
+                              src={resolvePlayerImageUrl(member.player.imagePath)}
+                              alt={displayName}
+                              className="h-full w-full object-cover object-top"
+                            />
                           </div>
 
                           {/* Name */}

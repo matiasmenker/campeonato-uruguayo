@@ -2,6 +2,7 @@
 // Used in: home page leaders, team detail squad grid.
 
 import { getRatingFill } from "@/lib/rating"
+import { resolvePlayerImageUrl } from "@/lib/player"
 
 const POSITION_CONFIG: Record<number, { label: string; bg: string }> = {
   24: { label: "AR", bg: "#f59e0b" },
@@ -23,14 +24,7 @@ interface PlayerCardProps {
 
 const PlayerCirclePhoto = ({ src, alt }: { src: string | null; alt: string }) => (
   <div style={{ width: 76, height: 76, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
-    {src && !src.includes("placeholder") ? (
-      <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }} />
-    ) : (
-      <svg viewBox="0 0 80 80" fill="none" style={{ width: "100%", height: "100%", background: "#f1f5f9" }}>
-        <circle cx="40" cy="30" r="16" fill="#cbd5e1" />
-        <path d="M12 78c0-15.464 12.536-28 28-28s28 12.536 28 28" fill="#cbd5e1" />
-      </svg>
-    )}
+    <img src={resolvePlayerImageUrl(src)} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }} />
   </div>
 )
 
@@ -98,11 +92,11 @@ const PlayerCard = ({ name, imagePath, positionId, teamImagePath, rating }: Play
         <div className="absolute inset-x-0 top-0 h-px bg-slate-200" />
         <div className="relative z-10 flex h-full items-center justify-between px-3">
           {rating != null ? (
-            <div
-              className="flex items-center justify-center rounded-lg font-black text-white tabular-nums"
-              style={{ background: ratingColor, fontSize: 13, minWidth: 38, height: 22, paddingLeft: 6, paddingRight: 6 }}
-            >
-              {rating.toFixed(1)}
+            <div className="flex items-center gap-0.5">
+              <svg width={12} height={12} viewBox="0 0 24 24" fill={ratingColor} xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              <span className="tabular-nums font-black text-[13px]" style={{ color: ratingColor }}>{rating.toFixed(1)}</span>
             </div>
           ) : (
             <div className="h-5 w-10" />
