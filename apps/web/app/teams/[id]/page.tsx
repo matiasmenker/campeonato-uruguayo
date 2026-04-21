@@ -1,8 +1,9 @@
 import { Suspense } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { IconArrowLeft, IconShieldFilled, IconUser } from "@tabler/icons-react"
+import { IconArrowLeft, IconShieldFilled } from "@tabler/icons-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import PlayerCard from "@/components/player-card"
 import TeamSeasonSelector from "@/components/team-season-selector"
 import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, type SquadMember, type TeamFixture } from "@/lib/teams"
 import { getSeasons } from "@/lib/seasons"
@@ -17,19 +18,6 @@ const POSITION_LABELS: Record<number, string> = {
   25: "Defenders",
   26: "Midfielders",
   27: "Forwards",
-}
-const POSITION_SHORT: Record<number, string> = {
-  24: "GK",
-  25: "DEF",
-  26: "MID",
-  27: "FWD",
-}
-
-const getRatingColor = (value: number): string => {
-  if (value >= 8.0) return "bg-emerald-500"
-  if (value >= 7.0) return "bg-sky-500"
-  if (value >= 6.0) return "bg-orange-400"
-  return "bg-red-400"
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -58,53 +46,17 @@ const getMatchResult = (
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const PlayerCard = ({ member, rating }: { member: SquadMember; rating: number | undefined }) => {
-  const name = member.player.displayName ?? member.player.name
-  const hasPhoto = !!member.player.imagePath && !member.player.imagePath.includes("placeholder")
-  const positionId = member.positionId ?? 0
-
-  return (
-    <div className="relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
-      {/* Rating badge */}
-      {rating !== undefined && (
-        <div className={`absolute right-3 top-3 rounded-lg px-1.5 py-0.5 ${getRatingColor(rating)}`}>
-          <p className="text-[11px] font-black text-white tabular-nums">{rating.toFixed(1)}</p>
-        </div>
-      )}
-
-      {/* Shirt number */}
-      {member.shirtNumber !== null && (
-        <div className="absolute left-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-slate-950">
-          <span className="text-[9px] font-bold text-white">{member.shirtNumber}</span>
-        </div>
-      )}
-
-      {/* Player photo */}
-      <div className="mt-2 h-16 w-16 overflow-hidden rounded-full bg-slate-100 ring-2 ring-slate-200">
-        {hasPhoto ? (
-          <img src={member.player.imagePath!} alt={name} className="h-full w-full object-cover object-top" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <IconUser size={28} className="text-slate-300" />
-          </div>
-        )}
-      </div>
-
-      {/* Name and position */}
-      <div className="flex flex-col items-center gap-0.5 text-center">
-        <p className="line-clamp-2 text-xs font-semibold text-slate-950 leading-tight">{name}</p>
-        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-slate-500">
-          {POSITION_SHORT[positionId] ?? "—"}
-        </span>
-        {member.isLoan && (
-          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-600">
-            Loan
-          </span>
-        )}
-      </div>
-    </div>
-  )
-}
+// SVG dot-grid texture for teams without a stadium photo
+const HeroTexture = () => (
+  <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <circle cx="2" cy="2" r="1.5" fill="rgba(255,255,255,0.08)" />
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#dots)" />
+  </svg>
+)
 
 const FixtureCard = ({ fixture, teamId }: { fixture: TeamFixture; teamId: number }) => {
   const isFinished = fixture.homeScore !== null && fixture.awayScore !== null
@@ -209,25 +161,21 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     )
   }
 
-  const [squadResult, fixturesResult, standingsResult, coachResult, ratingMapResult] = await Promise.allSettled([
+  const [squadResult, fixturesResult, coachResult, ratingMapResult] = await Promise.allSettled([
     getTeamSquad(teamId, selectedSeason.id),
     getTeamFixtures(teamId, selectedSeason.id, 15),
-    getStandings({ seasonId: selectedSeason.id }),
     getTeamCoach(teamId, selectedSeason.id),
     getPlayerRatingMap(selectedSeason.id),
   ])
 
   const squad = squadResult.status === "fulfilled" ? squadResult.value : []
-  const fixtures = fixturesResult.status === "fulfilled" ? fixturesResult.value : []
-  const allStandings = standingsResult.status === "fulfilled" ? standingsResult.value : []
+  const allFixtures = fixturesResult.status === "fulfilled" ? fixturesResult.value : []
   const coach = coachResult.status === "fulfilled" ? coachResult.value : null
   const ratingMap = ratingMapResult.status === "fulfilled" ? ratingMapResult.value : new Map<number, number>()
 
-  const teamStanding = allStandings.find((standing) => standing.team.id === teamId) ?? null
-
-  // Home venue from first home fixture with an image
-  const homeVenue = fixtures
-    .filter((fixture) => fixture.homeTeam?.id === teamId && fixture.venue)
+  // Home venue from first home fixture that has a non-empty image
+  const homeVenue = allFixtures
+    .filter((fixture) => fixture.homeTeam?.id === teamId && fixture.venue?.imagePath)
     .map((fixture) => fixture.venue)
     .find(Boolean) ?? null
 
@@ -236,14 +184,14 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     return groups
   }, {})
 
-  // Fixtures already sorted desc (most recent first) from the API
-  const recentFixtures = fixtures.filter(
-    (fixture) => fixture.homeScore !== null && fixture.awayScore !== null
-  )
-  const upcomingFixtures = fixtures
+  // Fixtures sorted desc (most recent first) from API
+  const recentFixtures = allFixtures
+    .filter((fixture) => fixture.homeScore !== null && fixture.awayScore !== null)
+    .slice(0, 5)
+
+  const nextFixture = allFixtures
     .filter((fixture) => fixture.homeScore === null || fixture.awayScore === null)
-    .reverse() // upcoming: earliest first
-    .slice(0, 3)
+    .at(-1) ?? null // API is desc, so last element = earliest upcoming
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
@@ -257,20 +205,27 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
           All teams
         </Link>
 
-        {/* Hero card */}
+        {/* Hero */}
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <div
             className="relative min-h-52 bg-slate-900"
             style={
               homeVenue?.imagePath
-                ? { backgroundImage: `url(${homeVenue.imagePath})`, backgroundSize: "cover", backgroundPosition: "center 40%" }
+                ? {
+                    backgroundImage: `url(${homeVenue.imagePath})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center 40%",
+                  }
                 : undefined
             }
           >
-            {/* Gradient overlay — stronger at bottom for legibility */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-black/80" />
+            {/* Texture for teams without stadium photo */}
+            {!homeVenue?.imagePath && <HeroTexture />}
 
-            {/* Season selector top-right */}
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/55 to-black/85" />
+
+            {/* Season selector — top right, aligned with team name */}
             {seasons.length > 1 && (
               <div className="absolute right-5 top-5">
                 <Suspense>
@@ -279,9 +234,8 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
               </div>
             )}
 
-            {/* Team info bottom */}
+            {/* Team info — bottom left */}
             <div className="absolute bottom-0 left-0 right-0 flex items-end gap-5 p-6">
-              {/* Badge */}
               {team.imagePath && (
                 <img
                   src={team.imagePath}
@@ -289,33 +243,16 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                   className="h-20 w-20 shrink-0 object-contain drop-shadow-xl"
                 />
               )}
-              <div className="min-w-0 flex flex-col gap-1.5 pb-1">
+              <div className="min-w-0 flex flex-col gap-2 pb-1">
                 <h1 className="text-3xl font-black text-white leading-none drop-shadow">{team.name}</h1>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/70">
-                  {homeVenue?.name && (
-                    <span>{homeVenue.name}{homeVenue.capacity ? ` · ${homeVenue.capacity.toLocaleString()} cap.` : ""}</span>
-                  )}
+                  {homeVenue?.name && <span>{homeVenue.name}</span>}
                   {coach && (
-                    <span>Coach: <span className="font-semibold text-white/90">{coach.name}</span></span>
+                    <span>
+                      Coach: <span className="font-semibold text-white/90">{coach.name}</span>
+                    </span>
                   )}
                 </div>
-                {teamStanding && (
-                  <div className="mt-1 flex items-center gap-3">
-                    <span className="text-sm font-bold text-white">
-                      #{teamStanding.position}
-                    </span>
-                    <span className="text-white/60 text-sm">·</span>
-                    <span className="text-sm text-white/80">
-                      <span className="font-bold text-white">{teamStanding.points}</span> pts
-                    </span>
-                    <span className="text-white/60 text-sm">·</span>
-                    <span className="text-sm text-white/80">
-                      {teamStanding.won}W {teamStanding.draw}D {teamStanding.lost}L
-                    </span>
-                    <span className="text-white/60 text-sm">·</span>
-                    <span className="text-sm text-white/80">{teamStanding.stage?.name}</span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -323,8 +260,8 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
 
-          {/* Squad grid */}
-          <div className="flex flex-col gap-4">
+          {/* Squad */}
+          <div className="flex flex-col gap-6">
             <h2 className="px-1 text-sm font-bold text-slate-700">
               Squad · <span className="font-normal text-slate-400">{selectedSeason.name}</span>
             </h2>
@@ -333,28 +270,28 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                 No squad data available for {selectedSeason.name}
               </div>
             ) : (
-              <div className="flex flex-col gap-6">
-                {POSITION_ORDER.map((positionId) => {
-                  const members = squadByPosition[positionId]
-                  if (!members || members.length === 0) return null
-                  return (
-                    <div key={positionId} className="flex flex-col gap-3">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">
-                        {POSITION_LABELS[positionId]}
-                      </p>
-                      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
-                        {members.map((member) => (
-                          <PlayerCard
-                            key={member.id}
-                            member={member}
-                            rating={ratingMap.get(member.player.id)}
-                          />
-                        ))}
-                      </div>
+              POSITION_ORDER.map((positionId) => {
+                const members = squadByPosition[positionId]
+                if (!members || members.length === 0) return null
+                return (
+                  <div key={positionId} className="flex flex-col gap-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">
+                      {POSITION_LABELS[positionId]}
+                    </p>
+                    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
+                      {members.map((member) => (
+                        <PlayerCard
+                          key={member.id}
+                          name={member.player.displayName ?? member.player.name}
+                          imagePath={member.player.imagePath}
+                          positionId={member.positionId}
+                          rating={ratingMap.get(member.player.id) ?? null}
+                        />
+                      ))}
                     </div>
-                  )
-                })}
-              </div>
+                  </div>
+                )
+              })
             )}
           </div>
 
@@ -363,7 +300,7 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 
             {recentFixtures.length > 0 && (
               <div className="flex flex-col gap-2">
-                <h2 className="px-1 text-sm font-bold text-slate-700">Recent results</h2>
+                <h2 className="px-1 text-sm font-bold text-slate-700">Last 5 results</h2>
                 <div className="flex flex-col gap-2">
                   {recentFixtures.map((fixture) => (
                     <FixtureCard key={fixture.id} fixture={fixture} teamId={teamId} />
@@ -372,18 +309,14 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
               </div>
             )}
 
-            {upcomingFixtures.length > 0 && (
+            {nextFixture && (
               <div className="flex flex-col gap-2">
-                <h2 className="px-1 text-sm font-bold text-slate-700">Upcoming</h2>
-                <div className="flex flex-col gap-2">
-                  {upcomingFixtures.map((fixture) => (
-                    <FixtureCard key={fixture.id} fixture={fixture} teamId={teamId} />
-                  ))}
-                </div>
+                <h2 className="px-1 text-sm font-bold text-slate-700">Next match</h2>
+                <FixtureCard fixture={nextFixture} teamId={teamId} />
               </div>
             )}
 
-            {recentFixtures.length === 0 && upcomingFixtures.length === 0 && (
+            {recentFixtures.length === 0 && !nextFixture && (
               <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
                 No fixtures available for {selectedSeason.name}
               </div>
