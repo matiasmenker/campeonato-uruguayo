@@ -305,13 +305,12 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
           <div className="flex flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
             {/* Table header */}
             {squad.length > 0 && (
-              <div className="grid grid-cols-[28px_36px_1fr_40px_72px_64px_48px] items-center border-b border-slate-200 bg-slate-50 px-4 py-2">
+              <div className="grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center border-b border-slate-200 bg-slate-50 px-4 py-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">#</span>
                 <span />
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Player</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Nat.</span>
+                <span className="text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">Nat.</span>
                 <span className="text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">Height</span>
-                <span className="text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">Date of birth</span>
                 <span className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Age</span>
               </div>
             )}
@@ -339,13 +338,10 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                       const age = dob
                         ? Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
                         : null
-                      const formattedDob = dob
-                        ? new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }).format(dob)
-                        : null
                       return (
                         <div
                           key={member.id}
-                          className={`grid grid-cols-[28px_36px_1fr_40px_72px_64px_48px] items-center gap-0 px-4 py-2 ${!isLast ? "border-b border-slate-100" : ""}`}
+                          className={`grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center px-4 py-2 ${!isLast ? "border-b border-slate-100" : ""}`}
                         >
                           {/* Shirt number */}
                           <span className="text-xs font-medium text-slate-300">
@@ -369,19 +365,24 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                           </div>
 
                           {/* Name */}
-                          <span className="min-w-0 truncate pr-2 text-sm font-medium text-slate-900">
+                          <span className="min-w-0 truncate pr-3 text-sm font-medium text-slate-900">
                             {displayName}
                           </span>
 
-                          {/* Nationality flag */}
-                          <div className="flex items-center gap-1">
+                          {/* Nationality flag + code */}
+                          <div className="flex flex-col items-center gap-0.5">
                             {member.player.nationality?.imageUrl ? (
-                              <img
-                                src={member.player.nationality.imageUrl}
-                                alt={member.player.nationality.name}
-                                className="h-3.5 w-5 rounded-sm object-cover"
-                                title={member.player.nationality.name}
-                              />
+                              <>
+                                <img
+                                  src={member.player.nationality.imageUrl}
+                                  alt={member.player.nationality.name}
+                                  className="h-4 w-6 rounded object-cover shadow-sm ring-1 ring-slate-200"
+                                  title={member.player.nationality.name}
+                                />
+                                <span className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">
+                                  {member.player.nationality.name.slice(0, 3)}
+                                </span>
+                              </>
                             ) : (
                               <span className="text-xs text-slate-300">—</span>
                             )}
@@ -390,11 +391,6 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                           {/* Height */}
                           <span className="text-center text-xs text-slate-500">
                             {member.player.height ? `${member.player.height} cm` : "—"}
-                          </span>
-
-                          {/* Date of birth */}
-                          <span className="text-center text-xs tabular-nums text-slate-500">
-                            {formattedDob ?? "—"}
                           </span>
 
                           {/* Age */}
