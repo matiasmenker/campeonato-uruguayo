@@ -8,39 +8,37 @@ import TeamsSeasonSelector from "@/components/teams-season-selector"
 
 export const dynamic = "force-dynamic"
 
-// Hero background — Pitch Night (dark green + gold)
+// Hero background — Denim Fade (mid blue wash)
 const HeroBackground = () => (
   <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
     <defs>
       <linearGradient id="base" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#052e16" />
-        <stop offset="50%" stopColor="#064e3b" />
-        <stop offset="100%" stopColor="#0a3728" />
+        <stop offset="0%" stopColor="#1e3a5f" />
+        <stop offset="50%" stopColor="#1d4ed8" />
+        <stop offset="100%" stopColor="#1e40af" />
       </linearGradient>
-      <radialGradient id="g1" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stopColor="#34d399" stopOpacity="0.1" />
-        <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+      <radialGradient id="g1" cx="20%" cy="20%" r="50%">
+        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.07" />
+        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
       </radialGradient>
-      <radialGradient id="g2" cx="80%" cy="20%" r="40%">
-        <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.12" />
-        <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+      <radialGradient id="g2" cx="80%" cy="80%" r="45%">
+        <stop offset="0%" stopColor="#0f172a" stopOpacity="0.4" />
+        <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
       </radialGradient>
-      <pattern id="stripes" x="0" y="0" width="48" height="48" patternUnits="userSpaceOnUse">
-        <rect x="0" y="0" width="24" height="48" fill="rgba(255,255,255,0.015)" />
+      <pattern id="dots" x="0" y="0" width="12" height="12" patternUnits="userSpaceOnUse">
+        <circle cx="6" cy="6" r="0.7" fill="rgba(255,255,255,0.08)" />
       </pattern>
-      <pattern id="dots" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
-        <circle cx="8" cy="8" r="0.7" fill="rgba(52,211,153,0.12)" />
+      <pattern id="diag" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect x="0" y="0" width="10" height="20" fill="rgba(255,255,255,0.02)" />
       </pattern>
     </defs>
     <rect width="100%" height="100%" fill="url(#base)" />
-    <rect width="100%" height="100%" fill="url(#stripes)" />
+    <rect width="100%" height="100%" fill="url(#diag)" />
     <rect width="100%" height="100%" fill="url(#g1)" />
     <rect width="100%" height="100%" fill="url(#g2)" />
     <rect width="100%" height="100%" fill="url(#dots)" />
-    <circle cx="50%" cy="50%" r="22%" fill="none" stroke="rgba(52,211,153,0.08)" strokeWidth="1" />
-    <circle cx="50%" cy="50%" r="2%" fill="rgba(52,211,153,0.12)" />
-    <line x1="50%" y1="0%" x2="50%" y2="100%" stroke="rgba(52,211,153,0.06)" strokeWidth="1" />
-    <rect x="35%" y="70%" width="30%" height="28%" fill="none" stroke="rgba(52,211,153,0.06)" strokeWidth="1" />
+    <circle cx="-10%" cy="110%" r="70%" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+    <circle cx="-10%" cy="110%" r="52%" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
   </svg>
 )
 
