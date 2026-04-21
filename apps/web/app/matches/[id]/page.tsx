@@ -208,10 +208,10 @@ const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: Ev
       {subEvents.map((sub, i) => (
         <span
           key={`s${i}`}
-          title={sub.minute != null ? `${isStarter ? "Sale" : "Entra"} en el minuto ${sub.minute}${sub.extraMinute != null ? `+${sub.extraMinute}` : ""}'` : "Cambio"}
-          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, borderRadius: "50%", background: "#fff", flexShrink: 0, cursor: "default" }}
+          title={sub.minute != null ? `Entra en el minuto ${sub.minute}${sub.extraMinute != null ? `+${sub.extraMinute}` : ""}'` : "Entra"}
+          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "default" }}
         >
-          {isStarter ? <SubOutIcon size={12} /> : <SubInIcon size={12} />}
+          <SubInIcon size={13} />
         </span>
       ))}
     </div>
@@ -227,14 +227,15 @@ interface PlayerTokenProps {
   assists: number
   x: number
   y: number
+  substitutedOut: boolean
+  subMinute: number | null
+  subExtraMinute: number | null
 }
 
-const PlayerToken = ({ player, events, rating, assists, x, y }: PlayerTokenProps) => {
+const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut, subMinute, subExtraMinute }: PlayerTokenProps) => {
   const fullName = player.player.displayName ?? player.player.name
   const parts = fullName.trim().split(/\s+/)
   const shortName = parts.length > 2 ? parts[parts.length - 1] : parts.slice(-2).join(" ")
-  const wasSubstituted = events.some(e => e.typeId === EVENT_SUBSTITUTION)
-  const subEvent = events.find(e => e.typeId === EVENT_SUBSTITUTION)
 
   return (
     <div
@@ -260,9 +261,9 @@ const PlayerToken = ({ player, events, rating, assists, x, y }: PlayerTokenProps
           </span>
         )}
         {/* Sub out icon — bottom right */}
-        {wasSubstituted && (
+        {substitutedOut && (
           <span
-            title={subEvent?.minute != null ? `Sale en el minuto ${subEvent.minute}${subEvent.extraMinute != null ? `+${subEvent.extraMinute}` : ""}'` : "Sale"}
+            title={subMinute != null ? `Sale en el minuto ${subMinute}${subExtraMinute != null ? `+${subExtraMinute}` : ""}'` : "Sale"}
             style={{ position: "absolute", bottom: -3, right: -3, width: 18, height: 18, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.5)", cursor: "default" }}
           >
             <SubOutIcon size={14} />
@@ -300,9 +301,18 @@ interface PitchProps {
   eventsByPlayer: Map<number, FixtureEvent[]>
   ratingByPlayer: Map<number, number>
   assistsByPlayer: Map<number, number>
+  subPairs: SubstitutionPair[]
 }
 
-const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assistsByPlayer }: PitchProps) => {
+const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assistsByPlayer, subPairs }: PitchProps) => {
+  // Build a map: playerId → { minute, extraMinute } for players who went OUT
+  const substitutedOutMap = new Map<number, { minute: number | null; extraMinute: number | null }>()
+  for (const pair of subPairs) {
+    if (pair.playerOut?.id != null) {
+      substitutedOutMap.set(pair.playerOut.id, { minute: pair.minute, extraMinute: pair.extraMinute })
+    }
+  }
+
   const renderTeam = (lineup: LineupPlayer[], isHome: boolean) => {
     const starters = lineup
       .filter(p => p.formationPosition !== null)
@@ -313,17 +323,23 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
     return rows.flatMap((rowPlayers, rowIndex) => {
       if (!rowPlayers.length) return []
       const yPos = yPositions(rowPlayers.length)
-      return rowPlayers.map((player, playerIndex) => (
-        <PlayerToken
-          key={player.id}
-          player={player}
-          events={eventsByPlayer.get(player.player.id) ?? []}
-          rating={ratingByPlayer.get(player.player.id) ?? null}
-          assists={assistsByPlayer.get(player.player.id) ?? 0}
-          x={xMap[rowIndex]}
-          y={yPos[playerIndex]}
-        />
-      ))
+      return rowPlayers.map((player, playerIndex) => {
+        const subInfo = substitutedOutMap.get(player.player.id)
+        return (
+          <PlayerToken
+            key={player.id}
+            player={player}
+            events={eventsByPlayer.get(player.player.id) ?? []}
+            rating={ratingByPlayer.get(player.player.id) ?? null}
+            assists={assistsByPlayer.get(player.player.id) ?? 0}
+            x={xMap[rowIndex]}
+            y={yPos[playerIndex]}
+            substitutedOut={subInfo != null}
+            subMinute={subInfo?.minute ?? null}
+            subExtraMinute={subInfo?.extraMinute ?? null}
+          />
+        )
+      })
     })
   }
 
@@ -710,7 +726,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
 
         {/* ── Pitch ─────────────────────────────────────────────────────────── */}
         {hasLineups ? (
-          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} />
+          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} subPairs={subPairs} />
         ) : (
           <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
             Alineación no disponible para este partido
