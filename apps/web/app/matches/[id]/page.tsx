@@ -182,10 +182,10 @@ const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: Ev
   const yellows    = events.filter(e => e.typeId === EVENT_YELLOW).length
   const yellowReds = events.filter(e => e.typeId === EVENT_YELLOW_RED).length
   const reds       = events.filter(e => e.typeId === EVENT_RED).length
-  const subEvents  = events.filter(e => e.typeId === EVENT_SUBSTITUTION)
-  const subs       = subEvents.length
+  // For starters: subs are shown as a badge on the avatar corner, not here
+  const subEvents  = isStarter ? [] : events.filter(e => e.typeId === EVENT_SUBSTITUTION)
 
-  if (!goals && !assists && !yellows && !yellowReds && !reds && !subs) return null
+  if (!goals && !assists && !yellows && !yellowReds && !reds && !subEvents.length) return null
 
   return (
     <div
@@ -233,6 +233,8 @@ const PlayerToken = ({ player, events, rating, assists, x, y }: PlayerTokenProps
   const fullName = player.player.displayName ?? player.player.name
   const parts = fullName.trim().split(/\s+/)
   const shortName = parts.length > 2 ? parts[parts.length - 1] : parts.slice(-2).join(" ")
+  const wasSubstituted = events.some(e => e.typeId === EVENT_SUBSTITUTION)
+  const subEvent = events.find(e => e.typeId === EVENT_SUBSTITUTION)
 
   return (
     <div
@@ -240,6 +242,7 @@ const PlayerToken = ({ player, events, rating, assists, x, y }: PlayerTokenProps
       style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: 120, gap: 4 }}
     >
       <div className="relative" style={{ width: 56, height: 56 }}>
+        {/* Goal / assist / card badges float above */}
         <EventBadges events={events} assists={assists} offsetBottom={2} isStarter={true} />
         <div
           className="overflow-hidden rounded-full"
@@ -247,12 +250,22 @@ const PlayerToken = ({ player, events, rating, assists, x, y }: PlayerTokenProps
         >
           <PlayerAvatar player={player.player} size={56} />
         </div>
+        {/* Jersey number — bottom left */}
         {player.jerseyNumber != null && (
           <span
             className="absolute flex items-center justify-center rounded-full font-black text-white leading-none"
             style={{ width: 18, height: 18, fontSize: 8, bottom: -3, left: -3, background: "#0f172a", boxShadow: "0 1px 4px rgba(0,0,0,0.7)" }}
           >
             {player.jerseyNumber}
+          </span>
+        )}
+        {/* Sub out icon — bottom right */}
+        {wasSubstituted && (
+          <span
+            title={subEvent?.minute != null ? `Sale en el minuto ${subEvent.minute}${subEvent.extraMinute != null ? `+${subEvent.extraMinute}` : ""}'` : "Sale"}
+            style={{ position: "absolute", bottom: -3, right: -3, width: 18, height: 18, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.5)", cursor: "default" }}
+          >
+            <SubOutIcon size={14} />
           </span>
         )}
       </div>
