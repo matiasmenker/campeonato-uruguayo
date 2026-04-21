@@ -6,7 +6,6 @@ import {
   getFixtureEvents,
   getFixtureLineups,
   getFixturePlayerRatings,
-  STAT_TYPE_RATING,
   type LineupPlayer,
   type FixtureEvent,
 } from "@/lib/matches"
@@ -31,12 +30,9 @@ const getFormationRow = (pos: number): number => {
   return 3
 }
 
-// X% positions for each row. Home team: left→right. Away team: right→left.
-// GK stays near their own goal, FWDs well separated from the centre line.
 const HOME_X: Record<number, number> = { 0: 9, 1: 23, 2: 37, 3: 48 }
 const AWAY_X: Record<number, number> = { 0: 91, 1: 77, 2: 63, 3: 52 }
 
-// Y% positions distributed evenly inside [12%, 88%]
 const yPositions = (count: number): number[] => {
   if (count === 1) return [50]
   const top = 12
@@ -45,39 +41,12 @@ const yPositions = (count: number): number[] => {
   return Array.from({ length: count }, (_, i) => top + i * step)
 }
 
-// ─── Position ring colour ─────────────────────────────────────────────────────
-// Uses positionId from the player object (SportMonks standard IDs):
-//   24 = Goalkeeper · 25 = Defender · 26 = Midfielder · 27 = Attacker
-
-const positionRingColor = (positionId: number | null): string => {
-  if (positionId === 24) return "#f59e0b" // POR → amber
-  if (positionId === 25) return "#3b82f6" // DEF → blue
-  if (positionId === 26) return "#22c55e" // MED → green
-  if (positionId === 27) return "#ef4444" // DEL → red
-  return "#94a3b8"                         // unknown → slate
-}
-
-// ─── Formation string ─────────────────────────────────────────────────────────
-// Derives "4-3-3" from starter formationPositions (excludes GK row 0)
-
-const deriveFormation = (lineup: LineupPlayer[]): string | null => {
-  const starters = lineup.filter(p => p.formationPosition !== null && p.formationPosition !== 1)
-  if (!starters.length) return null
-  const rows: Record<number, number> = {}
-  for (const player of starters) {
-    const row = getFormationRow(player.formationPosition!)
-    rows[row] = (rows[row] ?? 0) + 1
-  }
-  // rows 1, 2, 3 → e.g. "4-3-3"
-  return [rows[1] ?? 0, rows[2] ?? 0, rows[3] ?? 0].filter(n => n > 0).join("-")
-}
-
 // ─── Rating helpers ───────────────────────────────────────────────────────────
 
 const ratingBg = (rating: number): string => {
-  if (rating >= 7) return "#16a34a"   // green-600
-  if (rating >= 5) return "#ea580c"   // orange-600
-  return "#dc2626"                     // red-600
+  if (rating >= 7) return "#16a34a"
+  if (rating >= 5) return "#ea580c"
+  return "#dc2626"
 }
 
 const formatRating = (rating: number): string => {
@@ -101,20 +70,25 @@ const formatKickoffTime = (kickoffAt: string | null): string => {
 }
 
 // ─── PlayerAvatar ─────────────────────────────────────────────────────────────
+// Always white background, same circular crop
 
 const PlayerAvatar = ({ player }: { player: LineupPlayer["player"] }) => {
   const name = player.displayName ?? player.name
   if (player.imagePath && !player.imagePath.includes("placeholder")) {
     return (
-      <img src={player.imagePath} alt={name} className="h-full w-full object-cover object-top" />
+      <img
+        src={player.imagePath}
+        alt={name}
+        className="h-full w-full object-cover object-top"
+        style={{ background: "#fff" }}
+      />
     )
   }
-  // Fallback silhouette — always dark background, never white
   return (
-    <div className="h-full w-full flex items-end justify-center" style={{ background: "#334155" }}>
-      <svg viewBox="0 0 40 44" fill="none" className="w-4/5">
-        <ellipse cx="20" cy="13" rx="8" ry="9" fill="#64748b" />
-        <path d="M2 44c0-9.941 8.059-18 18-18s18 8.059 18 18" fill="#64748b" />
+    <div className="h-full w-full flex items-end justify-center" style={{ background: "#fff" }}>
+      <svg viewBox="0 0 40 48" fill="none" style={{ width: "90%", height: "90%" }}>
+        <ellipse cx="20" cy="14" rx="9" ry="10" fill="#cbd5e1" />
+        <path d="M1 48c0-10.493 8.507-19 19-19s19 8.507 19 19" fill="#cbd5e1" />
       </svg>
     </div>
   )
@@ -131,24 +105,24 @@ const EventBadges = ({ events }: { events: FixtureEvent[] }) => {
   if (!goals && !yellows && !reds && !subs) return null
 
   return (
-    <div className="flex items-center justify-center gap-0.5 flex-wrap" style={{ minHeight: 12 }}>
+    <div className="flex items-center justify-center gap-0.5 flex-wrap">
       {Array.from({ length: goals }).map((_, i) => (
-        <span key={`g${i}`} style={{ fontSize: 10, lineHeight: 1 }}>⚽</span>
+        <span key={`g${i}`} style={{ fontSize: 11, lineHeight: 1 }}>⚽</span>
       ))}
       {Array.from({ length: yellows }).map((_, i) => (
-        <span key={`y${i}`} style={{ display: "inline-block", width: 6, height: 9, borderRadius: 1, background: "#facc15" }} />
+        <span key={`y${i}`} style={{ display: "inline-block", width: 7, height: 10, borderRadius: 2, background: "#facc15", boxShadow: "0 1px 2px rgba(0,0,0,0.4)" }} />
       ))}
       {Array.from({ length: reds }).map((_, i) => (
-        <span key={`r${i}`} style={{ display: "inline-block", width: 6, height: 9, borderRadius: 1, background: "#ef4444" }} />
+        <span key={`r${i}`} style={{ display: "inline-block", width: 7, height: 10, borderRadius: 2, background: "#ef4444", boxShadow: "0 1px 2px rgba(0,0,0,0.4)" }} />
       ))}
       {Array.from({ length: subs }).map((_, i) => (
-        <span key={`s${i}`} style={{ fontSize: 9, lineHeight: 1 }}>🔄</span>
+        <span key={`s${i}`} style={{ fontSize: 10, lineHeight: 1 }}>🔄</span>
       ))}
     </div>
   )
 }
 
-// ─── PlayerToken ──────────────────────────────────────────────────────────────
+// ─── PlayerToken (pitch) ──────────────────────────────────────────────────────
 
 interface PlayerTokenProps {
   player: LineupPlayer
@@ -160,69 +134,76 @@ interface PlayerTokenProps {
 
 const PlayerToken = ({ player, events, rating, x, y }: PlayerTokenProps) => {
   const fullName = player.player.displayName ?? player.player.name
-  // Show last name; if single word keep it whole
   const parts = fullName.trim().split(/\s+/)
   const shortName = parts.length > 1 ? parts[parts.length - 1] : fullName
-  const ringColor = positionRingColor(player.player.positionId)
 
   return (
     <div
       className="absolute flex flex-col items-center"
-      style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: 60, gap: 3 }}
+      style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: 68, gap: 4 }}
     >
-      {/* Event badges above avatar */}
+      {/* Event badges */}
       <EventBadges events={events} />
 
-      {/* Avatar circle */}
-      <div className="relative" style={{ width: 46, height: 46 }}>
+      {/* Avatar — white bg, white ring, drop shadow */}
+      <div className="relative" style={{ width: 52, height: 52 }}>
         <div
           className="overflow-hidden rounded-full"
-          style={{ width: 46, height: 46, border: `2.5px solid ${ringColor}`, boxShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
+          style={{
+            width: 52, height: 52,
+            background: "#fff",
+            border: "2.5px solid rgba(255,255,255,0.95)",
+            boxShadow: "0 3px 10px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4)",
+          }}
         >
           <PlayerAvatar player={player.player} />
         </div>
 
-        {/* Jersey number — bottom-left */}
+        {/* Jersey number */}
         {player.jerseyNumber != null && (
           <span
-            className="absolute flex items-center justify-center rounded-full text-white font-black leading-none"
-            style={{ width: 15, height: 15, fontSize: 7, bottom: -2, left: -2, background: "rgba(0,0,0,0.82)", border: "1px solid rgba(255,255,255,0.35)" }}
+            className="absolute flex items-center justify-center rounded-full font-black text-white leading-none"
+            style={{
+              width: 17, height: 17, fontSize: 8,
+              bottom: -3, left: -3,
+              background: "#1e293b",
+              border: "1.5px solid rgba(255,255,255,0.5)",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.5)",
+            }}
           >
             {player.jerseyNumber}
           </span>
         )}
       </div>
 
-      {/* Name */}
-      <span
-        className="text-white font-semibold leading-none text-center"
-        style={{
-          fontSize: 9,
-          textShadow: "0 1px 4px rgba(0,0,0,1), 0 0 8px rgba(0,0,0,0.9)",
-          maxWidth: 60,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-        title={fullName}
+      {/* Name + rating pill */}
+      <div
+        className="flex items-center gap-0.5 rounded-full"
+        style={{ background: "rgba(0,0,0,0.62)", backdropFilter: "blur(4px)", padding: "2px 6px 2px 5px", maxWidth: 68 }}
       >
-        {shortName}
-      </span>
-
-      {/* Rating — always show (prominent) */}
-      <span
-        className="flex items-center justify-center rounded font-black text-white leading-none"
-        style={{
-          fontSize: 9,
-          background: rating !== null ? ratingBg(rating) : "rgba(0,0,0,0.45)",
-          minWidth: 20,
-          height: 14,
-          paddingLeft: 4,
-          paddingRight: 4,
-        }}
-      >
-        {rating !== null ? formatRating(rating) : "—"}
-      </span>
+        <span
+          className="text-white font-semibold leading-none"
+          style={{
+            fontSize: 9,
+            maxWidth: rating !== null ? 36 : 52,
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}
+          title={fullName}
+        >
+          {shortName}
+        </span>
+        {rating !== null && (
+          <>
+            <span style={{ width: 1, height: 8, background: "rgba(255,255,255,0.25)", margin: "0 2px", display: "inline-block", flexShrink: 0 }} />
+            <span
+              className="font-black text-white leading-none shrink-0 rounded"
+              style={{ fontSize: 9, background: ratingBg(rating), padding: "1px 3px" }}
+            >
+              {formatRating(rating)}
+            </span>
+          </>
+        )}
+      </div>
     </div>
   )
 }
@@ -290,24 +271,25 @@ const BenchPlayer = ({
   const name = player.player.displayName ?? player.player.name
 
   return (
-    <div className="flex flex-col items-center gap-1.5" style={{ width: 68 }}>
+    <div className="flex flex-col items-center gap-1.5" style={{ width: 72 }}>
       <EventBadges events={events} />
 
-      <div className="relative" style={{ width: 48, height: 48 }}>
+      <div className="relative" style={{ width: 52, height: 52 }}>
         <div
           className="overflow-hidden rounded-full"
           style={{
-            width: 48, height: 48,
-            border: `2.5px solid ${positionRingColor(player.player.positionId)}`,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+            width: 52, height: 52,
+            background: "#fff",
+            border: "2px solid #e2e8f0",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
           }}
         >
           <PlayerAvatar player={player.player} />
         </div>
         {player.jerseyNumber != null && (
           <span
-            className="absolute flex items-center justify-center rounded-full text-white font-black leading-none"
-            style={{ width: 16, height: 16, fontSize: 8, bottom: -2, left: -2, background: "rgba(15,23,42,0.82)", border: "1px solid rgba(255,255,255,0.2)" }}
+            className="absolute flex items-center justify-center rounded-full font-black text-white leading-none"
+            style={{ width: 17, height: 17, fontSize: 8, bottom: -2, left: -2, background: "#1e293b", border: "1.5px solid #fff" }}
           >
             {player.jerseyNumber}
           </span>
@@ -315,7 +297,7 @@ const BenchPlayer = ({
         {rating !== null && (
           <span
             className="absolute flex items-center justify-center rounded font-black text-white leading-none"
-            style={{ fontSize: 8, minWidth: 18, height: 14, paddingLeft: 3, paddingRight: 3, bottom: -3, right: -4, background: ratingBg(rating) }}
+            style={{ fontSize: 9, minWidth: 20, height: 15, paddingLeft: 4, paddingRight: 4, bottom: -4, right: -5, background: ratingBg(rating), boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
           >
             {formatRating(rating)}
           </span>
@@ -324,7 +306,7 @@ const BenchPlayer = ({
 
       <span
         className="text-center text-slate-700 font-medium leading-tight"
-        style={{ fontSize: 10, maxWidth: 68, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+        style={{ fontSize: 10, maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
         title={name}
       >
         {name}
@@ -354,18 +336,15 @@ const BenchSection = ({
 }: BenchSectionProps) => {
   const homeBench = homeLineup.filter(p => p.formationPosition === null)
   const awayBench = awayLineup.filter(p => p.formationPosition === null)
-
   if (!homeBench.length && !awayBench.length) return null
 
-  const TeamBench = ({
-    bench, teamName, teamImage,
-  }: { bench: LineupPlayer[]; teamName: string; teamImage: string | null }) => (
+  const TeamBench = ({ bench, teamName, teamImage }: { bench: LineupPlayer[]; teamName: string; teamImage: string | null }) => (
     <div className="flex flex-1 flex-col gap-4 min-w-0">
       <div className="flex flex-col items-center gap-1">
         {teamImage && <img src={teamImage} alt={teamName} className="h-8 w-8 object-contain" />}
         <span className="text-xs font-bold text-slate-600">{teamName}</span>
       </div>
-      <div className="flex flex-wrap justify-center gap-x-3 gap-y-4">
+      <div className="flex flex-wrap justify-center gap-x-3 gap-y-5">
         {bench.map(player => (
           <BenchPlayer
             key={player.id}
@@ -432,7 +411,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const fixtureId = Number(id)
   if (isNaN(fixtureId)) notFound()
 
-  const [fixtureResult, eventsResult, lineupsResult, statsResult] = await Promise.allSettled([
+  const [fixtureResult, eventsResult, lineupsResult, ratingsResult] = await Promise.allSettled([
     getFixture(fixtureId),
     getFixtureEvents(fixtureId),
     getFixtureLineups(fixtureId),
@@ -441,13 +420,13 @@ const MatchPage = async ({ params }: MatchPageProps) => {
 
   if (fixtureResult.status === "rejected") notFound()
 
-  const fixture = fixtureResult.value
-  const events  = eventsResult.status  === "fulfilled" ? eventsResult.value  : []
-  const lineups = lineupsResult.status === "fulfilled" ? lineupsResult.value : []
-  const stats   = statsResult.status   === "fulfilled" ? statsResult.value   : []
+  const fixture  = fixtureResult.value
+  const events   = eventsResult.status   === "fulfilled" ? eventsResult.value   : []
+  const lineups  = lineupsResult.status  === "fulfilled" ? lineupsResult.value  : []
+  const ratings  = ratingsResult.status  === "fulfilled" ? ratingsResult.value  : []
 
-  const homeTeam = fixture.homeTeam
-  const awayTeam = fixture.awayTeam
+  const homeTeam   = fixture.homeTeam
+  const awayTeam   = fixture.awayTeam
   const isFinished = fixture.homeScore !== null && fixture.awayScore !== null
 
   const homeLineup = lineups.filter(p => p.team?.id === homeTeam?.id)
@@ -462,7 +441,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   }
 
   const ratingByPlayer = new Map<number, number>()
-  for (const stat of stats) {
+  for (const stat of ratings) {
     const value = stat.value.normalizedValue
     if (typeof value === "number") ratingByPlayer.set(stat.player.id, value)
   }
@@ -547,47 +526,20 @@ const MatchPage = async ({ params }: MatchPageProps) => {
           </div>
         </div>
 
-        {/* ── Legend + formations ───────────────────────────────────────────── */}
-        {hasLineups && (() => {
-          const homeFormation = deriveFormation(homeLineup)
-          const awayFormation = deriveFormation(awayLineup)
-          return (
-            <div className="flex items-center justify-between px-1">
-              {/* Home team + formation */}
-              <div className="flex items-center gap-2">
-                {homeTeam?.imagePath && <img src={homeTeam.imagePath} alt={homeTeam?.name ?? ""} className="h-5 w-5 object-contain" />}
-                <span className="text-sm font-bold text-slate-700">{homeTeam?.name}</span>
-                {homeFormation && (
-                  <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-bold text-slate-500">{homeFormation}</span>
-                )}
-              </div>
-
-              {/* Position legend */}
-              <div className="flex items-center gap-3">
-                {[
-                  { label: "POR", color: "#f59e0b" },
-                  { label: "DEF", color: "#3b82f6" },
-                  { label: "MED", color: "#22c55e" },
-                  { label: "DEL", color: "#ef4444" },
-                ].map(({ label, color }) => (
-                  <div key={label} className="flex items-center gap-1">
-                    <span className="rounded-full" style={{ width: 8, height: 8, background: color, display: "inline-block" }} />
-                    <span className="text-[10px] font-medium text-slate-400">{label}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Away team + formation */}
-              <div className="flex items-center gap-2">
-                {awayFormation && (
-                  <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-bold text-slate-500">{awayFormation}</span>
-                )}
-                <span className="text-sm font-bold text-slate-700">{awayTeam?.name}</span>
-                {awayTeam?.imagePath && <img src={awayTeam.imagePath} alt={awayTeam?.name ?? ""} className="h-5 w-5 object-contain" />}
-              </div>
+        {/* ── Pitch header ──────────────────────────────────────────────────── */}
+        {hasLineups && (
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              {homeTeam?.imagePath && <img src={homeTeam.imagePath} alt={homeTeam?.name ?? ""} className="h-5 w-5 object-contain" />}
+              <span className="text-sm font-bold text-slate-700">{homeTeam?.name}</span>
             </div>
-          )
-        })()}
+            <span className="text-xs font-medium text-slate-400">Alineación</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-slate-700">{awayTeam?.name}</span>
+              {awayTeam?.imagePath && <img src={awayTeam.imagePath} alt={awayTeam?.name ?? ""} className="h-5 w-5 object-contain" />}
+            </div>
+          </div>
+        )}
 
         {/* ── Pitch ─────────────────────────────────────────────────────────── */}
         {hasLineups ? (
