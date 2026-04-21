@@ -8,18 +8,51 @@ import TeamsSeasonSelector from "@/components/teams-season-selector"
 
 export const dynamic = "force-dynamic"
 
-// Replace with a real stadium/football image path in public/ when available
-const HERO_IMAGE_PATH: string | null = null
-
-// SVG dot-grid texture — same as team detail page
-const HeroTexture = () => (
-  <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
+// Decorative hero background — gradient + geometric texture
+const HeroBackground = () => (
+  <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
     <defs>
-      <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <circle cx="2" cy="2" r="1.5" fill="rgba(255,255,255,0.08)" />
+      {/* Base gradient: deep navy → vivid blue → teal */}
+      <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#0f172a" />
+        <stop offset="40%" stopColor="#1e3a5f" />
+        <stop offset="75%" stopColor="#0d4f6c" />
+        <stop offset="100%" stopColor="#064e3b" />
+      </linearGradient>
+      {/* Radial glow top-right */}
+      <radialGradient id="glow1" cx="85%" cy="15%" r="45%">
+        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+      </radialGradient>
+      {/* Radial glow bottom-left */}
+      <radialGradient id="glow2" cx="10%" cy="90%" r="40%">
+        <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
+        <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+      </radialGradient>
+      {/* Diamond grid pattern */}
+      <pattern id="diamonds" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="40" height="40" fill="none" />
+        <rect x="0" y="0" width="40" height="1" fill="rgba(255,255,255,0.04)" />
+        <rect x="0" y="0" width="1" height="40" fill="rgba(255,255,255,0.04)" />
+      </pattern>
+      {/* Dot accent pattern */}
+      <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+        <circle cx="1.5" cy="1.5" r="1" fill="rgba(255,255,255,0.06)" />
       </pattern>
     </defs>
+    {/* Base gradient fill */}
+    <rect width="100%" height="100%" fill="url(#heroGrad)" />
+    {/* Glow accents */}
+    <rect width="100%" height="100%" fill="url(#glow1)" />
+    <rect width="100%" height="100%" fill="url(#glow2)" />
+    {/* Texture layers */}
+    <rect width="100%" height="100%" fill="url(#diamonds)" />
     <rect width="100%" height="100%" fill="url(#dots)" />
+    {/* Large decorative circle arc — bottom right */}
+    <circle cx="105%" cy="110%" r="55%" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
+    <circle cx="105%" cy="110%" r="42%" fill="none" stroke="rgba(255,255,255,0.035)" strokeWidth="1" />
+    {/* Small decorative circles — top left */}
+    <circle cx="-5%" cy="-10%" r="30%" fill="none" stroke="rgba(59,130,246,0.08)" strokeWidth="1" />
   </svg>
 )
 
@@ -52,22 +85,11 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
 
         {/* Hero — same pattern as team detail page */}
         <div className="overflow-hidden rounded-2xl shadow-lg">
-          <div
-            className="relative min-h-44 bg-slate-900"
-            style={
-              HERO_IMAGE_PATH
-                ? {
-                    backgroundImage: `url(${HERO_IMAGE_PATH})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center 40%",
-                  }
-                : undefined
-            }
-          >
-            {!HERO_IMAGE_PATH && <HeroTexture />}
+          <div className="relative min-h-44 bg-slate-900">
+            <HeroBackground />
 
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/55 to-black/85" />
+            {/* Gradient overlay — darkens bottom for text legibility */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
 
             {/* Season selector — top right */}
             {seasons.length > 1 && (
