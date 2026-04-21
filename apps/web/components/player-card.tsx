@@ -1,7 +1,7 @@
 // Shared player card component — same design as home page top players.
 // Used in: home page leaders, team detail squad grid.
 
-import { getRatingFill } from "@/lib/rating"
+import { getRatingFill, getRatingColors } from "@/lib/rating"
 
 const POSITION_CONFIG: Record<number, { label: string; bg: string }> = {
   24: { label: "AR", bg: "#f59e0b" },
@@ -12,7 +12,6 @@ const POSITION_CONFIG: Record<number, { label: string; bg: string }> = {
 
 const getPositionConfig = (positionId: number | null) =>
   positionId ? (POSITION_CONFIG[positionId] ?? { label: "—", bg: "#94a3b8" }) : { label: "—", bg: "#94a3b8" }
-
 
 interface PlayerCardProps {
   name: string
@@ -40,7 +39,8 @@ const PlayerCard = ({ name, imagePath, positionId, teamImagePath, rating }: Play
   const first = parts[0]
   const last = parts.slice(1).join(" ")
   const positionConfig = getPositionConfig(positionId)
-  const ratingColor = rating != null ? getRatingFill(rating) : "#94a3b8"
+  const ratingColors = rating != null ? getRatingColors(rating) : null
+  const ratingFill = ratingColors?.fill ?? "#94a3b8"
 
   return (
     <article
@@ -52,8 +52,11 @@ const PlayerCard = ({ name, imagePath, positionId, teamImagePath, rating }: Play
         border: "1px solid #e2e8f0",
       }}
     >
+      {/* Top color bar — rating tier indicator */}
+      <div style={{ position: "absolute", inset: 0, top: 0, height: 4, background: ratingFill, zIndex: 40 }} />
+
       {/* Player name */}
-      <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-center px-3 pt-2.5" style={{ height: 40 }}>
+      <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-center px-3 pt-3.5" style={{ height: 44 }}>
         <div className="text-center">
           {last ? (
             <>
@@ -67,7 +70,7 @@ const PlayerCard = ({ name, imagePath, positionId, teamImagePath, rating }: Play
       </div>
 
       {/* Photo + position badge */}
-      <div className="absolute inset-x-0 z-20 flex items-center justify-center" style={{ top: 42, bottom: 50 }}>
+      <div className="absolute inset-x-0 z-20 flex items-center justify-center" style={{ top: 44, bottom: 50 }}>
         <div className="relative">
           <PlayerCirclePhoto src={imagePath} alt={name} />
           <div
@@ -99,13 +102,19 @@ const PlayerCard = ({ name, imagePath, positionId, teamImagePath, rating }: Play
         <div className="absolute inset-x-0 top-0 h-px bg-slate-200" />
         <div className="relative z-10 flex h-full items-center justify-between px-3">
           {rating != null ? (
-            <div className="flex items-center gap-1">
-              <span className="text-xl font-black tabular-nums" style={{ color: ratingColor }}>
-                {rating.toFixed(1)}
-              </span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: ratingColor, opacity: 0.75, flexShrink: 0 }}>
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
+            <div
+              className="flex items-center justify-center rounded-lg font-black text-white tabular-nums"
+              style={{
+                background: ratingFill,
+                fontSize: 13,
+                minWidth: 36,
+                height: 22,
+                paddingLeft: 6,
+                paddingRight: 6,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {rating.toFixed(1)}
             </div>
           ) : (
             <div className="h-5 w-10" />
