@@ -209,9 +209,9 @@ const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: Ev
         <span
           key={`s${i}`}
           title={sub.minute != null ? `${isStarter ? "Sale" : "Entra"} en el minuto ${sub.minute}${sub.extraMinute != null ? `+${sub.extraMinute}` : ""}'` : "Cambio"}
-          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "default" }}
+          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, borderRadius: "50%", background: "#fff", flexShrink: 0, cursor: "default" }}
         >
-          {isStarter ? <SubOutIcon size={13} /> : <SubInIcon size={13} />}
+          {isStarter ? <SubOutIcon size={12} /> : <SubInIcon size={12} />}
         </span>
       ))}
     </div>
