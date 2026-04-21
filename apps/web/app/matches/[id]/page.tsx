@@ -46,13 +46,15 @@ const yPositions = (count: number): number[] => {
 }
 
 // ─── Position ring colour ─────────────────────────────────────────────────────
+// Uses positionId from the player object (SportMonks standard IDs):
+//   24 = Goalkeeper · 25 = Defender · 26 = Midfielder · 27 = Attacker
 
-const positionRingColor = (formationPosition: number | null): string => {
-  if (formationPosition === null)    return "#94a3b8" // bench / unknown
-  if (formationPosition === 1)       return "#f59e0b" // GK  → amber
-  if (formationPosition <= 5)        return "#3b82f6" // DEF → blue
-  if (formationPosition <= 8)        return "#22c55e" // MID → green
-  return "#ef4444"                                     // FWD → red
+const positionRingColor = (positionId: number | null): string => {
+  if (positionId === 24) return "#f59e0b" // POR → amber
+  if (positionId === 25) return "#3b82f6" // DEF → blue
+  if (positionId === 26) return "#22c55e" // MED → green
+  if (positionId === 27) return "#ef4444" // DEL → red
+  return "#94a3b8"                         // unknown → slate
 }
 
 // ─── Formation string ─────────────────────────────────────────────────────────
@@ -161,7 +163,7 @@ const PlayerToken = ({ player, events, rating, x, y }: PlayerTokenProps) => {
   // Show last name; if single word keep it whole
   const parts = fullName.trim().split(/\s+/)
   const shortName = parts.length > 1 ? parts[parts.length - 1] : fullName
-  const ringColor = positionRingColor(player.formationPosition)
+  const ringColor = positionRingColor(player.player.positionId)
 
   return (
     <div
@@ -296,7 +298,7 @@ const BenchPlayer = ({
           className="overflow-hidden rounded-full"
           style={{
             width: 48, height: 48,
-            border: `2.5px solid ${positionRingColor(null)}`,
+            border: `2.5px solid ${positionRingColor(player.player.positionId)}`,
             boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
           }}
         >
