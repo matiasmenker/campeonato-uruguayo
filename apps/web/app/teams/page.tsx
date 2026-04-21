@@ -8,37 +8,48 @@ import TeamsSeasonSelector from "@/components/teams-season-selector"
 
 export const dynamic = "force-dynamic"
 
-// Hero background — Denim Fade (mid blue wash)
+// Hero background — brand blues (primary hue ~250, chart palette)
 const HeroBackground = () => (
   <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
     <defs>
+      {/* Base: dark navy → primary blue → deep blue — brand hue 250 */}
       <linearGradient id="base" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#1e3a5f" />
-        <stop offset="50%" stopColor="#1d4ed8" />
-        <stop offset="100%" stopColor="#1e40af" />
+        <stop offset="0%"   stopColor="#080e24" />
+        <stop offset="40%"  stopColor="#162265" />
+        <stop offset="75%"  stopColor="#2040b0" />
+        <stop offset="100%" stopColor="#1a358f" />
       </linearGradient>
-      <radialGradient id="g1" cx="20%" cy="20%" r="50%">
-        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.07" />
-        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+      {/* Bright primary glow — top right */}
+      <radialGradient id="gA" cx="85%" cy="10%" r="45%">
+        <stop offset="0%" stopColor="#5b8def" stopOpacity="0.32" />
+        <stop offset="100%" stopColor="#5b8def" stopOpacity="0" />
       </radialGradient>
-      <radialGradient id="g2" cx="80%" cy="80%" r="45%">
-        <stop offset="0%" stopColor="#0f172a" stopOpacity="0.4" />
-        <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
+      {/* Mid-blue wash — center */}
+      <radialGradient id="gB" cx="40%" cy="55%" r="50%">
+        <stop offset="0%" stopColor="#3461d1" stopOpacity="0.2" />
+        <stop offset="100%" stopColor="#3461d1" stopOpacity="0" />
       </radialGradient>
-      <pattern id="dots" x="0" y="0" width="12" height="12" patternUnits="userSpaceOnUse">
-        <circle cx="6" cy="6" r="0.7" fill="rgba(255,255,255,0.08)" />
-      </pattern>
-      <pattern id="diag" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-        <rect x="0" y="0" width="10" height="20" fill="rgba(255,255,255,0.02)" />
+      {/* Deep shadow — bottom right */}
+      <radialGradient id="gC" cx="95%" cy="95%" r="45%">
+        <stop offset="0%" stopColor="#06091a" stopOpacity="0.5" />
+        <stop offset="100%" stopColor="#06091a" stopOpacity="0" />
+      </radialGradient>
+      {/* Subtle dot texture */}
+      <pattern id="dots" x="0" y="0" width="18" height="18" patternUnits="userSpaceOnUse">
+        <circle cx="9" cy="9" r="0.8" fill="rgba(160,185,255,0.1)" />
       </pattern>
     </defs>
     <rect width="100%" height="100%" fill="url(#base)" />
-    <rect width="100%" height="100%" fill="url(#diag)" />
-    <rect width="100%" height="100%" fill="url(#g1)" />
-    <rect width="100%" height="100%" fill="url(#g2)" />
+    <rect width="100%" height="100%" fill="url(#gA)" />
+    <rect width="100%" height="100%" fill="url(#gB)" />
+    <rect width="100%" height="100%" fill="url(#gC)" />
     <rect width="100%" height="100%" fill="url(#dots)" />
-    <circle cx="-10%" cy="110%" r="70%" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-    <circle cx="-10%" cy="110%" r="52%" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+    {/* Concentric arcs — bottom left */}
+    <circle cx="-8%" cy="115%" r="72%" fill="none" stroke="rgba(91,141,239,0.1)" strokeWidth="1.5" />
+    <circle cx="-8%" cy="115%" r="55%" fill="none" stroke="rgba(91,141,239,0.07)" strokeWidth="1" />
+    <circle cx="-8%" cy="115%" r="38%" fill="none" stroke="rgba(91,141,239,0.05)" strokeWidth="0.5" />
+    {/* Accent arc — top right */}
+    <circle cx="110%" cy="-10%" r="50%" fill="none" stroke="rgba(160,185,255,0.07)" strokeWidth="1" />
   </svg>
 )
 
