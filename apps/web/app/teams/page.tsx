@@ -8,51 +8,76 @@ import TeamsSeasonSelector from "@/components/teams-season-selector"
 
 export const dynamic = "force-dynamic"
 
-// Decorative hero background — gradient + geometric texture
+// Decorative hero background — layered blues with geometric accents
 const HeroBackground = () => (
   <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
     <defs>
-      {/* Base gradient: deep navy → vivid blue → teal */}
-      <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0f172a" />
-        <stop offset="40%" stopColor="#1e3a5f" />
-        <stop offset="75%" stopColor="#0d4f6c" />
-        <stop offset="100%" stopColor="#064e3b" />
+      {/* Main diagonal gradient — midnight blue → royal blue → indigo */}
+      <linearGradient id="base" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#060d1f" />
+        <stop offset="35%" stopColor="#0a2456" />
+        <stop offset="65%" stopColor="#1a3a8f" />
+        <stop offset="100%" stopColor="#312e81" />
       </linearGradient>
-      {/* Radial glow top-right */}
-      <radialGradient id="glow1" cx="85%" cy="15%" r="45%">
-        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
-        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+      {/* Horizontal sweep — adds warm cobalt band */}
+      <linearGradient id="sweep" x1="0%" y1="50%" x2="100%" y2="50%">
+        <stop offset="0%" stopColor="#1d4ed8" stopOpacity="0" />
+        <stop offset="40%" stopColor="#2563eb" stopOpacity="0.18" />
+        <stop offset="100%" stopColor="#4f46e5" stopOpacity="0.08" />
+      </linearGradient>
+      {/* Glow — electric blue, top-right */}
+      <radialGradient id="glowA" cx="80%" cy="10%" r="50%">
+        <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.28" />
+        <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
       </radialGradient>
-      {/* Radial glow bottom-left */}
-      <radialGradient id="glow2" cx="10%" cy="90%" r="40%">
-        <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
-        <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+      {/* Glow — cyan, center-left */}
+      <radialGradient id="glowB" cx="15%" cy="55%" r="38%">
+        <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.18" />
+        <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
       </radialGradient>
-      {/* Diamond grid pattern */}
-      <pattern id="diamonds" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-        <rect width="40" height="40" fill="none" />
-        <rect x="0" y="0" width="40" height="1" fill="rgba(255,255,255,0.04)" />
-        <rect x="0" y="0" width="1" height="40" fill="rgba(255,255,255,0.04)" />
+      {/* Glow — violet, bottom-right */}
+      <radialGradient id="glowC" cx="90%" cy="95%" r="40%">
+        <stop offset="0%" stopColor="#818cf8" stopOpacity="0.22" />
+        <stop offset="100%" stopColor="#818cf8" stopOpacity="0" />
+      </radialGradient>
+      {/* Fine crosshatch */}
+      <pattern id="hatch" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
+        <line x1="0" y1="0" x2="0" y2="16" stroke="rgba(255,255,255,0.035)" strokeWidth="0.5" />
       </pattern>
-      {/* Dot accent pattern */}
-      <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-        <circle cx="1.5" cy="1.5" r="1" fill="rgba(255,255,255,0.06)" />
+      {/* Hex-dot grid */}
+      <pattern id="hexdots" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
+        <circle cx="0"  cy="0"  r="1.2" fill="rgba(148,163,255,0.12)" />
+        <circle cx="14" cy="14" r="1.2" fill="rgba(148,163,255,0.07)" />
+        <circle cx="28" cy="0"  r="1.2" fill="rgba(148,163,255,0.12)" />
+        <circle cx="0"  cy="28" r="1.2" fill="rgba(148,163,255,0.12)" />
+        <circle cx="28" cy="28" r="1.2" fill="rgba(148,163,255,0.12)" />
       </pattern>
     </defs>
-    {/* Base gradient fill */}
-    <rect width="100%" height="100%" fill="url(#heroGrad)" />
-    {/* Glow accents */}
-    <rect width="100%" height="100%" fill="url(#glow1)" />
-    <rect width="100%" height="100%" fill="url(#glow2)" />
-    {/* Texture layers */}
-    <rect width="100%" height="100%" fill="url(#diamonds)" />
-    <rect width="100%" height="100%" fill="url(#dots)" />
-    {/* Large decorative circle arc — bottom right */}
-    <circle cx="105%" cy="110%" r="55%" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
-    <circle cx="105%" cy="110%" r="42%" fill="none" stroke="rgba(255,255,255,0.035)" strokeWidth="1" />
-    {/* Small decorative circles — top left */}
-    <circle cx="-5%" cy="-10%" r="30%" fill="none" stroke="rgba(59,130,246,0.08)" strokeWidth="1" />
+
+    {/* Base */}
+    <rect width="100%" height="100%" fill="url(#base)" />
+
+    {/* Color sweeps */}
+    <rect width="100%" height="100%" fill="url(#sweep)" />
+    <rect width="100%" height="100%" fill="url(#glowA)" />
+    <rect width="100%" height="100%" fill="url(#glowB)" />
+    <rect width="100%" height="100%" fill="url(#glowC)" />
+
+    {/* Texture */}
+    <rect width="100%" height="100%" fill="url(#hatch)" />
+    <rect width="100%" height="100%" fill="url(#hexdots)" />
+
+    {/* Decorative arcs — large sphere suggestion bottom-right */}
+    <circle cx="108%" cy="120%" r="65%" fill="none" stroke="rgba(99,102,241,0.12)" strokeWidth="1.5" />
+    <circle cx="108%" cy="120%" r="50%" fill="none" stroke="rgba(99,102,241,0.09)" strokeWidth="1" />
+    <circle cx="108%" cy="120%" r="36%" fill="none" stroke="rgba(99,102,241,0.06)" strokeWidth="0.5" />
+
+    {/* Accent arc — top-left */}
+    <circle cx="-8%" cy="-15%" r="38%" fill="none" stroke="rgba(96,165,250,0.1)" strokeWidth="1" />
+
+    {/* Diagonal accent line */}
+    <line x1="55%" y1="0%" x2="100%" y2="60%" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+    <line x1="60%" y1="0%" x2="100%" y2="55%" stroke="rgba(255,255,255,0.025)" strokeWidth="0.5" />
   </svg>
 )
 
