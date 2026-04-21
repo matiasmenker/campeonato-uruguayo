@@ -1,13 +1,13 @@
-import type { SquadMembership, Player, Team, Season, Prisma } from "db";
+import type { SquadMembership, Player, Team, Season, Country, Prisma } from "db";
 import { getPrisma } from "../../database/index.js";
 import type { SquadMembershipsQuery } from "./squad-memberships.contracts.js";
 type SquadMembershipWithRelations = SquadMembership & {
-  player: Player;
+  player: Player & { country: Country | null };
   team: Team;
   season: Season;
 };
 const includeRelations = {
-  player: true,
+  player: { include: { country: true } },
   team: true,
   season: true,
 } as const;

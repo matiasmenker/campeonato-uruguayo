@@ -6,7 +6,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamSeasonSelector from "@/components/team-season-selector"
 import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, type SquadMember, type TeamFixture } from "@/lib/teams"
 import { getSeasons, getStages, getSeasonChampion } from "@/lib/seasons"
-import { getSquadRatingMap } from "@/lib/metrics"
 
 export const dynamic = "force-dynamic"
 
@@ -173,17 +172,15 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     stage.name.toLowerCase() === INTERMEDIATE_ROUND_FINAL_NAME
   ) ?? null
 
-  const [squadResult, fixturesResult, coachResult, ratingMapResult] = await Promise.allSettled([
+  const [squadResult, fixturesResult, coachResult] = await Promise.allSettled([
     getTeamSquad(teamId, selectedSeason.id),
     getTeamFixtures(teamId, selectedSeason.id, 15),
     getTeamCoach(teamId, selectedSeason.id),
-    getSquadRatingMap(teamId, selectedSeason.id),
   ])
 
   const squad = squadResult.status === "fulfilled" ? squadResult.value : []
   const allFixtures = fixturesResult.status === "fulfilled" ? fixturesResult.value : []
   const coach = coachResult.status === "fulfilled" ? coachResult.value : null
-  const ratingMap = ratingMapResult.status === "fulfilled" ? ratingMapResult.value : new Map<number, number>()
 
   // Resolve champion sequentially: Championship Finals → Intermediate Round Final fallback
   let isChampion = false
@@ -306,6 +303,18 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 
           {/* Squad table */}
           <div className="flex flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+            {/* Table header */}
+            {squad.length > 0 && (
+              <div className="grid grid-cols-[28px_36px_1fr_40px_72px_64px_48px] items-center border-b border-slate-200 bg-slate-50 px-4 py-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">#</span>
+                <span />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Player</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Nat.</span>
+                <span className="text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">Height</span>
+                <span className="text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">Date of birth</span>
+                <span className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400">Age</span>
+              </div>
+            )}
             {squad.length === 0 ? (
               <div className="flex h-36 items-center justify-center text-sm text-slate-400">
                 No squad data available for {selectedSeason.name}
@@ -317,28 +326,34 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                 return (
                   <div key={positionId}>
                     {/* Position group header */}
-                    <div className="border-b border-slate-100 bg-slate-50 px-4 py-2">
+                    <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-1.5">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                         {POSITION_LABELS[positionId]}
                       </p>
                     </div>
                     {/* Player rows */}
                     {members.map((member, index) => {
-                      const rating = ratingMap.get(member.player.id) ?? null
                       const displayName = member.player.displayName ?? member.player.name
                       const isLast = index === members.length - 1
+                      const dob = member.player.dateOfBirth ? new Date(member.player.dateOfBirth) : null
+                      const age = dob
+                        ? Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+                        : null
+                      const formattedDob = dob
+                        ? new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }).format(dob)
+                        : null
                       return (
                         <div
                           key={member.id}
-                          className={`flex items-center gap-3 px-4 py-2.5 ${!isLast ? "border-b border-slate-100" : ""}`}
+                          className={`grid grid-cols-[28px_36px_1fr_40px_72px_64px_48px] items-center gap-0 px-4 py-2 ${!isLast ? "border-b border-slate-100" : ""}`}
                         >
                           {/* Shirt number */}
-                          <span className="w-5 shrink-0 text-center text-xs font-medium text-slate-300">
+                          <span className="text-xs font-medium text-slate-300">
                             {member.shirtNumber ?? "—"}
                           </span>
 
                           {/* Photo */}
-                          <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
+                          <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
                             {member.player.imagePath && !member.player.imagePath.includes("placeholder") ? (
                               <img
                                 src={member.player.imagePath}
@@ -354,45 +369,38 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                           </div>
 
                           {/* Name */}
-                          <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900">
+                          <span className="min-w-0 truncate pr-2 text-sm font-medium text-slate-900">
                             {displayName}
                           </span>
 
-                          {/* Rating */}
-                          {rating != null ? (
-                            <div className="flex shrink-0 items-center gap-1">
-                              <span
-                                className="text-sm font-black tabular-nums"
-                                style={{
-                                  color:
-                                    rating >= 8.0 ? "#22c55e"
-                                    : rating >= 7.0 ? "#38bdf8"
-                                    : rating >= 6.0 ? "#f97316"
-                                    : "#ef4444",
-                                }}
-                              >
-                                {rating.toFixed(1)}
-                              </span>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                                style={{
-                                  color:
-                                    rating >= 8.0 ? "#22c55e"
-                                    : rating >= 7.0 ? "#38bdf8"
-                                    : rating >= 6.0 ? "#f97316"
-                                    : "#ef4444",
-                                  opacity: 0.7,
-                                }}
-                              >
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                              </svg>
-                            </div>
-                          ) : (
-                            <span className="w-10 shrink-0" />
-                          )}
+                          {/* Nationality flag */}
+                          <div className="flex items-center gap-1">
+                            {member.player.nationality?.imageUrl ? (
+                              <img
+                                src={member.player.nationality.imageUrl}
+                                alt={member.player.nationality.name}
+                                className="h-3.5 w-5 rounded-sm object-cover"
+                                title={member.player.nationality.name}
+                              />
+                            ) : (
+                              <span className="text-xs text-slate-300">—</span>
+                            )}
+                          </div>
+
+                          {/* Height */}
+                          <span className="text-center text-xs text-slate-500">
+                            {member.player.height ? `${member.player.height} cm` : "—"}
+                          </span>
+
+                          {/* Date of birth */}
+                          <span className="text-center text-xs tabular-nums text-slate-500">
+                            {formattedDob ?? "—"}
+                          </span>
+
+                          {/* Age */}
+                          <span className="text-right text-xs text-slate-500">
+                            {age != null ? `${age} yrs` : "—"}
+                          </span>
                         </div>
                       )
                     })}

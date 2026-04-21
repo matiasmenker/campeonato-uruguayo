@@ -79,6 +79,9 @@ export interface SquadMember {
     displayName: string | null
     imagePath: string | null
     positionId: number | null
+    dateOfBirth: string | null
+    height: number | null
+    nationality: { name: string; imageUrl: string | null } | null
   }
   positionId: number | null
   shirtNumber: number | null

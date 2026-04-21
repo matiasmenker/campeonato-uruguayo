@@ -1,19 +1,33 @@
-import type { SquadMembership, Player, Team, Season } from "db";
-import { toPlayerSummary } from "../players/players.mapper.js";
+import type { SquadMembership, Player, Team, Season, Country } from "db";
 import { toTeamSummary } from "../teams/teams.mapper.js";
 import { toSeasonSummary } from "../competition/competition.mapper.js";
-import type { SquadMembershipContract } from "./squad-memberships.contracts.js";
+import type { SquadMembershipContract, SquadPlayerSummary } from "./squad-memberships.contracts.js";
+
 type SquadMembershipWithRelations = SquadMembership & {
-  player: Player;
+  player: Player & { country: Country | null };
   team: Team;
   season: Season;
 };
+
+const toSquadPlayerSummary = (player: Player & { country: Country | null }): SquadPlayerSummary => ({
+  id: player.id,
+  name: player.name,
+  displayName: player.displayName,
+  imagePath: player.imagePath,
+  positionId: player.positionId,
+  dateOfBirth: player.dateOfBirth?.toISOString() ?? null,
+  height: player.height,
+  nationality: player.country
+    ? { name: player.country.name, imageUrl: player.country.imageUrl }
+    : null,
+});
+
 export const toSquadMembershipContract = (
   membership: SquadMembershipWithRelations
 ): SquadMembershipContract => {
   return {
     id: membership.id,
-    player: toPlayerSummary(membership.player),
+    player: toSquadPlayerSummary(membership.player),
     team: toTeamSummary(membership.team),
     season: toSeasonSummary(membership.season),
     positionId: membership.positionId,

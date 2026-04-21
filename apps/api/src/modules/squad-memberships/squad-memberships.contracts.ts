@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { paginationQuerySchema } from "../../contracts/pagination.js";
 import type { TeamSummary } from "../teams/teams.contracts.js";
-import type { PlayerSummary } from "../players/players.contracts.js";
 import type { SeasonSummary } from "../competition/competition.contracts.js";
 
 export const squadMembershipsQuerySchema = paginationQuerySchema.extend({
@@ -26,9 +25,20 @@ export const teamSquadQuerySchema = z.object({
 
 export type TeamSquadQuery = z.infer<typeof teamSquadQuerySchema>;
 
+export interface SquadPlayerSummary {
+  id: number;
+  name: string;
+  displayName: string | null;
+  imagePath: string | null;
+  positionId: number | null;
+  dateOfBirth: string | null;
+  height: number | null;
+  nationality: { name: string; imageUrl: string | null } | null;
+}
+
 export interface SquadMembershipContract {
   id: number;
-  player: PlayerSummary;
+  player: SquadPlayerSummary;
   team: TeamSummary;
   season: SeasonSummary;
   positionId: number | null;
