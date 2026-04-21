@@ -95,8 +95,16 @@ const PlayerAvatar = ({ player }: { player: LineupPlayer["player"] }) => {
 }
 
 // ─── EventBadges ──────────────────────────────────────────────────────────────
+// Rendered inside a relative container — always absolutely positioned above
+// the avatar circle so they never affect layout flow.
 
-const EventBadges = ({ events }: { events: FixtureEvent[] }) => {
+interface EventBadgesProps {
+  events: FixtureEvent[]
+  // How far above the circle's top edge (positive = further up)
+  offsetBottom?: number
+}
+
+const EventBadges = ({ events, offsetBottom = 0 }: EventBadgesProps) => {
   const goals   = events.filter(e => e.typeId === EVENT_GOAL).length
   const yellows = events.filter(e => e.typeId === EVENT_YELLOW).length
   const reds    = events.filter(e => e.typeId === EVENT_RED || e.typeId === EVENT_YELLOW_RED).length
@@ -105,18 +113,21 @@ const EventBadges = ({ events }: { events: FixtureEvent[] }) => {
   if (!goals && !yellows && !reds && !subs) return null
 
   return (
-    <div className="flex items-center justify-center gap-0.5 flex-wrap">
+    <div
+      className="absolute flex items-center justify-center gap-0.5 flex-wrap"
+      style={{ bottom: `calc(100% + ${offsetBottom}px)`, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap" }}
+    >
       {Array.from({ length: goals }).map((_, i) => (
-        <span key={`g${i}`} style={{ fontSize: 11, lineHeight: 1 }}>⚽</span>
+        <span key={`g${i}`} style={{ fontSize: 12, lineHeight: 1 }}>⚽</span>
       ))}
       {Array.from({ length: yellows }).map((_, i) => (
-        <span key={`y${i}`} style={{ display: "inline-block", width: 7, height: 10, borderRadius: 2, background: "#facc15", boxShadow: "0 1px 2px rgba(0,0,0,0.4)" }} />
+        <span key={`y${i}`} style={{ display: "inline-block", width: 8, height: 11, borderRadius: 2, background: "#facc15", boxShadow: "0 1px 3px rgba(0,0,0,0.5)" }} />
       ))}
       {Array.from({ length: reds }).map((_, i) => (
-        <span key={`r${i}`} style={{ display: "inline-block", width: 7, height: 10, borderRadius: 2, background: "#ef4444", boxShadow: "0 1px 2px rgba(0,0,0,0.4)" }} />
+        <span key={`r${i}`} style={{ display: "inline-block", width: 8, height: 11, borderRadius: 2, background: "#ef4444", boxShadow: "0 1px 3px rgba(0,0,0,0.5)" }} />
       ))}
       {Array.from({ length: subs }).map((_, i) => (
-        <span key={`s${i}`} style={{ fontSize: 10, lineHeight: 1 }}>🔄</span>
+        <span key={`s${i}`} style={{ fontSize: 11, lineHeight: 1 }}>🔄</span>
       ))}
     </div>
   )
@@ -135,40 +146,41 @@ interface PlayerTokenProps {
 const PlayerToken = ({ player, events, rating, x, y }: PlayerTokenProps) => {
   const fullName = player.player.displayName ?? player.player.name
   const parts = fullName.trim().split(/\s+/)
-  const shortName = parts.length > 1 ? parts[parts.length - 1] : fullName
+  // Use last two words max so names like "Bentancourt" fit but "Washington Aguerre" also works
+  const shortName = parts.length > 2 ? parts[parts.length - 1] : parts.slice(-2).join(" ")
 
   return (
     <div
       className="absolute flex flex-col items-center"
-      style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: 68, gap: 4 }}
+      style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: 80, gap: 5 }}
     >
-      {/* Event badges */}
-      <EventBadges events={events} />
+      {/* Avatar + events (events absolutely positioned, no layout impact) */}
+      <div className="relative" style={{ width: 56, height: 56 }}>
+        {/* Event badges float above the circle */}
+        <EventBadges events={events} offsetBottom={2} />
 
-      {/* Avatar — white bg, white ring, drop shadow */}
-      <div className="relative" style={{ width: 52, height: 52 }}>
         <div
           className="overflow-hidden rounded-full"
           style={{
-            width: 52, height: 52,
+            width: 56, height: 56,
             background: "#fff",
             border: "2.5px solid rgba(255,255,255,0.95)",
-            boxShadow: "0 3px 10px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.4)",
           }}
         >
           <PlayerAvatar player={player.player} />
         </div>
 
-        {/* Jersey number */}
+        {/* Jersey number — bottom-left of circle */}
         {player.jerseyNumber != null && (
           <span
             className="absolute flex items-center justify-center rounded-full font-black text-white leading-none"
             style={{
-              width: 17, height: 17, fontSize: 8,
+              width: 18, height: 18, fontSize: 8,
               bottom: -3, left: -3,
               background: "#1e293b",
-              border: "1.5px solid rgba(255,255,255,0.5)",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.5)",
+              border: "2px solid rgba(255,255,255,0.6)",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.6)",
             }}
           >
             {player.jerseyNumber}
@@ -176,34 +188,38 @@ const PlayerToken = ({ player, events, rating, x, y }: PlayerTokenProps) => {
         )}
       </div>
 
-      {/* Name + rating pill */}
-      <div
-        className="flex items-center gap-0.5 rounded-full"
-        style={{ background: "rgba(0,0,0,0.62)", backdropFilter: "blur(4px)", padding: "2px 6px 2px 5px", maxWidth: 68 }}
+      {/* Name — no bar, plain text with strong shadow */}
+      <span
+        className="text-white font-bold leading-tight text-center"
+        style={{
+          fontSize: 10,
+          textShadow: "0 1px 5px rgba(0,0,0,1), 0 0 10px rgba(0,0,0,0.95)",
+          maxWidth: 80,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+        title={fullName}
       >
-        <span
-          className="text-white font-semibold leading-none"
-          style={{
-            fontSize: 9,
-            maxWidth: rating !== null ? 36 : 52,
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          }}
-          title={fullName}
-        >
-          {shortName}
-        </span>
-        {rating !== null && (
-          <>
-            <span style={{ width: 1, height: 8, background: "rgba(255,255,255,0.25)", margin: "0 2px", display: "inline-block", flexShrink: 0 }} />
-            <span
-              className="font-black text-white leading-none shrink-0 rounded"
-              style={{ fontSize: 9, background: ratingBg(rating), padding: "1px 3px" }}
-            >
-              {formatRating(rating)}
-            </span>
-          </>
-        )}
-      </div>
+        {shortName}
+      </span>
+
+      {/* Rating — always shown, colored pill */}
+      <span
+        className="flex items-center justify-center rounded-md font-black text-white leading-none"
+        style={{
+          fontSize: 10,
+          background: rating !== null ? ratingBg(rating) : "rgba(0,0,0,0.4)",
+          minWidth: 28,
+          height: 16,
+          paddingLeft: 5,
+          paddingRight: 5,
+          marginTop: -2,
+          boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
+        }}
+      >
+        {rating !== null ? formatRating(rating) : "—"}
+      </span>
     </div>
   )
 }
@@ -271,45 +287,54 @@ const BenchPlayer = ({
   const name = player.player.displayName ?? player.player.name
 
   return (
-    <div className="flex flex-col items-center gap-1.5" style={{ width: 72 }}>
-      <EventBadges events={events} />
+    <div className="flex flex-col items-center gap-2" style={{ width: 76 }}>
+      {/* Avatar with absolute event badges */}
+      <div className="relative" style={{ width: 52, height: 52, marginTop: 16 }}>
+        <EventBadges events={events} offsetBottom={2} />
 
-      <div className="relative" style={{ width: 52, height: 52 }}>
         <div
           className="overflow-hidden rounded-full"
           style={{
             width: 52, height: 52,
             background: "#fff",
             border: "2px solid #e2e8f0",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
           }}
         >
           <PlayerAvatar player={player.player} />
         </div>
+
         {player.jerseyNumber != null && (
           <span
             className="absolute flex items-center justify-center rounded-full font-black text-white leading-none"
-            style={{ width: 17, height: 17, fontSize: 8, bottom: -2, left: -2, background: "#1e293b", border: "1.5px solid #fff" }}
+            style={{ width: 17, height: 17, fontSize: 8, bottom: -2, left: -2, background: "#1e293b", border: "2px solid #fff" }}
           >
             {player.jerseyNumber}
           </span>
         )}
-        {rating !== null && (
-          <span
-            className="absolute flex items-center justify-center rounded font-black text-white leading-none"
-            style={{ fontSize: 9, minWidth: 20, height: 15, paddingLeft: 4, paddingRight: 4, bottom: -4, right: -5, background: ratingBg(rating), boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
-          >
-            {formatRating(rating)}
-          </span>
-        )}
       </div>
 
+      {/* Name */}
       <span
-        className="text-center text-slate-700 font-medium leading-tight"
-        style={{ fontSize: 10, maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+        className="text-center text-slate-700 font-semibold leading-tight"
+        style={{ fontSize: 10, maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
         title={name}
       >
         {name}
+      </span>
+
+      {/* Rating */}
+      <span
+        className="flex items-center justify-center rounded-md font-black text-white leading-none"
+        style={{
+          fontSize: 10,
+          background: rating !== null ? ratingBg(rating) : "#94a3b8",
+          minWidth: 28, height: 16,
+          paddingLeft: 5, paddingRight: 5,
+          marginTop: -4,
+        }}
+      >
+        {rating !== null ? formatRating(rating) : "—"}
       </span>
     </div>
   )
