@@ -236,14 +236,6 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
-        <Link
-          href={`/teams${selectedSeasonId ? `?seasonId=${selectedSeasonId}` : ""}`}
-          className="flex w-fit items-center gap-1.5 text-sm font-medium text-slate-400 transition-colors hover:text-slate-700"
-        >
-          <IconArrowLeft size={15} />
-          All teams
-        </Link>
-
         {/* Hero */}
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <div
@@ -262,6 +254,17 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/55 to-black/85" />
+
+            {/* Back link — top left, same level as season selector */}
+            <div className="absolute left-5 top-5">
+              <Link
+                href={`/teams${selectedSeasonId ? `?seasonId=${selectedSeasonId}` : ""}`}
+                className="flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 py-2 pl-3 pr-4 text-sm font-medium text-white/80 backdrop-blur-sm transition-colors hover:bg-white/20 hover:text-white"
+              >
+                <IconArrowLeft size={15} />
+                All teams
+              </Link>
+            </div>
 
             {/* Season selector — top right */}
             {seasons.length > 1 && (
