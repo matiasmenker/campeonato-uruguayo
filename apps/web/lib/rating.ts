@@ -23,7 +23,7 @@ export interface RatingColorSet {
 
 export const getRatingColors = (rating: number): RatingColorSet => {
   if (rating >= 9.0) return { fill: "#2563eb", muted: "rgba(37,99,235,0.15)",  text: "#1d4ed8" }  // blue-600 / blue-700
-  if (rating >= 8.0) return { fill: "#0d9488", muted: "rgba(13,148,136,0.15)", text: "#0f766e" }  // teal-600 / teal-700
+  if (rating >= 8.0) return { fill: "#38bdf8", muted: "rgba(56,189,248,0.15)", text: "#0369a1" }  // sky-400 (celeste) / sky-700
   if (rating >= 7.0) return { fill: "#16a34a", muted: "rgba(22,163,74,0.15)",  text: "#15803d" }  // green-600 / green-700
   if (rating >= 6.5) return { fill: "#ca8a04", muted: "rgba(202,138,4,0.15)",  text: "#a16207" }  // yellow-600 / yellow-700
   if (rating >= 6.0) return { fill: "#ea580c", muted: "rgba(234,88,12,0.15)",  text: "#c2410c" }  // orange-600 / orange-700
