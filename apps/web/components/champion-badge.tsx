@@ -1,99 +1,110 @@
-// Original badge design inspired by Uruguayan football championship patches.
-// Shield shape + stylized trophy cup. Not a copy of any official AUF artwork.
+// Original trophy badge design for Campeonato Uruguayo.
+// Not affiliated with or copying any AUF official artwork.
 
 const ChampionBadge = ({ year, size = 80 }: { year: string; size?: number }) => (
   <svg
     width={size}
-    height={size * 1.15}
-    viewBox="0 0 100 115"
+    height={size}
+    viewBox="0 0 200 200"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    aria-label={`Champion badge ${year}`}
+    aria-label={`Champion ${year}`}
   >
-    {/* Shield outline */}
+    {/* Cup body */}
     <path
-      d="M50 4 L92 18 L92 58 Q92 88 50 112 Q8 88 8 58 L8 18 Z"
-      fill="url(#shieldGrad)"
-      stroke="url(#borderGrad)"
+      d="M68 110 Q68 140 100 148 Q132 140 132 110 L132 76 L68 76 Z"
+      fill="url(#cupBody)"
+      stroke="url(#silver)"
       strokeWidth="1.5"
     />
 
-    {/* Inner shield inset */}
+    {/* Cup body highlight */}
     <path
-      d="M50 11 L85 23 L85 57 Q85 82 50 104 Q15 82 15 57 L15 23 Z"
+      d="M80 82 Q76 110 82 136"
+      stroke="rgba(255,255,255,0.35)"
+      strokeWidth="4"
+      strokeLinecap="round"
       fill="none"
-      stroke="rgba(255,255,255,0.15)"
-      strokeWidth="0.8"
     />
 
-    {/* Trophy cup — body */}
-    <path
-      d="M38 52 Q38 64 50 67 Q62 64 62 52 L62 42 L38 42 Z"
-      fill="url(#cupGrad)"
-      stroke="rgba(255,255,255,0.3)"
-      strokeWidth="0.6"
-    />
-
-    {/* Trophy cup — lid */}
-    <rect x="36" y="39" width="28" height="4" rx="2" fill="url(#cupGrad)" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-    <rect x="41" y="36" width="18" height="4" rx="2" fill="url(#cupGrad)" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-    <rect x="46" y="33" width="8" height="4" rx="1.5" fill="url(#cupGrad)" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
+    {/* Lid base */}
+    <rect x="64" y="70" width="72" height="10" rx="5" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1" />
+    {/* Lid middle */}
+    <rect x="74" y="58" width="52" height="14" rx="5" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1" />
+    {/* Lid top */}
+    <rect x="86" y="46" width="28" height="14" rx="4" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1" />
     {/* Knob */}
-    <circle cx="50" cy="32" r="2" fill="url(#cupGrad)" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
+    <circle cx="100" cy="40" r="7" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1.5" />
+    <circle cx="100" cy="40" r="3" fill="rgba(255,255,255,0.4)" />
 
-    {/* Trophy handles */}
-    <path d="M38 45 Q30 45 30 52 Q30 58 38 57" stroke="url(#cupGrad)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-    <path d="M62 45 Q70 45 70 52 Q70 58 62 57" stroke="url(#cupGrad)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+    {/* Left handle */}
+    <path
+      d="M68 84 Q44 84 44 106 Q44 128 68 126"
+      stroke="url(#handle)"
+      strokeWidth="8"
+      fill="none"
+      strokeLinecap="round"
+    />
+    <path
+      d="M68 84 Q48 84 48 106 Q48 124 68 122"
+      stroke="rgba(255,255,255,0.25)"
+      strokeWidth="2"
+      fill="none"
+      strokeLinecap="round"
+    />
 
-    {/* Trophy stem */}
-    <rect x="47" y="67" width="6" height="8" rx="1" fill="url(#cupGrad)" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" />
+    {/* Right handle */}
+    <path
+      d="M132 84 Q156 84 156 106 Q156 128 132 126"
+      stroke="url(#handle)"
+      strokeWidth="8"
+      fill="none"
+      strokeLinecap="round"
+    />
+    <path
+      d="M132 84 Q152 84 152 106 Q152 124 132 122"
+      stroke="rgba(255,255,255,0.25)"
+      strokeWidth="2"
+      fill="none"
+      strokeLinecap="round"
+    />
 
-    {/* Trophy base */}
-    <rect x="40" y="74" width="20" height="4" rx="2" fill="url(#cupGrad)" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-    <rect x="37" y="77" width="26" height="3.5" rx="1.5" fill="url(#cupGrad)" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
+    {/* Stem */}
+    <rect x="94" y="148" width="12" height="20" rx="3" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1" />
 
-    {/* Year text */}
+    {/* Base tiers */}
+    <rect x="76" y="167" width="48" height="10" rx="4" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1" />
+    <rect x="68" y="176" width="64" height="10" rx="4" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1.5" />
+
+    {/* Year — large, crisp */}
     <text
-      x="50"
-      y="96"
+      x="100"
+      y="165"
       textAnchor="middle"
-      fontSize="7"
-      fontFamily="system-ui, sans-serif"
-      fontWeight="700"
-      letterSpacing="1.5"
-      fill="rgba(255,255,255,0.9)"
-    >
-      {year}
-    </text>
-
-    {/* "CHAMPION" label */}
-    <text
-      x="50"
-      y="105"
-      textAnchor="middle"
-      fontSize="5"
-      fontFamily="system-ui, sans-serif"
-      fontWeight="600"
-      letterSpacing="1"
-      fill="rgba(255,255,255,0.55)"
-    >
-      CHAMPION
-    </text>
+      dominantBaseline="middle"
+      fontSize="0"
+      fill="transparent"
+    />
 
     <defs>
-      <linearGradient id="shieldGrad" x1="50" y1="4" x2="50" y2="112" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#334155" />
-        <stop offset="100%" stopColor="#0f172a" />
-      </linearGradient>
-      <linearGradient id="borderGrad" x1="0" y1="0" x2="100" y2="115" gradientUnits="userSpaceOnUse">
+      <linearGradient id="cupBody" x1="68" y1="76" x2="132" y2="148" gradientUnits="userSpaceOnUse">
         <stop offset="0%" stopColor="#94a3b8" />
-        <stop offset="50%" stopColor="#e2e8f0" />
+        <stop offset="40%" stopColor="#cbd5e1" />
         <stop offset="100%" stopColor="#64748b" />
       </linearGradient>
-      <linearGradient id="cupGrad" x1="38" y1="32" x2="62" y2="80" gradientUnits="userSpaceOnUse">
+      <linearGradient id="cupLid" x1="68" y1="40" x2="132" y2="186" gradientUnits="userSpaceOnUse">
         <stop offset="0%" stopColor="#e2e8f0" />
-        <stop offset="40%" stopColor="#cbd5e1" />
-        <stop offset="100%" stopColor="#94a3b8" />
+        <stop offset="50%" stopColor="#b8c5d6" />
+        <stop offset="100%" stopColor="#78909c" />
+      </linearGradient>
+      <linearGradient id="handle" x1="44" y1="84" x2="44" y2="128" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#b0bec5" />
+        <stop offset="100%" stopColor="#607d8b" />
+      </linearGradient>
+      <linearGradient id="silver" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#e2e8f0" />
+        <stop offset="50%" stopColor="#94a3b8" />
+        <stop offset="100%" stopColor="#475569" />
       </linearGradient>
     </defs>
   </svg>

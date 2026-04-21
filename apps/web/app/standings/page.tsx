@@ -96,30 +96,28 @@ const StandingsTable = ({ standings }: { standings: StandingEntry[] }) => {
 
 const ChampionCard = ({ champion, seasonName }: { champion: SeasonChampion; seasonName: string }) => (
   <div className="overflow-hidden rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-800 to-slate-950 shadow-lg">
-    <div className="flex items-center gap-4 p-4">
-      <ChampionBadge year={seasonName} size={72} />
+    <div className="flex items-center gap-4 px-5 py-4">
+      <ChampionBadge year={seasonName} size={64} />
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Season Champion</p>
-        <p className="mt-0.5 truncate text-lg font-black text-white">{champion.team.name}</p>
-        <p className="text-xs text-slate-500">{seasonName} · Primera División</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Season Champion</p>
+        <p className="mt-1 truncate text-xl font-black text-white leading-tight">{champion.team.name}</p>
+        <p className="mt-0.5 text-xs font-semibold text-slate-400">{seasonName}</p>
       </div>
       {champion.team.imagePath && (
-        <img
-          src={champion.team.imagePath}
-          alt={champion.team.name}
-          className="h-12 w-12 shrink-0 object-contain opacity-90"
-        />
+        <img src={champion.team.imagePath} alt={champion.team.name} className="h-14 w-14 shrink-0 object-contain opacity-90 drop-shadow-md" />
       )}
     </div>
   </div>
 )
 
-const LeaderCard = ({ standing, stageName }: { standing: StandingEntry; stageName: string }) => (
+const LeaderCard = ({ standing, stageName, isWinner }: { standing: StandingEntry; stageName: string; isWinner: boolean }) => (
   <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-    <div className="bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-3">
+    <div className="px-4 py-3 border-b border-slate-100">
       <div className="flex items-center gap-1.5">
-        <IconTrophy size={13} className="text-amber-500" />
-        <span className="text-xs font-bold uppercase tracking-wide text-amber-600">{stageName} leader</span>
+        <IconTrophy size={13} className={isWinner ? "text-slate-700" : "text-slate-400"} />
+        <span className="text-xs font-bold uppercase tracking-wide text-slate-600">
+          {isWinner ? `${stageName} winner` : `${stageName} leader`}
+        </span>
       </div>
     </div>
     <div className="p-4">
@@ -174,7 +172,7 @@ const PlayerStatCard = ({
   <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
     <div className="flex items-center gap-4 p-4">
       <div className="relative shrink-0">
-        <div className="h-12 w-12 overflow-hidden rounded-full bg-slate-100 ring-2 ring-slate-100">
+        <div className="h-16 w-16 overflow-hidden rounded-full bg-slate-100 ring-2 ring-slate-200">
           {playerImage ? (
             <img src={playerImage} alt={playerName} className="h-full w-full object-cover object-top" />
           ) : (
@@ -185,56 +183,15 @@ const PlayerStatCard = ({
           )}
         </div>
         {teamImage && (
-          <img src={teamImage} alt="" className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-white bg-white object-contain" />
+          <img src={teamImage} alt="" className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-2 border-white bg-white object-contain shadow-sm" />
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="mb-0.5 flex items-center gap-1.5">
+        <div className="mb-1 flex items-center gap-1.5">
           <Icon size={12} className={accentColor} />
           <p className={`text-[10px] font-bold uppercase tracking-wide ${accentColor}`}>{label}</p>
         </div>
-        <p className="truncate text-sm font-semibold text-slate-950">{playerName}</p>
-      </div>
-      <div className="shrink-0 text-right">
-        <p className="text-2xl font-black text-slate-950 tabular-nums">{value}</p>
-        <p className="text-[10px] uppercase tracking-wide text-slate-400">{unit}</p>
-      </div>
-    </div>
-  </div>
-)
-
-const TeamStatCard = ({
-  icon: Icon,
-  accentColor,
-  label,
-  teamName,
-  teamImage,
-  value,
-  unit,
-}: {
-  icon: React.ComponentType<{ size?: number; className?: string }>
-  accentColor: string
-  label: string
-  teamName: string
-  teamImage: string | null
-  value: number
-  unit: string
-}) => (
-  <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-    <div className="flex items-center gap-4 p-4">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-50">
-        {teamImage ? (
-          <img src={teamImage} alt={teamName} className="h-9 w-9 object-contain" />
-        ) : (
-          <div className="h-9 w-9 rounded-full bg-slate-200" />
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="mb-0.5 flex items-center gap-1.5">
-          <Icon size={12} className={accentColor} />
-          <p className={`text-[10px] font-bold uppercase tracking-wide ${accentColor}`}>{label}</p>
-        </div>
-        <p className="truncate text-sm font-semibold text-slate-950">{teamName}</p>
+        <p className="truncate text-sm font-semibold text-slate-950 leading-tight">{playerName}</p>
       </div>
       <div className="shrink-0 text-right">
         <p className="text-2xl font-black text-slate-950 tabular-nums">{value}</p>
@@ -304,9 +261,11 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
   const leaderStanding = standings[0] ?? null
   const topScorer = leaders?.topScorers.leaders[0] ?? null
   const topAssist = leaders?.topAssists.leaders[0] ?? null
-  const bestAttack = standings.length > 0
-    ? standings.reduce((best, standing) => standing.goalsFor > best.goalsFor ? standing : best)
-    : null
+  const topRated = leaders?.topRated.leaders[0] ?? null
+
+  // Stage is considered over (winner, not just leader) when the season is done
+  // or when the stage is no longer the current one
+  const isStageOver = !selectedSeason?.isCurrent || !selectedStage?.isCurrent
 
   const getPlayerName = (displayName: string | null, name: string) => displayName ?? name
 
@@ -364,7 +323,11 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
                 <ChampionCard champion={champion} seasonName={selectedSeason?.name ?? "—"} />
               )}
               {leaderStanding && (
-                <LeaderCard standing={leaderStanding} stageName={selectedStage?.name ?? "Stage"} />
+                <LeaderCard
+                  standing={leaderStanding}
+                  stageName={selectedStage?.name ?? "Stage"}
+                  isWinner={isStageOver}
+                />
               )}
               {topScorer && (
                 <PlayerStatCard
@@ -390,15 +353,16 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
                   unit="assists"
                 />
               )}
-              {bestAttack && (
-                <TeamStatCard
+              {topRated && (
+                <PlayerStatCard
                   icon={IconStar}
-                  accentColor="text-orange-500"
-                  label="Best attack"
-                  teamName={bestAttack.team.name}
-                  teamImage={bestAttack.team.imagePath ?? null}
-                  value={bestAttack.goalsFor}
-                  unit="goals"
+                  accentColor="text-amber-500"
+                  label="Best rated"
+                  playerName={getPlayerName(topRated.player.displayName, topRated.player.name)}
+                  playerImage={topRated.player.imagePath}
+                  teamImage={topRated.team?.imagePath ?? null}
+                  value={topRated.value}
+                  unit="rating"
                 />
               )}
             </div>
