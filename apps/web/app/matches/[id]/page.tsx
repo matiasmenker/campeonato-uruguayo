@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { IconArrowLeft, IconArrowUp, IconArrowDown } from "@tabler/icons-react"
+import { IconArrowLeft } from "@tabler/icons-react"
 import {
   getFixture,
   getFixtureEvents,
@@ -117,27 +117,41 @@ const PlayerAvatar = ({ player, size }: { player: LineupPlayer["player"]; size: 
 
 // ─── Event icon SVGs ──────────────────────────────────────────────────────────
 
-// Football (goal) — no border, flat
+// Football (goal) — official soccer ball pattern
 const BallIcon = ({ size = 14 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" fill="#1a1a1a" />
-    <polygon points="12,4 14.5,8.5 19.5,8.5 15.5,12 17,17 12,13.5 7,17 8.5,12 4.5,8.5 9.5,8.5" fill="#fff" opacity="0.15" />
-    <path d="M12 4.5 L14 8 L18.5 9 L15 13 L16 18 L12 15.5 L8 18 L9 13 L5.5 9 L10 8 Z" fill="none" stroke="#fff" strokeWidth="0.8" opacity="0.6" />
-    <circle cx="12" cy="12" r="2.5" fill="#fff" opacity="0.1" />
-    {/* Pentagon patches */}
-    <path d="M12 5.5 l1.8 2.8 h-3.6 Z" fill="#fff" opacity="0.9" />
-    <path d="M17.5 10 l-2.5 1.8 -1-3h3.5Z" fill="#fff" opacity="0.9" />
-    <path d="M15.5 15.5 l-3.5-2.5 3-1.5Z" fill="#fff" opacity="0.9" />
-    <path d="M8.5 15.5 l3.5-2.5 -3-1.5Z" fill="#fff" opacity="0.9" />
-    <path d="M6.5 10 l2.5 1.8 1-3h-3.5Z" fill="#fff" opacity="0.9" />
+  <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="11" fill="#fff" />
+    <path d="M12 0a12 12 0 1 0 12 12A12 12 0 0 0 12 0Zm8.42 6.63-.48 1.74-4.18 1.36-2.76-2v-4.4l1.5-1a10 10 0 0 1 5.92 4.3ZM9.5 2.33l1.5 1v4.4l-2.76 2-4.18-1.36-.48-1.74a10 10 0 0 1 5.92-4.3ZM2 12v-.49l1.55-1.21 4.11 1.34 1 3.2-2.54 3.5-1.94-.08A9.89 9.89 0 0 1 2 12Zm6.24 9.26-.58-1.58L10.33 16h3.34l2.67 3.68-.58 1.58a9.92 9.92 0 0 1-7.52 0Zm11.54-3-1.94.08-2.54-3.5 1-3.2 4.11-1.34L22 11.51V12a9.89 9.89 0 0 1-2.22 6.26Z" />
   </svg>
 )
 
-// Boot (assist) — kicking foot, no border
-const BootIcon = ({ size = 14 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M5 18 C5 18 6 14 8 12 C9.5 10.5 11 10 12 9 L12 5 C12 4.4 12.4 4 13 4 L15 4 C15.6 4 16 4.4 16 5 L16 10 C16 10 18 11 19 13 C19.5 14 19.5 15 19 16 L18 18 C17.6 18.8 16.8 19 16 19 L6 19 C5.4 19 5 18.6 5 18 Z" fill="currentColor" />
-    <path d="M5 18 L19 18" stroke="white" strokeWidth="0.5" opacity="0.3" />
+// Assist — blue circle with white arrow
+const AssistIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="12" fill="#3b82f6" />
+    <path d="M2 13h16.51l-4.23 4.3 1.44 1.4 5.87-6a1 1 0 0 0 0-1.39l-5.87-6-1.44 1.39 4.23 4.3H2Z" fill="#fff" />
+  </svg>
+)
+
+// Player going OUT — red arrow with silhouette
+const SubOutIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="m17 5 6.54 6.25a1.08 1.08 0 0 1 0 1.58L17 19a1.18 1.18 0 0 1-2-.79v-1.73h-4.7a1.14 1.14 0 0 1-1.17-1.12V8.64a1.14 1.14 0 0 1 1.17-1.12H15V5.75A1.18 1.18 0 0 1 17 5Z" fill="#ef4444" />
+    <path fill="#fff" d="M12.39 5.52H10.3a3.15 3.15 0 0 0-3.17 3.12v2.27a4.5 4.5 0 1 1 5.26-5.39Z" />
+    <path d="m13.83 3.65-.17.19-.15.21-.14.22a4 4 0 0 0-.21.47 2.85 2.85 0 0 0-.13.48v.3h-.6a4.5 4.5 0 1 0-5.26 5.39v2a6.49 6.49 0 1 1 6.69-9.29Z" />
+    <path fill="#fff" d="M14 20.54V22H2v-2.37a4.63 4.63 0 0 1 1.68-3.57A10.46 10.46 0 0 0 7.6 17a3.16 3.16 0 0 0 2.7 1.5H13a3.11 3.11 0 0 0 1 2.04Z" />
+    <path d="M16 21.36V24H0v-4.37a6.61 6.61 0 0 1 3.58-5.88 8.59 8.59 0 0 0 3.55 1.19v.42a2.1 2.1 0 0 0 0 .36 2.73 2.73 0 0 0 .24.89 2.64 2.64 0 0 0 .2.37 10.46 10.46 0 0 1-3.92-.92A4.63 4.63 0 0 0 2 19.63V22h12v-1.46a2.54 2.54 0 0 0 .5.36 1.13 1.13 0 0 0 .21.12 1.59 1.59 0 0 0 .27.12 3.15 3.15 0 0 0 1.02.22Z" />
+  </svg>
+)
+
+// Player coming IN — green arrow with silhouette
+const SubInIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="m16 19-6.53-6.21a1.08 1.08 0 0 1 0-1.58L16 5a1.18 1.18 0 0 1 2 .79v1.73h4.7a1.14 1.14 0 0 1 1.17 1.12v6.72a1.14 1.14 0 0 1-1.17 1.12H18v1.77a1.18 1.18 0 0 1-2 .75Z" fill="#16a34a" />
+    <path fill="#fff" d="M14 19.89V22H2v-2.37a4.63 4.63 0 0 1 1.68-3.57 10.21 10.21 0 0 0 6.93.59Z" />
+    <path d="M16 21.25V24H0v-4.37a6.61 6.61 0 0 1 3.58-5.88A8.43 8.43 0 0 0 8 15a7.36 7.36 0 0 0 .82-.06l1.79 1.71a10.21 10.21 0 0 1-6.93-.59A4.63 4.63 0 0 0 2 19.63V22h12v-2.11l.63.6.34.28a3 3 0 0 0 .3.19 3.58 3.58 0 0 0 .73.29Z" />
+    <path fill="#fff" d="M12.41 5.63 8.09 9.76a3.12 3.12 0 0 0-.76 1.17 4.49 4.49 0 1 1 5.08-5.3Z" />
+    <path d="m14 4.08-1.59 1.55a4.5 4.5 0 1 0-5.08 5.3 2.9 2.9 0 0 0-.18.76v.87a3 3 0 0 0 .11.4A6.5 6.5 0 1 1 14 4.08Z" />
   </svg>
 )
 
@@ -186,7 +200,7 @@ const EventBadges = ({ events, assists, offsetBottom = 0 }: EventBadgesProps) =>
       ))}
       {Array.from({ length: assists }).map((_, i) => (
         <span key={`a${i}`} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#38bdf8", flexShrink: 0 }}>
-          <BootIcon size={13} />
+          <AssistIcon size={13} />
         </span>
       ))}
       {Array.from({ length: yellows }).map((_, i) => <CardRect key={`y${i}`} color="#facc15" />)}
@@ -196,9 +210,9 @@ const EventBadges = ({ events, assists, offsetBottom = 0 }: EventBadgesProps) =>
         <span
           key={`s${i}`}
           title={sub.minute != null ? `Cambio en el minuto ${sub.minute}${sub.extraMinute != null ? `+${sub.extraMinute}` : ""}'` : "Cambio"}
-          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 13, height: 13, borderRadius: "50%", background: "#475569", flexShrink: 0, cursor: "default" }}
+          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, cursor: "default" }}
         >
-          <span style={{ fontSize: 8, color: "#fff", lineHeight: 1 }}>↕</span>
+          <SubOutIcon size={13} />
         </span>
       ))}
     </div>
@@ -353,7 +367,7 @@ const BenchPlayer = ({ player, events, rating, assists }: {
         ))}
         {Array.from({ length: assists }).map((_, i) => (
           <span key={`a${i}`} style={{ display: "inline-flex", color: "#38bdf8" }}>
-            <BootIcon size={13} />
+            <AssistIcon size={13} />
           </span>
         ))}
         {Array.from({ length: yellows }).map((_, i) => <CardRect key={`y${i}`} color="#facc15" />)}
@@ -363,9 +377,9 @@ const BenchPlayer = ({ player, events, rating, assists }: {
           <span
             key={`s${i}`}
             title={sub.minute != null ? `Cambio en el minuto ${sub.minute}${sub.extraMinute != null ? `+${sub.extraMinute}` : ""}'` : "Cambio"}
-            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 13, height: 13, borderRadius: "50%", background: "#475569", cursor: "default" }}
+            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "default" }}
           >
-            <span style={{ fontSize: 7, color: "#fff", lineHeight: 1 }}>↕</span>
+            <SubOutIcon size={13} />
           </span>
         ))}
       </div>
@@ -504,8 +518,8 @@ const SubstitutionRow = ({ pair }: { pair: SubstitutionPair }) => {
       {/* Icon column */}
       <div className="flex w-6 items-center justify-center shrink-0 pt-0.5">
         <div className="flex flex-col items-center gap-0.5">
-          <IconArrowDown size={12} style={{ color: "#dc2626" }} />
-          <IconArrowUp   size={12} style={{ color: "#16a34a" }} />
+          <SubOutIcon size={13} />
+          {pair.playerIn && <SubInIcon size={13} />}
         </div>
       </div>
 
