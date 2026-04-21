@@ -6,6 +6,7 @@ import {
   getFixtureEvents,
   getFixtureLineups,
   getFixturePlayerRatings,
+  getFixturePlayerAssists,
   type LineupPlayer,
   type FixtureEvent,
 } from "@/lib/matches"
@@ -41,12 +42,14 @@ const yPositions = (count: number): number[] => {
   return Array.from({ length: count }, (_, i) => top + i * step)
 }
 
-// ─── Rating helpers ───────────────────────────────────────────────────────────
+// ─── Rating helpers — same thresholds as player-card.tsx ─────────────────────
+// ≥8.0 green · ≥7.0 celeste · ≥6.0 orange · <6.0 red
 
 const ratingBg = (rating: number): string => {
-  if (rating >= 7) return "#16a34a"
-  if (rating >= 5) return "#ea580c"
-  return "#dc2626"
+  if (rating >= 8.0) return "#16a34a"  // green-600
+  if (rating >= 7.0) return "#0ea5e9"  // sky-500 (celeste)
+  if (rating >= 6.0) return "#ea580c"  // orange-600
+  return "#dc2626"                      // red-600
 }
 
 const formatRating = (rating: number): string => {
@@ -95,40 +98,44 @@ const PlayerAvatar = ({ player }: { player: LineupPlayer["player"] }) => {
 }
 
 // ─── EventBadges ──────────────────────────────────────────────────────────────
-// Rendered inside a relative container — always absolutely positioned above
-// the avatar circle so they never affect layout flow.
+// Always absolutely positioned inside a relative parent — no layout impact.
 
 interface EventBadgesProps {
   events: FixtureEvent[]
-  // How far above the circle's top edge (positive = further up)
+  assists: number          // count of assist stats for this player
   offsetBottom?: number
 }
 
-const EventBadges = ({ events, offsetBottom = 0 }: EventBadgesProps) => {
-  const goals   = events.filter(e => e.typeId === EVENT_GOAL).length
-  const yellows = events.filter(e => e.typeId === EVENT_YELLOW).length
-  const reds    = events.filter(e => e.typeId === EVENT_RED || e.typeId === EVENT_YELLOW_RED).length
-  const subs    = events.filter(e => e.typeId === EVENT_SUBSTITUTION).length
+const Card = ({ color }: { color: string }) => (
+  <span style={{ display: "inline-block", width: 8, height: 11, borderRadius: 2, background: color, boxShadow: "0 1px 3px rgba(0,0,0,0.6)", flexShrink: 0 }} />
+)
 
-  if (!goals && !yellows && !reds && !subs) return null
+const EventBadges = ({ events, assists, offsetBottom = 0 }: EventBadgesProps) => {
+  const goals      = events.filter(e => e.typeId === EVENT_GOAL).length
+  const yellows    = events.filter(e => e.typeId === EVENT_YELLOW).length
+  const yellowReds = events.filter(e => e.typeId === EVENT_YELLOW_RED).length
+  const reds       = events.filter(e => e.typeId === EVENT_RED).length
+  const subs       = events.filter(e => e.typeId === EVENT_SUBSTITUTION).length
+
+  if (!goals && !assists && !yellows && !yellowReds && !reds && !subs) return null
 
   return (
     <div
-      className="absolute flex items-center justify-center gap-0.5 flex-wrap"
+      className="absolute flex items-center justify-center gap-0.5"
       style={{ bottom: `calc(100% + ${offsetBottom}px)`, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap" }}
     >
-      {Array.from({ length: goals }).map((_, i) => (
-        <span key={`g${i}`} style={{ fontSize: 12, lineHeight: 1 }}>⚽</span>
+      {Array.from({ length: goals }).map((_, i)   => <span key={`g${i}`}  style={{ fontSize: 12, lineHeight: 1 }}>⚽</span>)}
+      {Array.from({ length: assists }).map((_, i) => <span key={`a${i}`}  style={{ fontSize: 11, lineHeight: 1 }}>🅰️</span>)}
+      {Array.from({ length: yellows }).map((_, i) => <Card key={`y${i}`}  color="#facc15" />)}
+      {/* Yellow/red: show yellow + red side by side slightly overlapping */}
+      {Array.from({ length: yellowReds }).map((_, i) => (
+        <span key={`yr${i}`} className="flex items-center" style={{ gap: -2 }}>
+          <Card color="#facc15" />
+          <Card color="#ef4444" />
+        </span>
       ))}
-      {Array.from({ length: yellows }).map((_, i) => (
-        <span key={`y${i}`} style={{ display: "inline-block", width: 8, height: 11, borderRadius: 2, background: "#facc15", boxShadow: "0 1px 3px rgba(0,0,0,0.5)" }} />
-      ))}
-      {Array.from({ length: reds }).map((_, i) => (
-        <span key={`r${i}`} style={{ display: "inline-block", width: 8, height: 11, borderRadius: 2, background: "#ef4444", boxShadow: "0 1px 3px rgba(0,0,0,0.5)" }} />
-      ))}
-      {Array.from({ length: subs }).map((_, i) => (
-        <span key={`s${i}`} style={{ fontSize: 11, lineHeight: 1 }}>🔄</span>
-      ))}
+      {Array.from({ length: reds }).map((_, i)    => <Card key={`r${i}`}  color="#ef4444" />)}
+      {Array.from({ length: subs }).map((_, i)    => <span key={`s${i}`}  style={{ fontSize: 10, lineHeight: 1 }}>🔄</span>)}
     </div>
   )
 }
@@ -139,25 +146,24 @@ interface PlayerTokenProps {
   player: LineupPlayer
   events: FixtureEvent[]
   rating: number | null
+  assists: number
   x: number
   y: number
 }
 
-const PlayerToken = ({ player, events, rating, x, y }: PlayerTokenProps) => {
+const PlayerToken = ({ player, events, rating, assists, x, y }: PlayerTokenProps) => {
   const fullName = player.player.displayName ?? player.player.name
   const parts = fullName.trim().split(/\s+/)
-  // Use last two words max so names like "Bentancourt" fit but "Washington Aguerre" also works
   const shortName = parts.length > 2 ? parts[parts.length - 1] : parts.slice(-2).join(" ")
 
   return (
     <div
       className="absolute flex flex-col items-center"
-      style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: 80, gap: 5 }}
+      style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: 84, gap: 4 }}
     >
-      {/* Avatar + events (events absolutely positioned, no layout impact) */}
+      {/* Avatar — event badges float above, no layout impact */}
       <div className="relative" style={{ width: 56, height: 56 }}>
-        {/* Event badges float above the circle */}
-        <EventBadges events={events} offsetBottom={2} />
+        <EventBadges events={events} assists={assists} offsetBottom={2} />
 
         <div
           className="overflow-hidden rounded-full"
@@ -165,61 +171,47 @@ const PlayerToken = ({ player, events, rating, x, y }: PlayerTokenProps) => {
             width: 56, height: 56,
             background: "#fff",
             border: "2.5px solid rgba(255,255,255,0.95)",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.4)",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.4)",
           }}
         >
           <PlayerAvatar player={player.player} />
         </div>
 
-        {/* Jersey number — bottom-left of circle */}
+        {/* Jersey number — no border */}
         {player.jerseyNumber != null && (
           <span
             className="absolute flex items-center justify-center rounded-full font-black text-white leading-none"
-            style={{
-              width: 18, height: 18, fontSize: 8,
-              bottom: -3, left: -3,
-              background: "#1e293b",
-              border: "2px solid rgba(255,255,255,0.6)",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.6)",
-            }}
+            style={{ width: 18, height: 18, fontSize: 8, bottom: -3, left: -3, background: "#0f172a", boxShadow: "0 1px 4px rgba(0,0,0,0.7)" }}
           >
             {player.jerseyNumber}
           </span>
         )}
       </div>
 
-      {/* Name — no bar, plain text with strong shadow */}
-      <span
-        className="text-white font-bold leading-tight text-center"
-        style={{
-          fontSize: 10,
-          textShadow: "0 1px 5px rgba(0,0,0,1), 0 0 10px rgba(0,0,0,0.95)",
-          maxWidth: 80,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-        title={fullName}
+      {/* Name + rating — hero button style: rounded-xl, bg-white/10, backdrop-blur, NO border */}
+      <div
+        className="flex items-center gap-1.5 rounded-xl px-2.5 py-1"
+        style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)", maxWidth: 84 }}
       >
-        {shortName}
-      </span>
-
-      {/* Rating — always shown, colored pill */}
-      <span
-        className="flex items-center justify-center rounded-md font-black text-white leading-none"
-        style={{
-          fontSize: 10,
-          background: rating !== null ? ratingBg(rating) : "rgba(0,0,0,0.4)",
-          minWidth: 28,
-          height: 16,
-          paddingLeft: 5,
-          paddingRight: 5,
-          marginTop: -2,
-          boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
-        }}
-      >
-        {rating !== null ? formatRating(rating) : "—"}
-      </span>
+        <span
+          className="text-white font-semibold leading-none"
+          style={{ fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 1, minWidth: 0 }}
+          title={fullName}
+        >
+          {shortName}
+        </span>
+        <span
+          className="flex items-center justify-center rounded font-black text-white leading-none shrink-0"
+          style={{
+            fontSize: 9,
+            background: rating !== null ? ratingBg(rating) : "rgba(255,255,255,0.18)",
+            minWidth: 22, height: 14,
+            paddingLeft: 3, paddingRight: 3,
+          }}
+        >
+          {rating !== null ? formatRating(rating) : "—"}
+        </span>
+      </div>
     </div>
   )
 }
@@ -231,9 +223,10 @@ interface PitchProps {
   awayLineup: LineupPlayer[]
   eventsByPlayer: Map<number, FixtureEvent[]>
   ratingByPlayer: Map<number, number>
+  assistsByPlayer: Map<number, number>
 }
 
-const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer }: PitchProps) => {
+const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assistsByPlayer }: PitchProps) => {
   const renderTeam = (lineup: LineupPlayer[], isHome: boolean) => {
     const starters = lineup
       .filter(p => p.formationPosition !== null)
@@ -255,6 +248,7 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer }: Pitch
           player={player}
           events={eventsByPlayer.get(player.player.id) ?? []}
           rating={ratingByPlayer.get(player.player.id) ?? null}
+          assists={assistsByPlayer.get(player.player.id) ?? 0}
           x={xMap[rowIndex]}
           y={yPos[playerIndex]}
         />
@@ -276,45 +270,38 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer }: Pitch
 // ─── BenchPlayer ─────────────────────────────────────────────────────────────
 
 const BenchPlayer = ({
-  player,
-  events,
-  rating,
+  player, events, rating, assists,
 }: {
   player: LineupPlayer
   events: FixtureEvent[]
   rating: number | null
+  assists: number
 }) => {
   const name = player.player.displayName ?? player.player.name
 
   return (
     <div className="flex flex-col items-center gap-2" style={{ width: 76 }}>
-      {/* Avatar with absolute event badges */}
       <div className="relative" style={{ width: 52, height: 52, marginTop: 16 }}>
-        <EventBadges events={events} offsetBottom={2} />
+        <EventBadges events={events} assists={assists} offsetBottom={2} />
 
         <div
           className="overflow-hidden rounded-full"
-          style={{
-            width: 52, height: 52,
-            background: "#fff",
-            border: "2px solid #e2e8f0",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-          }}
+          style={{ width: 52, height: 52, background: "#fff", border: "2px solid #e2e8f0", boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
         >
           <PlayerAvatar player={player.player} />
         </div>
 
+        {/* Jersey — no border */}
         {player.jerseyNumber != null && (
           <span
             className="absolute flex items-center justify-center rounded-full font-black text-white leading-none"
-            style={{ width: 17, height: 17, fontSize: 8, bottom: -2, left: -2, background: "#1e293b", border: "2px solid #fff" }}
+            style={{ width: 17, height: 17, fontSize: 8, bottom: -2, left: -2, background: "#0f172a", boxShadow: "0 1px 3px rgba(0,0,0,0.4)" }}
           >
             {player.jerseyNumber}
           </span>
         )}
       </div>
 
-      {/* Name */}
       <span
         className="text-center text-slate-700 font-semibold leading-tight"
         style={{ fontSize: 10, maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
@@ -323,16 +310,9 @@ const BenchPlayer = ({
         {name}
       </span>
 
-      {/* Rating */}
       <span
         className="flex items-center justify-center rounded-md font-black text-white leading-none"
-        style={{
-          fontSize: 10,
-          background: rating !== null ? ratingBg(rating) : "#94a3b8",
-          minWidth: 28, height: 16,
-          paddingLeft: 5, paddingRight: 5,
-          marginTop: -4,
-        }}
+        style={{ fontSize: 10, background: rating !== null ? ratingBg(rating) : "#94a3b8", minWidth: 28, height: 16, paddingLeft: 5, paddingRight: 5, marginTop: -4 }}
       >
         {rating !== null ? formatRating(rating) : "—"}
       </span>
@@ -351,13 +331,14 @@ interface BenchSectionProps {
   awayTeamImage: string | null
   eventsByPlayer: Map<number, FixtureEvent[]>
   ratingByPlayer: Map<number, number>
+  assistsByPlayer: Map<number, number>
 }
 
 const BenchSection = ({
   homeLineup, awayLineup,
   homeTeamName, awayTeamName,
   homeTeamImage, awayTeamImage,
-  eventsByPlayer, ratingByPlayer,
+  eventsByPlayer, ratingByPlayer, assistsByPlayer,
 }: BenchSectionProps) => {
   const homeBench = homeLineup.filter(p => p.formationPosition === null)
   const awayBench = awayLineup.filter(p => p.formationPosition === null)
@@ -376,6 +357,7 @@ const BenchSection = ({
             player={player}
             events={eventsByPlayer.get(player.player.id) ?? []}
             rating={ratingByPlayer.get(player.player.id) ?? null}
+            assists={assistsByPlayer.get(player.player.id) ?? 0}
           />
         ))}
       </div>
@@ -436,11 +418,12 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const fixtureId = Number(id)
   if (isNaN(fixtureId)) notFound()
 
-  const [fixtureResult, eventsResult, lineupsResult, ratingsResult] = await Promise.allSettled([
+  const [fixtureResult, eventsResult, lineupsResult, ratingsResult, assistsResult] = await Promise.allSettled([
     getFixture(fixtureId),
     getFixtureEvents(fixtureId),
     getFixtureLineups(fixtureId),
     getFixturePlayerRatings(fixtureId),
+    getFixturePlayerAssists(fixtureId),
   ])
 
   if (fixtureResult.status === "rejected") notFound()
@@ -449,6 +432,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const events   = eventsResult.status   === "fulfilled" ? eventsResult.value   : []
   const lineups  = lineupsResult.status  === "fulfilled" ? lineupsResult.value  : []
   const ratings  = ratingsResult.status  === "fulfilled" ? ratingsResult.value  : []
+  const assists  = assistsResult.status  === "fulfilled" ? assistsResult.value  : []
 
   const homeTeam   = fixture.homeTeam
   const awayTeam   = fixture.awayTeam
@@ -469,6 +453,13 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   for (const stat of ratings) {
     const value = stat.value.normalizedValue
     if (typeof value === "number") ratingByPlayer.set(stat.player.id, value)
+  }
+
+  // Assists: value is the count (1 assist = 1)
+  const assistsByPlayer = new Map<number, number>()
+  for (const stat of assists) {
+    const value = stat.value.normalizedValue
+    if (typeof value === "number" && value > 0) assistsByPlayer.set(stat.player.id, value)
   }
 
   const keyEvents = events
@@ -573,6 +564,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
             awayLineup={awayLineup}
             eventsByPlayer={eventsByPlayer}
             ratingByPlayer={ratingByPlayer}
+            assistsByPlayer={assistsByPlayer}
           />
         ) : (
           <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
@@ -590,6 +582,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
           awayTeamImage={awayTeam?.imagePath ?? null}
           eventsByPlayer={eventsByPlayer}
           ratingByPlayer={ratingByPlayer}
+          assistsByPlayer={assistsByPlayer}
         />
 
         {/* ── Events timeline ────────────────────────────────────────────────── */}
