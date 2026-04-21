@@ -300,18 +300,13 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
           </div>
         </div>
 
-        <div className="grid gap-x-6 gap-y-3 lg:grid-cols-[1fr_340px]">
+        {/* Squad heading — full width */}
+        <div className="flex items-center gap-2 px-1">
+          <h2 className="text-sm font-bold text-slate-700">Squad</h2>
+          <span className="text-sm font-normal text-slate-400">· {selectedSeason.name}</span>
+        </div>
 
-          {/* Squad column heading */}
-          <div className="flex items-center gap-2 px-1">
-            <h2 className="text-sm font-bold text-slate-700">Squad</h2>
-            <span className="text-sm font-normal text-slate-400">· {selectedSeason.name}</span>
-          </div>
-
-          {/* Fixtures column heading */}
-          <div className="px-1">
-            <h2 className="text-sm font-bold text-slate-700">Matches</h2>
-          </div>
+        <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
 
           {/* Squad table */}
           <div className="flex flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
