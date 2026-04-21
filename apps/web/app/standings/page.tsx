@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { getRatingFill } from "@/lib/rating"
 import Link from "next/link"
 import { IconBallFootball, IconStar, IconTrophy, IconUsers } from "@tabler/icons-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -23,12 +24,6 @@ const MAIN_STAGE_NAMES = ["apertura", "clausura", "intermediate round"]
 const CHAMPIONSHIP_FINALS_NAME = "championship - finals"
 const INTERMEDIATE_ROUND_FINAL_NAME = "intermediate round - final"
 
-const getRatingColor = (value: number): string => {
-  if (value >= 8.0) return "#22c55e"
-  if (value >= 7.0) return "#38bdf8"
-  if (value >= 6.0) return "#f97316"
-  return "#ef4444"
-}
 
 const isMainStage = (stageName: string) =>
   MAIN_STAGE_NAMES.some((name) => stageName.toLowerCase() === name)
@@ -187,7 +182,7 @@ const PlayerStatCard = ({
   unit: string
   isRating?: boolean
 }) => {
-  const valueColor = isRating ? getRatingColor(value) : undefined
+  const valueColor = isRating ? getRatingFill(value) : undefined
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
       <div className="flex items-center gap-4 p-4">

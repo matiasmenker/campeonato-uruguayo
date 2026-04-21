@@ -98,13 +98,11 @@ const PlayerCard = ({ name, imagePath, positionId, teamImagePath, rating }: Play
         <div className="absolute inset-x-0 top-0 h-px bg-slate-200" />
         <div className="relative z-10 flex h-full items-center justify-between px-3">
           {rating != null ? (
-            <div className="flex items-center gap-1">
-              <span className="text-xl font-black tabular-nums" style={{ color: ratingColor }}>
-                {rating.toFixed(1)}
-              </span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: ratingColor, opacity: 0.75, flexShrink: 0 }}>
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
+            <div
+              className="flex items-center justify-center rounded-lg font-black text-white tabular-nums"
+              style={{ background: ratingColor, fontSize: 13, minWidth: 38, height: 22, paddingLeft: 6, paddingRight: 6 }}
+            >
+              {rating.toFixed(1)}
             </div>
           ) : (
             <div className="h-5 w-10" />
