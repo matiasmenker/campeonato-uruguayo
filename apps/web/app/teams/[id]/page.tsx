@@ -30,6 +30,16 @@ const formatKickoff = (kickoffAt: string | null): string => {
   return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${dayMonthYear}`
 }
 
+const formatKickoffTime = (kickoffAt: string | null): string => {
+  if (!kickoffAt) return "--:--"
+  return new Intl.DateTimeFormat("es-UY", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "America/Montevideo",
+  }).format(new Date(kickoffAt))
+}
+
 const getMatchResult = (
   fixture: TeamFixture,
   teamId: number
@@ -98,7 +108,7 @@ const FixtureCard = ({ fixture, teamId }: { fixture: TeamFixture; teamId: number
           </>
         ) : (
           <>
-            <p className="text-base font-black text-slate-300">vs</p>
+            <p className="text-xl font-black tabular-nums text-slate-800">{formatKickoffTime(fixture.kickoffAt)}</p>
             <p className="text-[10px] font-medium text-slate-400">{formatKickoff(fixture.kickoffAt)}</p>
           </>
         )}
