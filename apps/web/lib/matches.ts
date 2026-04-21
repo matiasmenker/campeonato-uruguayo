@@ -147,3 +147,54 @@ export const getFixturePlayerStatsByType = async (id: number, typeId: number): P
 // Convenience wrappers
 export const getFixturePlayerRatings = (id: number) => getFixturePlayerStatsByType(id, STAT_TYPE_RATING)
 export const getFixturePlayerAssists = (id: number) => getFixturePlayerStatsByType(id, STAT_TYPE_ASSIST)
+
+export interface Round {
+  id: number
+  name: string
+  isCurrent: boolean
+}
+
+export interface FixtureListItem {
+  id: number
+  kickoffAt: string | null
+  resultInfo: string | null
+  homeScore: number | null
+  awayScore: number | null
+  state: {
+    id: number
+    state: string
+    name: string
+    shortName: string
+    developerName: string
+  } | null
+  season: { id: number; name: string; isCurrent: boolean }
+  stage: { id: number; name: string; isCurrent: boolean } | null
+  round: Round | null
+  venue: { id: number; name: string; city: string | null; imagePath: string | null } | null
+  homeTeam: { id: number; name: string; shortCode: string | null; imagePath: string | null } | null
+  awayTeam: { id: number; name: string; shortCode: string | null; imagePath: string | null } | null
+}
+
+export interface FixtureListResponse {
+  data: FixtureListItem[]
+  pagination: {
+    page: number
+    pageSize: number
+    totalItems: number
+    totalPages: number
+  }
+}
+
+export const getFixtures = async (params: {
+  seasonId?: number
+  roundId?: number
+  page?: number
+  pageSize?: number
+}): Promise<FixtureListResponse> => {
+  const query = new URLSearchParams()
+  if (params.seasonId) query.set("seasonId", String(params.seasonId))
+  if (params.roundId) query.set("roundId", String(params.roundId))
+  query.set("page", String(params.page ?? 1))
+  query.set("pageSize", String(params.pageSize ?? 100))
+  return apiFetch<FixtureListResponse>(`/api/v1/fixtures?${query.toString()}`)
+}
