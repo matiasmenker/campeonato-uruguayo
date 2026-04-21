@@ -124,3 +124,20 @@ export const getFixtureLineups = async (id: number): Promise<LineupPlayer[]> => 
   )
   return response.data
 }
+
+export interface FixturePlayerStat {
+  id: number
+  fixtureId: number
+  player: PlayerSummary
+  typeId: number | null
+  value: { normalizedValue: number | string | boolean | null }
+}
+
+export const getFixturePlayerStats = async (id: number): Promise<FixturePlayerStat[]> => {
+  const response = await apiFetch<ListResponse<FixturePlayerStat>>(
+    `/api/v1/fixtures/${id}/player-statistics?pageSize=500`
+  )
+  return response.data
+}
+
+export const STAT_TYPE_RATING = 118
