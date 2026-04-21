@@ -99,7 +99,7 @@ const ChampionCard = ({ champion, seasonName }: { champion: SeasonChampion; seas
     <div className="flex items-center gap-4 px-5 py-4">
       <ChampionBadge year={seasonName} size={64} />
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Season Champion</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Champion</p>
         <p className="mt-1 truncate text-xl font-black text-white leading-tight">{champion.team.name}</p>
         <p className="mt-0.5 text-xs font-semibold text-slate-400">{seasonName}</p>
       </div>
@@ -183,7 +183,7 @@ const PlayerStatCard = ({
           )}
         </div>
         {teamImage && (
-          <img src={teamImage} alt="" className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-2 border-white bg-white object-contain shadow-sm" />
+          <img src={teamImage} alt="" className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full border-2 border-white bg-white object-contain shadow-sm p-0.5" />
         )}
       </div>
       <div className="min-w-0 flex-1">
