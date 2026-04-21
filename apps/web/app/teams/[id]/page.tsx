@@ -321,7 +321,7 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 
           {/* Heading: Matches */}
           <h2 className="px-1 text-sm font-bold text-slate-700">
-            {recentFixtures.length > 0 ? "Last 5 results" : nextFixture ? "Next match" : "Matches"}
+            {nextFixture ? "Next match" : recentFixtures.length > 0 ? "Last 5 results" : "Matches"}
           </h2>
 
           {/* Squad table */}
@@ -432,17 +432,20 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
               </div>
             ) : (
               <>
-                <div className="flex flex-col gap-2">
-                  {recentFixtures.map((fixture) => (
-                    <FixtureCard key={fixture.id} fixture={fixture} teamId={teamId} />
-                  ))}
-                </div>
                 {nextFixture && (
                   <div className="flex flex-col gap-2">
-                    {recentFixtures.length > 0 && (
-                      <p className="px-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Next match</p>
-                    )}
                     <FixtureCard fixture={nextFixture} teamId={teamId} />
+                    {recentFixtures.length > 0 && (
+                      <h2 className="px-1 pt-2 text-sm font-bold text-slate-700">Last 5 results</h2>
+                    )}
+                  </div>
+                )}
+                {recentFixtures.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {!nextFixture && null}
+                    {recentFixtures.map((fixture) => (
+                      <FixtureCard key={fixture.id} fixture={fixture} teamId={teamId} />
+                    ))}
                   </div>
                 )}
               </>
