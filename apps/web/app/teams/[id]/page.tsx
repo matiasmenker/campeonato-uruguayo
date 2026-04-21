@@ -3,7 +3,6 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { IconArrowLeft, IconShieldFilled, IconTrophy } from "@tabler/icons-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import PlayerCard from "@/components/player-card"
 import TeamSeasonSelector from "@/components/team-season-selector"
 import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, type SquadMember, type TeamFixture } from "@/lib/teams"
 import { getSeasons, getStages, getSeasonChampion } from "@/lib/seasons"
@@ -311,10 +310,10 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
 
-          {/* Squad */}
-          <div className="flex flex-col gap-6">
+          {/* Squad table */}
+          <div className="flex flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
             {squad.length === 0 ? (
-              <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
+              <div className="flex h-36 items-center justify-center text-sm text-slate-400">
                 No squad data available for {selectedSeason.name}
               </div>
             ) : (
@@ -322,21 +321,87 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                 const members = squadByPosition[positionId]
                 if (!members || members.length === 0) return null
                 return (
-                  <div key={positionId} className="flex flex-col gap-3">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1">
-                      {POSITION_LABELS[positionId]}
-                    </p>
-                    <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5">
-                      {members.map((member) => (
-                        <PlayerCard
-                          key={member.id}
-                          name={member.player.displayName ?? member.player.name}
-                          imagePath={member.player.imagePath}
-                          positionId={member.positionId}
-                          rating={ratingMap.get(member.player.id) ?? null}
-                        />
-                      ))}
+                  <div key={positionId}>
+                    {/* Position group header */}
+                    <div className="border-b border-slate-100 bg-slate-50 px-4 py-2">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        {POSITION_LABELS[positionId]}
+                      </p>
                     </div>
+                    {/* Player rows */}
+                    {members.map((member, index) => {
+                      const rating = ratingMap.get(member.player.id) ?? null
+                      const displayName = member.player.displayName ?? member.player.name
+                      const isLast = index === members.length - 1
+                      return (
+                        <div
+                          key={member.id}
+                          className={`flex items-center gap-3 px-4 py-2.5 ${!isLast ? "border-b border-slate-100" : ""}`}
+                        >
+                          {/* Shirt number */}
+                          <span className="w-5 shrink-0 text-center text-xs font-medium text-slate-300">
+                            {member.shirtNumber ?? "—"}
+                          </span>
+
+                          {/* Photo */}
+                          <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
+                            {member.player.imagePath && !member.player.imagePath.includes("placeholder") ? (
+                              <img
+                                src={member.player.imagePath}
+                                alt={displayName}
+                                className="h-full w-full object-cover object-top"
+                              />
+                            ) : (
+                              <svg viewBox="0 0 32 32" fill="none" className="h-full w-full">
+                                <circle cx="16" cy="12" r="6" fill="#cbd5e1" />
+                                <path d="M4 30c0-6.627 5.373-12 12-12s12 5.373 12 12" fill="#cbd5e1" />
+                              </svg>
+                            )}
+                          </div>
+
+                          {/* Name */}
+                          <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900">
+                            {displayName}
+                          </span>
+
+                          {/* Rating */}
+                          {rating != null ? (
+                            <div className="flex shrink-0 items-center gap-1">
+                              <span
+                                className="text-sm font-black tabular-nums"
+                                style={{
+                                  color:
+                                    rating >= 8.0 ? "#22c55e"
+                                    : rating >= 7.0 ? "#38bdf8"
+                                    : rating >= 6.0 ? "#f97316"
+                                    : "#ef4444",
+                                }}
+                              >
+                                {rating.toFixed(1)}
+                              </span>
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                style={{
+                                  color:
+                                    rating >= 8.0 ? "#22c55e"
+                                    : rating >= 7.0 ? "#38bdf8"
+                                    : rating >= 6.0 ? "#f97316"
+                                    : "#ef4444",
+                                  opacity: 0.7,
+                                }}
+                              >
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                              </svg>
+                            </div>
+                          ) : (
+                            <span className="w-10 shrink-0" />
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 )
               })
