@@ -1,31 +1,34 @@
 /**
  * Centralized rating color system.
  *
- * Scale (matches the official rating gradient):
- *   < 6.0   → red      (poor)
- *   6.0–6.4 → orange   (below average)
- *   6.5–6.9 → amber    (average)
- *   7.0–7.9 → lime     (good)
- *   8.0–8.9 → green    (very good)
- *   ≥ 9.0   → cyan     (outstanding)
+ * Based on the official SofaScore rating scale:
+ *
+ *   ≥ 9.0  → blue        (perfect / outstanding)
+ *   ≥ 8.0  → teal        (very good)
+ *   ≥ 7.0  → green       (good)
+ *   ≥ 6.5  → gold/amber  (starting rating — baseline)
+ *   ≥ 6.0  → orange      (below average)
+ *   ≥ 5.0  → dark red    (poor)
+ *   < 5.0  → bright red  (very poor / minimal)
  */
 
 export interface RatingColorSet {
   /** Solid fill — use for backgrounds, badges, pills */
   fill: string
-  /** Muted/transparent variant — use for subtle backgrounds (e.g. 15% opacity ring) */
+  /** Muted/transparent variant — use for subtle backgrounds */
   muted: string
-  /** Text color — always legible on white backgrounds */
+  /** Text color — legible on white/light backgrounds */
   text: string
 }
 
 export const getRatingColors = (rating: number): RatingColorSet => {
-  if (rating >= 9.0) return { fill: "#06b6d4", muted: "rgba(6,182,212,0.15)", text: "#0e7490" }   // cyan-500 / cyan-700
-  if (rating >= 8.0) return { fill: "#22c55e", muted: "rgba(34,197,94,0.15)",  text: "#15803d" }   // green-500 / green-700
-  if (rating >= 7.0) return { fill: "#84cc16", muted: "rgba(132,204,22,0.15)", text: "#4d7c0f" }   // lime-500 / lime-700
-  if (rating >= 6.5) return { fill: "#f59e0b", muted: "rgba(245,158,11,0.15)", text: "#b45309" }   // amber-500 / amber-700
-  if (rating >= 6.0) return { fill: "#f97316", muted: "rgba(249,115,22,0.15)", text: "#c2410c" }   // orange-500 / orange-700
-  return                      { fill: "#ef4444", muted: "rgba(239,68,68,0.15)",  text: "#b91c1c" }  // red-500 / red-700
+  if (rating >= 9.0) return { fill: "#2563eb", muted: "rgba(37,99,235,0.15)",  text: "#1d4ed8" }  // blue-600 / blue-700
+  if (rating >= 8.0) return { fill: "#0d9488", muted: "rgba(13,148,136,0.15)", text: "#0f766e" }  // teal-600 / teal-700
+  if (rating >= 7.0) return { fill: "#16a34a", muted: "rgba(22,163,74,0.15)",  text: "#15803d" }  // green-600 / green-700
+  if (rating >= 6.5) return { fill: "#ca8a04", muted: "rgba(202,138,4,0.15)",  text: "#a16207" }  // yellow-600 / yellow-700
+  if (rating >= 6.0) return { fill: "#ea580c", muted: "rgba(234,88,12,0.15)",  text: "#c2410c" }  // orange-600 / orange-700
+  if (rating >= 5.0) return { fill: "#b91c1c", muted: "rgba(185,28,28,0.15)",  text: "#991b1b" }  // red-700 / red-800
+  return                     { fill: "#dc2626", muted: "rgba(220,38,38,0.15)",  text: "#b91c1c" }  // red-600 / red-700
 }
 
 /** Convenience — just the fill hex. Most common usage. */
