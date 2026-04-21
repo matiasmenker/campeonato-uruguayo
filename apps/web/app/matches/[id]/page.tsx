@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { IconArrowLeft } from "@tabler/icons-react"
+import { IconArrowLeft, IconBallFootball, IconArrowsShuffle } from "@tabler/icons-react"
 import {
   getFixture,
   getFixtureEvents,
@@ -106,8 +106,17 @@ interface EventBadgesProps {
   offsetBottom?: number
 }
 
-const Card = ({ color }: { color: string }) => (
+// Small rectangle card (yellow / red)
+const CardRect = ({ color }: { color: string }) => (
   <span style={{ display: "inline-block", width: 8, height: 11, borderRadius: 2, background: color, boxShadow: "0 1px 3px rgba(0,0,0,0.6)", flexShrink: 0 }} />
+)
+
+// Double card (yellow/red): two rectangles overlapping to signal it's one event
+const DoubleCard = () => (
+  <span className="relative inline-flex items-center" style={{ width: 13, height: 11 }}>
+    <span style={{ position: "absolute", left: 0,  display: "inline-block", width: 8, height: 11, borderRadius: 2, background: "#facc15", boxShadow: "0 1px 3px rgba(0,0,0,0.5)" }} />
+    <span style={{ position: "absolute", left: 5,  display: "inline-block", width: 8, height: 11, borderRadius: 2, background: "#ef4444", boxShadow: "0 1px 3px rgba(0,0,0,0.5)" }} />
+  </span>
 )
 
 const EventBadges = ({ events, assists, offsetBottom = 0 }: EventBadgesProps) => {
@@ -121,21 +130,27 @@ const EventBadges = ({ events, assists, offsetBottom = 0 }: EventBadgesProps) =>
 
   return (
     <div
-      className="absolute flex items-center justify-center gap-0.5"
+      className="absolute flex items-center justify-center gap-1"
       style={{ bottom: `calc(100% + ${offsetBottom}px)`, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap" }}
     >
-      {Array.from({ length: goals }).map((_, i)   => <span key={`g${i}`}  style={{ fontSize: 12, lineHeight: 1 }}>⚽</span>)}
-      {Array.from({ length: assists }).map((_, i) => <span key={`a${i}`}  style={{ fontSize: 11, lineHeight: 1 }}>🅰️</span>)}
-      {Array.from({ length: yellows }).map((_, i) => <Card key={`y${i}`}  color="#facc15" />)}
-      {/* Yellow/red: show yellow + red side by side slightly overlapping */}
-      {Array.from({ length: yellowReds }).map((_, i) => (
-        <span key={`yr${i}`} className="flex items-center" style={{ gap: -2 }}>
-          <Card color="#facc15" />
-          <Card color="#ef4444" />
-        </span>
+      {/* Goal — native tabler icon */}
+      {Array.from({ length: goals }).map((_, i) => (
+        <IconBallFootball key={`g${i}`} size={13} color="#fff" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.7))" }} />
       ))}
-      {Array.from({ length: reds }).map((_, i)    => <Card key={`r${i}`}  color="#ef4444" />)}
-      {Array.from({ length: subs }).map((_, i)    => <span key={`s${i}`}  style={{ fontSize: 10, lineHeight: 1 }}>🔄</span>)}
+      {/* Assist — tabler icon in sky color */}
+      {Array.from({ length: assists }).map((_, i) => (
+        <IconBallFootball key={`a${i}`} size={13} color="#38bdf8" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.7))" }} />
+      ))}
+      {/* Yellow card */}
+      {Array.from({ length: yellows }).map((_, i)    => <CardRect key={`y${i}`}  color="#facc15" />)}
+      {/* Yellow+Red (double yellow → red) */}
+      {Array.from({ length: yellowReds }).map((_, i) => <DoubleCard key={`yr${i}`} />)}
+      {/* Red card */}
+      {Array.from({ length: reds }).map((_, i)       => <CardRect key={`r${i}`}  color="#ef4444" />)}
+      {/* Substitution — tabler icon */}
+      {Array.from({ length: subs }).map((_, i) => (
+        <IconArrowsShuffle key={`s${i}`} size={12} color="#a3e635" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.7))" }} />
+      ))}
     </div>
   )
 }
@@ -159,7 +174,7 @@ const PlayerToken = ({ player, events, rating, assists, x, y }: PlayerTokenProps
   return (
     <div
       className="absolute flex flex-col items-center"
-      style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: 84, gap: 4 }}
+      style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: 120, gap: 4 }}
     >
       {/* Avatar — event badges float above, no layout impact */}
       <div className="relative" style={{ width: 56, height: 56 }}>
@@ -191,7 +206,7 @@ const PlayerToken = ({ player, events, rating, assists, x, y }: PlayerTokenProps
       {/* Name + rating — hero button style: rounded-xl, bg-white/10, backdrop-blur, NO border */}
       <div
         className="flex items-center gap-1.5 rounded-xl px-2.5 py-1"
-        style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)", maxWidth: 84 }}
+        style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)", maxWidth: 120 }}
       >
         <span
           className="text-white font-semibold leading-none"
@@ -380,12 +395,23 @@ const BenchSection = ({
 
 // ─── EventRow ─────────────────────────────────────────────────────────────────
 
-const eventIcon = (typeId: number | null): string => {
-  if (typeId === EVENT_GOAL)         return "⚽"
-  if (typeId === EVENT_YELLOW)       return "🟨"
-  if (typeId === EVENT_RED || typeId === EVENT_YELLOW_RED) return "🟥"
-  if (typeId === EVENT_SUBSTITUTION) return "🔄"
-  return "•"
+const EventRowIcon = ({ typeId }: { typeId: number | null }) => {
+  if (typeId === EVENT_GOAL)
+    return <IconBallFootball size={16} className="text-slate-700 shrink-0" />
+  if (typeId === EVENT_SUBSTITUTION)
+    return <IconArrowsShuffle size={16} className="text-emerald-500 shrink-0" />
+  if (typeId === EVENT_YELLOW)
+    return <span style={{ display: "inline-block", width: 11, height: 15, borderRadius: 2, background: "#facc15", flexShrink: 0 }} />
+  if (typeId === EVENT_RED)
+    return <span style={{ display: "inline-block", width: 11, height: 15, borderRadius: 2, background: "#ef4444", flexShrink: 0 }} />
+  if (typeId === EVENT_YELLOW_RED)
+    return (
+      <span className="relative inline-flex items-center shrink-0" style={{ width: 18, height: 15 }}>
+        <span style={{ position: "absolute", left: 0, width: 11, height: 15, borderRadius: 2, background: "#facc15" }} />
+        <span style={{ position: "absolute", left: 7, width: 11, height: 15, borderRadius: 2, background: "#ef4444" }} />
+      </span>
+    )
+  return <span className="text-slate-400 shrink-0">•</span>
 }
 
 const EventRow = ({ event }: { event: FixtureEvent }) => {
@@ -395,7 +421,9 @@ const EventRow = ({ event }: { event: FixtureEvent }) => {
 
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-slate-100 last:border-0">
-      <span className="text-base leading-none shrink-0">{eventIcon(event.typeId)}</span>
+      <div className="flex w-5 items-center justify-center shrink-0">
+        <EventRowIcon typeId={event.typeId} />
+      </div>
       <span className="w-9 text-xs font-bold text-slate-400 tabular-nums shrink-0">
         {event.minute != null ? `${event.minute}'` : "—"}
       </span>
