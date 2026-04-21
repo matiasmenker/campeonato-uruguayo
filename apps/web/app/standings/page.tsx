@@ -21,6 +21,13 @@ const RELEGATION_ZONE_SIZE = 3
 const MAIN_STAGE_NAMES = ["apertura", "clausura", "intermediate round"]
 const CHAMPIONSHIP_FINALS_NAME = "championship - finals"
 
+const getRatingColor = (value: number): string => {
+  if (value >= 8.0) return "#22c55e"
+  if (value >= 7.0) return "#38bdf8"
+  if (value >= 6.0) return "#f97316"
+  return "#ef4444"
+}
+
 const isMainStage = (stageName: string) =>
   MAIN_STAGE_NAMES.some((name) => stageName.toLowerCase() === name)
 
@@ -157,8 +164,10 @@ const PlayerStatCard = ({
   playerName,
   playerImage,
   teamImage,
+  teamName,
   value,
   unit,
+  isRating,
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>
   accentColor: string
@@ -166,40 +175,48 @@ const PlayerStatCard = ({
   playerName: string
   playerImage: string | null
   teamImage: string | null
+  teamName: string | null
   value: number
   unit: string
-}) => (
-  <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-    <div className="flex items-center gap-4 p-4">
-      <div className="relative shrink-0">
-        <div className="h-16 w-16 overflow-hidden rounded-full bg-slate-100 ring-2 ring-slate-200">
-          {playerImage ? (
-            <img src={playerImage} alt={playerName} className="h-full w-full object-cover object-top" />
-          ) : (
-            <svg viewBox="0 0 80 80" fill="none" className="h-full w-full">
-              <circle cx="40" cy="30" r="16" fill="#cbd5e1" />
-              <path d="M12 78c0-15.464 12.536-28 28-28s28 12.536 28 28" fill="#cbd5e1" />
-            </svg>
+  isRating?: boolean
+}) => {
+  const valueColor = isRating ? getRatingColor(value) : undefined
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+      <div className="flex items-center gap-4 p-4">
+        <div className="shrink-0">
+          <div className="h-14 w-14 overflow-hidden rounded-full bg-slate-100 ring-2 ring-slate-200">
+            {playerImage ? (
+              <img src={playerImage} alt={playerName} className="h-full w-full object-cover object-top" />
+            ) : (
+              <svg viewBox="0 0 80 80" fill="none" className="h-full w-full">
+                <circle cx="40" cy="30" r="16" fill="#cbd5e1" />
+                <path d="M12 78c0-15.464 12.536-28 28-28s28 12.536 28 28" fill="#cbd5e1" />
+              </svg>
+            )}
+          </div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-1.5">
+            <Icon size={12} className={accentColor} />
+            <p className={`text-[10px] font-bold uppercase tracking-wide ${accentColor}`}>{label}</p>
+          </div>
+          <p className="truncate text-sm font-semibold text-slate-950 leading-tight">{playerName}</p>
+          {teamImage && teamName && (
+            <div className="mt-1.5 flex items-center gap-1">
+              <img src={teamImage} alt={teamName} className="h-4 w-4 shrink-0 object-contain" />
+              <span className="text-[11px] text-slate-400 truncate">{teamName}</span>
+            </div>
           )}
         </div>
-        {teamImage && (
-          <img src={teamImage} alt="" className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full border-2 border-white bg-white object-contain shadow-sm p-0.5" />
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="mb-1 flex items-center gap-1.5">
-          <Icon size={12} className={accentColor} />
-          <p className={`text-[10px] font-bold uppercase tracking-wide ${accentColor}`}>{label}</p>
+        <div className="shrink-0 text-right">
+          <p className="text-2xl font-black tabular-nums" style={{ color: valueColor ?? "#0f172a" }}>{value}</p>
+          <p className="text-[10px] uppercase tracking-wide text-slate-400">{unit}</p>
         </div>
-        <p className="truncate text-sm font-semibold text-slate-950 leading-tight">{playerName}</p>
-      </div>
-      <div className="shrink-0 text-right">
-        <p className="text-2xl font-black text-slate-950 tabular-nums">{value}</p>
-        <p className="text-[10px] uppercase tracking-wide text-slate-400">{unit}</p>
       </div>
     </div>
-  </div>
-)
+  )
+}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -337,6 +354,7 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
                   playerName={getPlayerName(topScorer.player.displayName, topScorer.player.name)}
                   playerImage={topScorer.player.imagePath}
                   teamImage={topScorer.team?.imagePath ?? null}
+                  teamName={topScorer.team?.name ?? null}
                   value={topScorer.value}
                   unit="goals"
                 />
@@ -349,6 +367,7 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
                   playerName={getPlayerName(topAssist.player.displayName, topAssist.player.name)}
                   playerImage={topAssist.player.imagePath}
                   teamImage={topAssist.team?.imagePath ?? null}
+                  teamName={topAssist.team?.name ?? null}
                   value={topAssist.value}
                   unit="assists"
                 />
@@ -361,8 +380,10 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
                   playerName={getPlayerName(topRated.player.displayName, topRated.player.name)}
                   playerImage={topRated.player.imagePath}
                   teamImage={topRated.team?.imagePath ?? null}
+                  teamName={topRated.team?.name ?? null}
                   value={topRated.value}
                   unit="rating"
+                  isRating
                 />
               )}
             </div>
