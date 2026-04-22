@@ -58,6 +58,7 @@ export const findChangeLogsByFixtureId = async (
 };
 type EventWithPlayer = Event & {
   player: Player | null;
+  relatedPlayer: Player | null;
 };
 export const findEvents = async (
   query: EventsQuery
@@ -73,7 +74,7 @@ export const findEvents = async (
   const [events, totalItems] = await Promise.all([
     prisma.event.findMany({
       where,
-      include: { player: true },
+      include: { player: true, relatedPlayer: true },
       orderBy: [{ sortOrder: "asc" }, { minute: "asc" }],
       skip: (query.page - 1) * query.pageSize,
       take: query.pageSize,
@@ -96,7 +97,7 @@ export const findEventsByFixtureId = async (
   const [events, totalItems] = await Promise.all([
     prisma.event.findMany({
       where,
-      include: { player: true },
+      include: { player: true, relatedPlayer: true },
       orderBy: [{ sortOrder: "asc" }, { minute: "asc" }],
       skip: (query.page - 1) * query.pageSize,
       take: query.pageSize,

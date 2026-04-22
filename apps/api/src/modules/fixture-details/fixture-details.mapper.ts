@@ -66,6 +66,7 @@ export const toChangeLogContract = (
 };
 type EventWithPlayer = Event & {
   player: Player | null;
+  relatedPlayer: Player | null;
 };
 export const toEventContract = (event: EventWithPlayer): EventContract => {
   return {
@@ -73,6 +74,7 @@ export const toEventContract = (event: EventWithPlayer): EventContract => {
     sportmonksId: event.sportmonksId,
     fixtureId: event.fixtureId,
     player: event.player ? toPlayerSummary(event.player) : null,
+    relatedPlayer: event.relatedPlayer ? toPlayerSummary(event.relatedPlayer) : null,
     typeId: event.typeId,
     sortOrder: event.sortOrder,
     minute: event.minute,

@@ -64,21 +64,28 @@ const formatKickoffTime = (kickoffAt: string | null): string => {
 }
 
 // ─── Substitution events ──────────────────────────────────────────────────────
-// SportMonks records the player coming IN (from bench) per substitution event.
-// The player going OUT is not captured in the events endpoint.
-// Each event is rendered as its own row in the timeline.
+// Each substitution event in SportMonks records:
+//   player        — the player coming IN (from bench)
+//   relatedPlayer — the player going OUT (starter being replaced)
+// Each event maps to one timeline row showing both players.
 
 interface SubstitutionEvent {
   minute: number | null
   extraMinute: number | null
-  player: FixtureEvent["player"]  // the player entering the pitch
+  playerIn:  FixtureEvent["player"]  // coming in
+  playerOut: FixtureEvent["player"]  // going out (null if not in data)
 }
 
 const buildSubEvents = (events: FixtureEvent[]): SubstitutionEvent[] =>
   events
     .filter(e => e.typeId === EVENT_SUBSTITUTION && e.player != null)
     .sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-    .map(e => ({ minute: e.minute, extraMinute: e.extraMinute, player: e.player }))
+    .map(e => ({
+      minute:    e.minute,
+      extraMinute: e.extraMinute,
+      playerIn:  e.player,
+      playerOut: e.relatedPlayer,
+    }))
 
 // ─── Shared player avatar ─────────────────────────────────────────────────────
 
@@ -286,12 +293,17 @@ interface PitchProps {
   eventsByPlayer: Map<number, FixtureEvent[]>
   ratingByPlayer: Map<number, number>
   assistsByPlayer: Map<number, number>
+  subEvents: SubstitutionEvent[]
 }
 
-const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assistsByPlayer }: PitchProps) => {
-  // SportMonks only records who comes IN per substitution event, not who goes OUT.
-  // SubOutIcon on pitch is omitted because the exiting player is unknown from available data.
+const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assistsByPlayer, subEvents }: PitchProps) => {
+  // Build map of who went OUT (relatedPlayer) and at which minute
   const substitutedOutMap = new Map<number, { minute: number | null; extraMinute: number | null }>()
+  for (const subEvent of subEvents) {
+    if (subEvent.playerOut?.id != null) {
+      substitutedOutMap.set(subEvent.playerOut.id, { minute: subEvent.minute, extraMinute: subEvent.extraMinute })
+    }
+  }
 
   const renderTeam = (lineup: LineupPlayer[], isHome: boolean) => {
     const starters = lineup
@@ -541,30 +553,41 @@ const CardRow = ({ event, playerTeamMap }: { event: FixtureEvent; playerTeamMap:
 }
 
 const SubstitutionRow = ({ subEvent, playerTeamMap }: { subEvent: SubstitutionEvent; playerTeamMap: Map<number, { imagePath: string | null }> }) => {
-  const minute = subEvent.minute != null ? `${subEvent.minute}${subEvent.extraMinute != null ? `+${subEvent.extraMinute}` : ""}'` : "—"
-  const name   = subEvent.player?.displayName ?? subEvent.player?.name ?? "—"
-  const playerId = subEvent.player?.id
-  const playerImg = resolvePlayerImageUrl(subEvent.player?.imagePath ?? null)
-  const teamImg   = playerId != null ? (playerTeamMap.get(playerId)?.imagePath ?? null) : null
+  const minute     = subEvent.minute != null ? `${subEvent.minute}${subEvent.extraMinute != null ? `+${subEvent.extraMinute}` : ""}'` : "—"
+  const nameIn     = subEvent.playerIn?.displayName  ?? subEvent.playerIn?.name  ?? "—"
+  const nameOut    = subEvent.playerOut?.displayName ?? subEvent.playerOut?.name ?? null
+  const inPlayerId = subEvent.playerIn?.id
+  const teamImg    = inPlayerId != null ? (playerTeamMap.get(inPlayerId)?.imagePath ?? null) : null
 
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-slate-100 last:border-0">
-      {/* Sub-in icon */}
-      <div className="flex w-6 items-center justify-center shrink-0">
-        <SubInIcon size={15} />
+    <div className="flex items-start gap-3 py-2.5 border-b border-slate-100 last:border-0">
+      {/* Icons column */}
+      <div className="flex w-6 shrink-0 flex-col items-center justify-center gap-0.5 pt-0.5">
+        <SubInIcon  size={13} />
+        {nameOut && <SubOutIcon size={13} />}
       </div>
 
       {/* Minute */}
-      <span className="w-9 text-xs font-bold text-slate-400 tabular-nums shrink-0">{minute}</span>
+      <span className="w-9 text-xs font-bold text-slate-400 tabular-nums shrink-0 pt-0.5">{minute}</span>
 
-      {/* Player avatar */}
-      <img src={playerImg} alt={name} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
-
-      {/* Name */}
-      <span className="text-sm font-semibold text-emerald-700 flex-1 min-w-0 truncate">{name}</span>
+      {/* Players */}
+      <div className="flex flex-1 min-w-0 flex-col gap-0.5">
+        {/* In */}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <img src={resolvePlayerImageUrl(subEvent.playerIn?.imagePath ?? null)} alt={nameIn} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+          <span className="text-sm font-semibold text-emerald-700 truncate">{nameIn}</span>
+        </div>
+        {/* Out */}
+        {nameOut && (
+          <div className="flex items-center gap-1.5 min-w-0">
+            <img src={resolvePlayerImageUrl(subEvent.playerOut?.imagePath ?? null)} alt={nameOut} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+            <span className="text-sm font-medium text-slate-400 truncate">{nameOut}</span>
+          </div>
+        )}
+      </div>
 
       {/* Team crest */}
-      {teamImg && <img src={teamImg} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
+      {teamImg && <img src={teamImg} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0, alignSelf: "center" }} />}
     </div>
   )
 }
@@ -731,7 +754,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
 
         {/* ── Pitch ─────────────────────────────────────────────────────────── */}
         {hasLineups ? (
-          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} />
+          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} subEvents={subEvents} />
         ) : (
           <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
             Alineación no disponible para este partido

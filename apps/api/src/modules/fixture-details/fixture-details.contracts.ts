@@ -46,6 +46,7 @@ export interface EventContract {
   sportmonksId: number;
   fixtureId: number;
   player: PlayerSummary | null;
+  relatedPlayer: PlayerSummary | null;  // for substitutions: the player going OUT
   typeId: number | null;
   sortOrder: number | null;
   minute: number | null;

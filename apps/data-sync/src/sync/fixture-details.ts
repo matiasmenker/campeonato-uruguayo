@@ -271,10 +271,18 @@ const syncFixtureDetails = async (
               missingPlayerSamples.push(eventPlayerSportmonksId);
           }
 
+          // For substitution events: related_player is the player going OUT
+          const relatedPlayerSportmonksId = event.related_player?.id ?? event.related_player_id ?? null;
+          const relatedPlayerId =
+            relatedPlayerSportmonksId != null
+              ? (playerIdBySportmonksId.get(relatedPlayerSportmonksId) ?? null)
+              : null;
+
           eventsBatch.push({
             sportmonksId: event.id,
             fixtureId,
             playerId: eventPlayerId,
+            relatedPlayerId,
             typeId: event.type_id ?? null,
             sortOrder: event.sort_order ?? event.order ?? null,
             minute: event.minute ?? null,

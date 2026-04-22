@@ -197,7 +197,8 @@ model Player {
   playerMarketValues      PlayerMarketValue[]
   injuries                Injury[]
   suspensions             Suspension[]
-  events                  Event[]
+  events                  Event[]  @relation("EventPlayer")
+  relatedEvents           Event[]  @relation("EventRelatedPlayer")
   lineups                 Lineup[]
   fixturePlayerStatistics FixturePlayerStatistic[]
 
@@ -383,22 +384,24 @@ model FixtureChangeLog {
 }
 
 model Event {
-  id           Int      @id @default(autoincrement())
-  sportmonksId Int      @unique
-  fixtureId    Int
-  playerId     Int?
-  typeId       Int?
-  sortOrder    Int?
-  minute       Int?
-  extraMinute  Int?
-  result       String?
-  info         String?
-  addition     String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  sportmonksId    Int      @unique
+  fixtureId       Int
+  playerId        Int?
+  relatedPlayerId Int?     // for substitutions: the player going OUT
+  typeId          Int?
+  sortOrder       Int?
+  minute          Int?
+  extraMinute     Int?
+  result          String?
+  info            String?
+  addition        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Restrict)
-  player  Player? @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  fixture       Fixture @relation(fields: [fixtureId], references: [id], onDelete: Restrict)
+  player        Player? @relation("EventPlayer", fields: [playerId], references: [id], onDelete: SetNull)
+  relatedPlayer Player? @relation("EventRelatedPlayer", fields: [relatedPlayerId], references: [id], onDelete: SetNull)
 
   @@index([fixtureId, sortOrder])
   @@index([fixtureId, minute])

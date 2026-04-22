@@ -86,6 +86,7 @@ export interface FixtureEvent {
   id: number
   fixtureId: number
   player: PlayerSummary | null
+  relatedPlayer: PlayerSummary | null  // for substitutions: the player going OUT
   typeId: number | null
   sortOrder: number | null
   minute: number | null
@@ -133,9 +134,10 @@ export interface FixturePlayerStat {
   value: { normalizedValue: number | string | boolean | null }
 }
 
-export const STAT_TYPE_RATING  = 118
-export const STAT_TYPE_ASSIST  = 79
-export const STAT_TYPE_GOALS   = 52
+export const STAT_TYPE_RATING         = 118
+export const STAT_TYPE_ASSIST         = 79
+export const STAT_TYPE_GOALS          = 52
+export const STAT_TYPE_MINUTES_PLAYED = 119
 
 export const getFixturePlayerStatsByType = async (id: number, typeId: number): Promise<FixturePlayerStat[]> => {
   const response = await apiFetch<ListResponse<FixturePlayerStat>>(
@@ -145,8 +147,9 @@ export const getFixturePlayerStatsByType = async (id: number, typeId: number): P
 }
 
 // Convenience wrappers
-export const getFixturePlayerRatings = (id: number) => getFixturePlayerStatsByType(id, STAT_TYPE_RATING)
-export const getFixturePlayerAssists = (id: number) => getFixturePlayerStatsByType(id, STAT_TYPE_ASSIST)
+export const getFixturePlayerRatings      = (id: number) => getFixturePlayerStatsByType(id, STAT_TYPE_RATING)
+export const getFixturePlayerAssists      = (id: number) => getFixturePlayerStatsByType(id, STAT_TYPE_ASSIST)
+export const getFixturePlayerMinutesPlayed = (id: number) => getFixturePlayerStatsByType(id, STAT_TYPE_MINUTES_PLAYED)
 
 export interface Round {
   id: number
