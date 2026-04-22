@@ -7,6 +7,12 @@ import { cn } from "@/lib/utils"
 
 export const dynamic = "force-dynamic"
 
+interface StageSummary {
+  id: number
+  name: string
+  isCurrent: boolean
+}
+
 const LIVE_STATES = new Set([
   "INPLAY_1ST_HALF",
   "INPLAY_2ND_HALF",
@@ -28,22 +34,22 @@ const getMatchStatus = (fixture: FixtureListItem) => {
   return "upcoming" as const
 }
 
-const formatKickoffDate = (value: string | null) => {
-  if (!value) return "Sin fecha"
-  return new Intl.DateTimeFormat("es-UY", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    timeZone: "America/Montevideo",
-  }).format(new Date(value))
-}
-
 const formatKickoffTime = (value: string | null) => {
   if (!value) return "--:--"
   return new Intl.DateTimeFormat("es-UY", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
+    timeZone: "America/Montevideo",
+  }).format(new Date(value))
+}
+
+const formatKickoffDateShort = (value: string | null) => {
+  if (!value) return ""
+  return new Intl.DateTimeFormat("es-UY", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
     timeZone: "America/Montevideo",
   }).format(new Date(value))
 }
@@ -167,44 +173,18 @@ const MatchRow = ({ fixture }: { fixture: FixtureListItem }) => {
   )
 }
 
-interface RoundGroup {
-  round: Round | null
-  fixtures: FixtureListItem[]
-}
-
-const groupByRound = (fixtures: FixtureListItem[]): RoundGroup[] => {
-  const map = new Map<number | null, RoundGroup>()
-  for (const fixture of fixtures) {
-    const roundId = fixture.round?.id ?? null
-    if (!map.has(roundId)) {
-      map.set(roundId, { round: fixture.round, fixtures: [] })
-    }
-    map.get(roundId)!.fixtures.push(fixture)
-  }
-  const groups = Array.from(map.values())
-  return groups.sort((groupA, groupB) => {
-    const nameA = groupA.round?.name ?? ""
-    const nameB = groupB.round?.name ?? ""
-    const numA = parseInt(nameA, 10)
-    const numB = parseInt(nameB, 10)
-    if (!isNaN(numA) && !isNaN(numB)) return numB - numA
-    return nameB.localeCompare(nameA)
-  })
-}
-
 interface MatchesPageProps {
-  searchParams: Promise<{ seasonId?: string; roundId?: string }>
+  searchParams: Promise<{ seasonId?: string; stageId?: string; roundId?: string }>
 }
 
 const MatchesPage = async ({ searchParams }: MatchesPageProps) => {
-  const { seasonId: seasonIdParam, roundId: roundIdParam } = await searchParams
+  const { seasonId: seasonIdParam, stageId: stageIdParam, roundId: roundIdParam } = await searchParams
 
   const [seasonsResult, fixturesResult] = await Promise.allSettled([
     getSeasons(),
     getFixtures({
       seasonId: seasonIdParam ? Number(seasonIdParam) : undefined,
-      roundId: roundIdParam ? Number(roundIdParam) : undefined,
-      pageSize: 100,
+      pageSize: 200,
     }),
   ])
 
@@ -213,64 +193,76 @@ const MatchesPage = async ({ searchParams }: MatchesPageProps) => {
   const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? null)
   const selectedSeason = seasons.find((season) => season.id === selectedSeasonId) ?? currentSeason
 
-  let fixtures: FixtureListItem[] = []
+  let allFixtures: FixtureListItem[] = []
   let errorMessage: string | null = null
 
   if (fixturesResult.status === "fulfilled") {
-    fixtures = fixturesResult.value.data
+    allFixtures = fixturesResult.value.data
   } else {
     errorMessage = "No se pudieron cargar los partidos."
   }
 
-  // If no season filter was applied but we resolved a current season, re-fetch filtered
-  // (only if the initial fetch had no seasonId param)
   if (!seasonIdParam && selectedSeasonId && fixturesResult.status === "fulfilled") {
-    const filtered = await getFixtures({
-      seasonId: selectedSeasonId,
-      roundId: roundIdParam ? Number(roundIdParam) : undefined,
-      pageSize: 100,
-    }).catch(() => null)
-    if (filtered) fixtures = filtered.data
+    const refetched = await getFixtures({ seasonId: selectedSeasonId, pageSize: 200 }).catch(() => null)
+    if (refetched) allFixtures = refetched.data
   }
 
-  // Build round list from the full-season fixtures (without round filter) for the selector
-  const allRounds: Round[] = []
-  const seenRoundIds = new Set<number>()
-  for (const fixture of fixtures) {
-    if (fixture.round && !seenRoundIds.has(fixture.round.id)) {
-      seenRoundIds.add(fixture.round.id)
-      allRounds.push(fixture.round)
+  // Extract stages from fixtures
+  const stageMap = new Map<number, StageSummary>()
+  for (const fixture of allFixtures) {
+    if (fixture.stage && !stageMap.has(fixture.stage.id)) {
+      stageMap.set(fixture.stage.id, fixture.stage)
     }
   }
-  allRounds.sort((roundA, roundB) => {
+  const stages = Array.from(stageMap.values()).sort((stageA, stageB) => stageA.id - stageB.id)
+  const currentStage = stages.find((stage) => stage.isCurrent) ?? stages[stages.length - 1] ?? null
+  const selectedStageId = stageIdParam ? Number(stageIdParam) : (currentStage?.id ?? null)
+  const selectedStage = stages.find((stage) => stage.id === selectedStageId) ?? currentStage
+
+  // Fixtures for the selected stage
+  const stageFixtures = selectedStageId
+    ? allFixtures.filter((fixture) => fixture.stage?.id === selectedStageId)
+    : allFixtures
+
+  // Extract rounds for this stage
+  const roundMap = new Map<number, Round>()
+  for (const fixture of stageFixtures) {
+    if (fixture.round && !roundMap.has(fixture.round.id)) {
+      roundMap.set(fixture.round.id, fixture.round)
+    }
+  }
+  const rounds = Array.from(roundMap.values()).sort((roundA, roundB) => {
     const numA = parseInt(roundA.name, 10)
     const numB = parseInt(roundB.name, 10)
-    if (!isNaN(numA) && !isNaN(numB)) return numB - numA
-    return roundB.name.localeCompare(roundA.name)
+    if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+    return roundA.name.localeCompare(roundB.name)
   })
 
-  const selectedRoundId = roundIdParam ? Number(roundIdParam) : null
-  const filteredFixtures = selectedRoundId
-    ? fixtures.filter((fixture) => fixture.round?.id === selectedRoundId)
-    : fixtures
+  const currentRound = rounds.find((round) => round.isCurrent) ?? rounds[rounds.length - 1] ?? null
+  const selectedRoundId = roundIdParam ? Number(roundIdParam) : (currentRound?.id ?? null)
+  const selectedRound = rounds.find((round) => round.id === selectedRoundId) ?? currentRound
 
-  const roundGroups = groupByRound(filteredFixtures)
+  const roundIndex = rounds.findIndex((round) => round.id === selectedRoundId)
+  const previousRound = roundIndex > 0 ? rounds[roundIndex - 1] : null
+  const nextRound = roundIndex < rounds.length - 1 ? rounds[roundIndex + 1] : null
 
-  const buildUrl = (params: { seasonId?: number | null; roundId?: number | null }) => {
+  const displayFixtures = selectedRoundId
+    ? stageFixtures.filter((fixture) => fixture.round?.id === selectedRoundId)
+    : stageFixtures
+
+  const buildUrl = (params: { seasonId?: number | null; stageId?: number | null; roundId?: number | null }) => {
     const query = new URLSearchParams()
-    const season = params.seasonId ?? selectedSeasonId
-    const round = params.roundId !== undefined ? params.roundId : selectedRoundId
+    const season = params.seasonId !== undefined ? params.seasonId : selectedSeasonId
+    const stage = params.stageId !== undefined ? params.stageId : selectedStageId
+    const round = params.roundId !== undefined ? params.roundId : null
     if (season) query.set("seasonId", String(season))
+    if (stage) query.set("stageId", String(stage))
     if (round) query.set("roundId", String(round))
     return `/matches?${query.toString()}`
   }
 
-  // Pagination for rounds nav
-  const currentRoundIndex = selectedRoundId
-    ? allRounds.findIndex((round) => round.id === selectedRoundId)
-    : -1
-  const previousRound = currentRoundIndex > 0 ? allRounds[currentRoundIndex - 1] : null
-  const nextRound = currentRoundIndex < allRounds.length - 1 ? allRounds[currentRoundIndex + 1] : null
+  // Group display fixtures by date for the header
+  const firstKickoff = displayFixtures.find((fixture) => fixture.kickoffAt)?.kickoffAt ?? null
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
@@ -282,13 +274,12 @@ const MatchesPage = async ({ searchParams }: MatchesPageProps) => {
             <HeroBackground />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
 
-            {/* Season selector — top right */}
             {seasons.length > 1 && (
               <div className="absolute right-5 top-5 flex items-center gap-2">
                 {seasons.map((season) => (
                   <Link
                     key={season.id}
-                    href={buildUrl({ seasonId: season.id, roundId: null })}
+                    href={buildUrl({ seasonId: season.id, stageId: null, roundId: null })}
                     className={cn(
                       "rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors",
                       season.id === selectedSeasonId
@@ -302,7 +293,6 @@ const MatchesPage = async ({ searchParams }: MatchesPageProps) => {
               </div>
             )}
 
-            {/* Title — bottom left */}
             <div className="absolute bottom-0 left-0 right-0 flex items-end gap-5 p-6">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
                 <IconBallFootball size={32} className="text-white/70" />
@@ -311,9 +301,7 @@ const MatchesPage = async ({ searchParams }: MatchesPageProps) => {
                 <h1 className="text-3xl font-black text-white leading-none drop-shadow">Partidos</h1>
                 <p className="text-sm text-white/70">
                   Primera División
-                  {selectedSeason ? (
-                    <span className="font-semibold text-white/90"> · {selectedSeason.name}</span>
-                  ) : null}
+                  {selectedSeason ? <span className="font-semibold text-white/90"> · {selectedSeason.name}</span> : null}
                 </p>
               </div>
             </div>
@@ -327,94 +315,77 @@ const MatchesPage = async ({ searchParams }: MatchesPageProps) => {
           </Alert>
         ) : (
           <>
-            {/* Round filter bar */}
-            {allRounds.length > 0 && (
-              <div className="flex items-center gap-2">
-                {/* Prev round */}
-                {previousRound ? (
+            {/* Stage tabs */}
+            {stages.length > 1 && (
+              <div className="flex gap-1 rounded-2xl border border-slate-200/80 bg-white p-1 shadow-sm">
+                {stages.map((stage) => (
                   <Link
-                    href={buildUrl({ roundId: previousRound.id })}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition hover:bg-slate-50 hover:shadow-sm"
-                    aria-label="Fecha anterior"
-                  >
-                    <IconChevronLeft size={15} />
-                  </Link>
-                ) : (
-                  <div className="h-8 w-8 shrink-0" />
-                )}
-
-                {/* Round chips — scrollable */}
-                <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-                  <Link
-                    href={buildUrl({ roundId: null })}
+                    key={stage.id}
+                    href={buildUrl({ stageId: stage.id, roundId: null })}
                     className={cn(
-                      "shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
-                      selectedRoundId === null
-                        ? "border-slate-800 bg-slate-800 text-white"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800"
+                      "flex-1 rounded-xl py-2 text-center text-sm font-semibold transition-colors",
+                      stage.id === selectedStageId
+                        ? "bg-slate-900 text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-800"
                     )}
                   >
-                    Todas
+                    {stage.name}
                   </Link>
-                  {allRounds.map((round) => (
-                    <Link
-                      key={round.id}
-                      href={buildUrl({ roundId: round.id })}
-                      className={cn(
-                        "shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition-colors",
-                        round.id === selectedRoundId
-                          ? "border-slate-800 bg-slate-800 text-white"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800"
-                      )}
-                    >
-                      Fecha {round.name}
-                    </Link>
-                  ))}
-                </div>
-
-                {/* Next round */}
-                {nextRound ? (
-                  <Link
-                    href={buildUrl({ roundId: nextRound.id })}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition hover:bg-slate-50 hover:shadow-sm"
-                    aria-label="Siguiente fecha"
-                  >
-                    <IconChevronRight size={15} />
-                  </Link>
-                ) : (
-                  <div className="h-8 w-8 shrink-0" />
-                )}
+                ))}
               </div>
             )}
 
-            {/* Match groups */}
-            {filteredFixtures.length === 0 ? (
+            {/* Round navigator */}
+            {rounds.length > 0 && (
+              <div className="flex items-center gap-3">
+                <Link
+                  href={previousRound ? buildUrl({ roundId: previousRound.id }) : "#"}
+                  aria-disabled={!previousRound}
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-white shadow-xs transition",
+                    previousRound
+                      ? "border-slate-200 text-slate-600 hover:bg-slate-50 hover:shadow-sm"
+                      : "pointer-events-none border-slate-100 text-slate-200"
+                  )}
+                >
+                  <IconChevronLeft size={16} />
+                </Link>
+
+                <div className="flex flex-1 flex-col items-center gap-0.5">
+                  <span className="text-base font-black text-slate-900">
+                    {selectedRound ? `Fecha ${selectedRound.name}` : "Sin fecha"}
+                  </span>
+                  {firstKickoff && (
+                    <span className="text-xs capitalize text-slate-400">
+                      {formatKickoffDateShort(firstKickoff)}
+                    </span>
+                  )}
+                </div>
+
+                <Link
+                  href={nextRound ? buildUrl({ roundId: nextRound.id }) : "#"}
+                  aria-disabled={!nextRound}
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-white shadow-xs transition",
+                    nextRound
+                      ? "border-slate-200 text-slate-600 hover:bg-slate-50 hover:shadow-sm"
+                      : "pointer-events-none border-slate-100 text-slate-200"
+                  )}
+                >
+                  <IconChevronRight size={16} />
+                </Link>
+              </div>
+            )}
+
+            {/* Match list */}
+            {displayFixtures.length === 0 ? (
               <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
                 No hay partidos disponibles
               </div>
             ) : (
-              <div className="flex flex-col gap-4">
-                {roundGroups.map((group) => (
-                  <section key={group.round?.id ?? "no-round"}>
-                    {/* Round header */}
-                    <div className="mb-2 flex items-center justify-between px-1">
-                      <h2 className="text-sm font-bold text-slate-700">
-                        {group.round ? `Fecha ${group.round.name}` : "Sin fecha"}
-                      </h2>
-                      {group.fixtures[0]?.kickoffAt && (
-                        <span className="text-xs capitalize text-slate-400">
-                          {formatKickoffDate(group.fixtures[0].kickoffAt)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Match list */}
-                    <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-                      {group.fixtures.map((fixture) => (
-                        <MatchRow key={fixture.id} fixture={fixture} />
-                      ))}
-                    </div>
-                  </section>
+              <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                {displayFixtures.map((fixture) => (
+                  <MatchRow key={fixture.id} fixture={fixture} />
                 ))}
               </div>
             )}

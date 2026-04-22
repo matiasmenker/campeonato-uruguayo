@@ -194,12 +194,14 @@ export interface FixtureListResponse {
 
 export const getFixtures = async (params: {
   seasonId?: number
+  stageId?: number
   roundId?: number
   page?: number
   pageSize?: number
 }): Promise<FixtureListResponse> => {
   const query = new URLSearchParams()
   if (params.seasonId) query.set("seasonId", String(params.seasonId))
+  if (params.stageId) query.set("stageId", String(params.stageId))
   if (params.roundId) query.set("roundId", String(params.roundId))
   query.set("page", String(params.page ?? 1))
   query.set("pageSize", String(params.pageSize ?? 100))
