@@ -304,9 +304,13 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
         <IconChevronRight size={15} />
       </button>
 
-      {/* Gradient fades — from-white because the card background is white */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-white to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-white to-transparent" />
+      {/* Gradient fades — only shown when there's content hidden in that direction */}
+      {canScrollPrev && (
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-slate-50 to-transparent" />
+      )}
+      {canScrollNext && (
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-slate-50 to-transparent" />
+      )}
 
       <div ref={emblaRef} className="overflow-hidden">
         <div className="flex -ml-2 px-5">
@@ -318,7 +322,7 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
                 <button
                   onClick={() => onSelectRound(group.round.id)}
                   className={cn(
-                    "flex flex-col items-center gap-1 rounded-2xl border px-4 py-2.5 transition-all duration-150",
+                    "cursor-pointer flex flex-col items-center gap-1 rounded-2xl border px-4 py-2.5 transition-all duration-150",
                     isActive
                       ? "border-slate-900 bg-slate-900 shadow-md"
                       : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
@@ -558,9 +562,9 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
         </div>
       )}
 
-      {/* Round carousel — standalone card, separated from the round content */}
+      {/* Round carousel — gradient strip, no card border */}
       {roundGroups.length > 0 && (
-        <div className="rounded-2xl border border-slate-200/80 bg-white py-4 shadow-sm">
+        <div className="rounded-2xl bg-gradient-to-b from-slate-100/80 to-slate-50 py-4">
           <RoundSelector
             roundGroups={roundGroups}
             effectiveRoundId={effectiveRoundId}
