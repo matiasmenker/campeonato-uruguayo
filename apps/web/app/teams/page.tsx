@@ -8,48 +8,40 @@ import TeamsSeasonSelector from "@/components/teams-season-selector"
 
 export const dynamic = "force-dynamic"
 
-// Hero background — brand blues (primary hue ~250, chart palette)
+// Hero background — brand blues (primary hue ~250)
 const HeroBackground = () => (
   <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
     <defs>
-      {/* Base: dark navy → primary blue → deep blue — brand hue 250 */}
-      <linearGradient id="base" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%"   stopColor="#080e24" />
-        <stop offset="40%"  stopColor="#162265" />
-        <stop offset="75%"  stopColor="#2040b0" />
-        <stop offset="100%" stopColor="#1a358f" />
+      <linearGradient id="teamsBase" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stopColor="#0d1535" />
+        <stop offset="35%"  stopColor="#162860" />
+        <stop offset="70%"  stopColor="#1e3d90" />
+        <stop offset="100%" stopColor="#162e78" />
       </linearGradient>
-      {/* Bright primary glow — top right */}
-      <radialGradient id="gA" cx="85%" cy="10%" r="45%">
-        <stop offset="0%" stopColor="#5b8def" stopOpacity="0.32" />
-        <stop offset="100%" stopColor="#5b8def" stopOpacity="0" />
+      <radialGradient id="teamsGA" cx="78%" cy="18%" r="52%">
+        <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.35" />
+        <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
       </radialGradient>
-      {/* Mid-blue wash — center */}
-      <radialGradient id="gB" cx="40%" cy="55%" r="50%">
-        <stop offset="0%" stopColor="#3461d1" stopOpacity="0.2" />
-        <stop offset="100%" stopColor="#3461d1" stopOpacity="0" />
+      <radialGradient id="teamsGB" cx="18%" cy="75%" r="55%">
+        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.28" />
+        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
       </radialGradient>
-      {/* Deep shadow — bottom right */}
-      <radialGradient id="gC" cx="95%" cy="95%" r="45%">
-        <stop offset="0%" stopColor="#06091a" stopOpacity="0.5" />
-        <stop offset="100%" stopColor="#06091a" stopOpacity="0" />
+      <radialGradient id="teamsGC" cx="50%" cy="45%" r="45%">
+        <stop offset="0%" stopColor="#2563eb" stopOpacity="0.16" />
+        <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
       </radialGradient>
-      {/* Subtle dot texture */}
-      <pattern id="dots" x="0" y="0" width="18" height="18" patternUnits="userSpaceOnUse">
-        <circle cx="9" cy="9" r="0.8" fill="rgba(160,185,255,0.1)" />
+      <pattern id="teamsDots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <circle cx="10" cy="10" r="1" fill="rgba(147,197,253,0.15)" />
       </pattern>
     </defs>
-    <rect width="100%" height="100%" fill="url(#base)" />
-    <rect width="100%" height="100%" fill="url(#gA)" />
-    <rect width="100%" height="100%" fill="url(#gB)" />
-    <rect width="100%" height="100%" fill="url(#gC)" />
-    <rect width="100%" height="100%" fill="url(#dots)" />
-    {/* Concentric arcs — bottom left */}
-    <circle cx="-8%" cy="115%" r="72%" fill="none" stroke="rgba(91,141,239,0.1)" strokeWidth="1.5" />
-    <circle cx="-8%" cy="115%" r="55%" fill="none" stroke="rgba(91,141,239,0.07)" strokeWidth="1" />
-    <circle cx="-8%" cy="115%" r="38%" fill="none" stroke="rgba(91,141,239,0.05)" strokeWidth="0.5" />
-    {/* Accent arc — top right */}
-    <circle cx="110%" cy="-10%" r="50%" fill="none" stroke="rgba(160,185,255,0.07)" strokeWidth="1" />
+    <rect width="100%" height="100%" fill="url(#teamsBase)" />
+    <rect width="100%" height="100%" fill="url(#teamsGA)" />
+    <rect width="100%" height="100%" fill="url(#teamsGB)" />
+    <rect width="100%" height="100%" fill="url(#teamsGC)" />
+    <rect width="100%" height="100%" fill="url(#teamsDots)" />
+    <circle cx="-5%" cy="108%" r="62%" fill="none" stroke="rgba(96,165,250,0.1)" strokeWidth="1.5" />
+    <circle cx="-5%" cy="108%" r="46%" fill="none" stroke="rgba(96,165,250,0.07)" strokeWidth="1" />
+    <circle cx="106%" cy="-6%" r="46%" fill="none" stroke="rgba(147,197,253,0.08)" strokeWidth="1" />
   </svg>
 )
 
@@ -80,37 +72,34 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
-        {/* Hero — same pattern as team detail page */}
         <div className="overflow-hidden rounded-2xl shadow-lg">
-          <div className="relative min-h-44 bg-slate-900">
+          <div className="relative min-h-52 bg-slate-900">
             <HeroBackground />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/15 to-black/60" />
 
-            {/* Gradient overlay — darkens bottom for text legibility */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-black/80" />
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              {/* Title */}
+              <div className="mb-4 flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
+                  <IconShieldFilled size={28} className="text-white/80" />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <h1 className="text-3xl font-black text-white leading-none drop-shadow">Teams</h1>
+                  <p className="text-sm text-white/65">
+                    Uruguayan Primera División
+                    {selectedSeason && <span className="font-semibold text-white/85"> · {selectedSeason.name}</span>}
+                  </p>
+                </div>
+              </div>
 
-            {/* Season selector — top right */}
-            {seasons.length > 1 && (
-              <div className="absolute right-5 top-5">
-                <Suspense>
-                  <TeamsSeasonSelector seasons={seasons} selectedSeasonId={selectedSeason?.id ?? 0} />
-                </Suspense>
-              </div>
-            )}
-
-            {/* Title — bottom left */}
-            <div className="absolute bottom-0 left-0 right-0 flex items-end gap-5 p-6">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
-                <IconShieldFilled size={32} className="text-white/70" />
-              </div>
-              <div className="flex flex-col gap-1 pb-1">
-                <h1 className="text-3xl font-black text-white leading-none drop-shadow">Teams</h1>
-                <p className="text-sm text-white/70">
-                  Uruguayan Primera División
-                  {selectedSeason ? (
-                    <span className="font-semibold text-white/90"> · {selectedSeason.name}</span>
-                  ) : null}
-                </p>
-              </div>
+              {/* Season selector */}
+              {seasons.length > 1 && (
+                <div className="flex items-center gap-2">
+                  <Suspense>
+                    <TeamsSeasonSelector seasons={seasons} selectedSeasonId={selectedSeason?.id ?? 0} />
+                  </Suspense>
+                </div>
+              )}
             </div>
           </div>
         </div>

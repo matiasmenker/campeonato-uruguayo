@@ -17,30 +17,35 @@ const HeroBackground = () => (
   <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
     <defs>
       <linearGradient id="matchesBase" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#0a1628" />
-        <stop offset="40%" stopColor="#0d2a1a" />
-        <stop offset="75%" stopColor="#0f4a2a" />
-        <stop offset="100%" stopColor="#0a3320" />
+        <stop offset="0%"   stopColor="#062b12" />
+        <stop offset="35%"  stopColor="#0a4020" />
+        <stop offset="70%"  stopColor="#0e5628" />
+        <stop offset="100%" stopColor="#0a3d1c" />
       </linearGradient>
-      <radialGradient id="matchesGA" cx="80%" cy="15%" r="45%">
-        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.18" />
+      <radialGradient id="matchesGA" cx="78%" cy="18%" r="52%">
+        <stop offset="0%" stopColor="#4ade80" stopOpacity="0.32" />
+        <stop offset="100%" stopColor="#4ade80" stopOpacity="0" />
+      </radialGradient>
+      <radialGradient id="matchesGB" cx="18%" cy="75%" r="55%">
+        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.26" />
         <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
       </radialGradient>
-      <radialGradient id="matchesGB" cx="20%" cy="70%" r="50%">
-        <stop offset="0%" stopColor="#16a34a" stopOpacity="0.12" />
+      <radialGradient id="matchesGC" cx="50%" cy="45%" r="45%">
+        <stop offset="0%" stopColor="#16a34a" stopOpacity="0.14" />
         <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
       </radialGradient>
-      <pattern id="matchesDots" x="0" y="0" width="18" height="18" patternUnits="userSpaceOnUse">
-        <circle cx="9" cy="9" r="0.8" fill="rgba(134,239,172,0.08)" />
+      <pattern id="matchesDots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <circle cx="10" cy="10" r="1" fill="rgba(134,239,172,0.14)" />
       </pattern>
     </defs>
     <rect width="100%" height="100%" fill="url(#matchesBase)" />
     <rect width="100%" height="100%" fill="url(#matchesGA)" />
     <rect width="100%" height="100%" fill="url(#matchesGB)" />
+    <rect width="100%" height="100%" fill="url(#matchesGC)" />
     <rect width="100%" height="100%" fill="url(#matchesDots)" />
-    <circle cx="-5%" cy="110%" r="65%" fill="none" stroke="rgba(34,197,94,0.07)" strokeWidth="1.5" />
-    <circle cx="-5%" cy="110%" r="48%" fill="none" stroke="rgba(34,197,94,0.05)" strokeWidth="1" />
-    <circle cx="108%" cy="-8%" r="48%" fill="none" stroke="rgba(134,239,174,0.06)" strokeWidth="1" />
+    <circle cx="-5%" cy="108%" r="62%" fill="none" stroke="rgba(74,222,128,0.1)" strokeWidth="1.5" />
+    <circle cx="-5%" cy="108%" r="46%" fill="none" stroke="rgba(74,222,128,0.07)" strokeWidth="1" />
+    <circle cx="106%" cy="-6%" r="46%" fill="none" stroke="rgba(134,239,172,0.08)" strokeWidth="1" />
   </svg>
 )
 
@@ -554,50 +559,50 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
   return (
     <div className="flex flex-col gap-6">
 
-      {/* Hero — season + stage selectors live here */}
+      {/* Hero — title + selectors */}
       <div className="overflow-hidden rounded-2xl shadow-lg">
-        <div className="relative min-h-44 bg-slate-900">
+        <div className="relative min-h-52 bg-slate-900">
           <HeroBackground />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-black/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/15 to-black/60" />
 
-          {/* Season select — top right */}
-          {showSeasonSelector && (
-            <div className="absolute right-5 top-5">
-              <HeroSelect
-                value={String(currentSeasonId ?? "")}
-                onValueChange={value => handleSeasonChange(Number(value))}
-                options={seasons}
-                disabled={isFetching}
-              />
-            </div>
-          )}
-
-          {/* Title left + stage select right — bottom */}
-          <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between p-6">
-            <div className="flex items-end gap-5">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
-                <IconBallFootball size={32} className="text-white/70" />
+          <div className="absolute bottom-0 left-0 right-0 p-6">
+            {/* Title */}
+            <div className="mb-4 flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
+                <IconBallFootball size={28} className="text-white/80" />
               </div>
-              <div className="flex flex-col gap-1 pb-1">
+              <div className="flex flex-col gap-0.5">
                 <h1 className="text-3xl font-black text-white leading-none drop-shadow">Partidos</h1>
-                <p className="text-sm text-white/70">
+                <p className="text-sm text-white/65">
                   Primera División
                   {selectedSeason && (
-                    <span className="font-semibold text-white/90"> · {selectedSeason.name}</span>
+                    <span className="font-semibold text-white/85"> · {selectedSeason.name}</span>
                   )}
                 </p>
               </div>
             </div>
 
-            {showStageSelector && (
-              <div className="pb-1">
-                <HeroSelect
-                  value={String(effectiveStageId ?? "")}
-                  onValueChange={value => handleStageChange(Number(value))}
-                  options={stages}
-                  disabled={isFetching}
-                  openUp
-                />
+            {/* Selectors — side by side */}
+            {(showSeasonSelector || showStageSelector) && (
+              <div className="flex items-center gap-2">
+                {showSeasonSelector && (
+                  <HeroSelect
+                    value={String(currentSeasonId ?? "")}
+                    onValueChange={value => handleSeasonChange(Number(value))}
+                    options={seasons}
+                    disabled={isFetching}
+                    openUp
+                  />
+                )}
+                {showStageSelector && (
+                  <HeroSelect
+                    value={String(effectiveStageId ?? "")}
+                    onValueChange={value => handleStageChange(Number(value))}
+                    options={stages}
+                    disabled={isFetching}
+                    openUp
+                  />
+                )}
               </div>
             )}
           </div>
