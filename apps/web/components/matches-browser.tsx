@@ -1,11 +1,16 @@
 "use client"
 
-import { useState, useMemo, useEffect, useRef } from "react"
+import { useState, useMemo, useEffect } from "react"
+import useEmblaCarousel from "embla-carousel-react"
 import Link from "next/link"
-import { IconShield } from "@tabler/icons-react"
+import { IconChevronLeft, IconChevronRight, IconShield } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 import type { FixtureListItem, Round } from "@/lib/matches"
 import type { Season } from "@/lib/seasons"
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 interface StageSummary {
   id: number
@@ -17,6 +22,10 @@ interface RoundGroup {
   round: Round
   fixtures: FixtureListItem[]
 }
+
+// ---------------------------------------------------------------------------
+// Constants & status helpers
+// ---------------------------------------------------------------------------
 
 const LIVE_STATES = new Set([
   "INPLAY_1ST_HALF", "INPLAY_2ND_HALF", "HT", "INPLAY_ET",
@@ -39,7 +48,7 @@ const formatKickoffTime = (value: string | null) => {
   }).format(new Date(value))
 }
 
-// "Domingo 24 de marzo" — same style as the home carousel date label
+// "Domingo 24 de marzo" — same style as the home carousel
 const formatRoundDate = (value: string | null) => {
   if (!value) return ""
   const formatted = new Intl.DateTimeFormat("es-UY", {
@@ -48,6 +57,7 @@ const formatRoundDate = (value: string | null) => {
   return formatted.charAt(0).toUpperCase() + formatted.slice(1)
 }
 
+// Full date shown inside each card (same as home carousel card)
 const formatMatchDay = (value: string | null) => {
   if (!value) return "Sin fecha"
   const formatted = new Intl.DateTimeFormat("es-UY", {
@@ -76,11 +86,11 @@ const getRoundStatus = (fixtures: FixtureListItem[]) => {
   if (finished > 0) {
     return { label: "En curso",   dotClass: "bg-amber-400",             textClass: "text-amber-600" }
   }
-  return       { label: "Por jugar", dotClass: "bg-slate-300",              textClass: "text-slate-400" }
+  return         { label: "Por jugar", dotClass: "bg-slate-300",             textClass: "text-slate-400" }
 }
 
 // ---------------------------------------------------------------------------
-// Dark venue card — same aesthetic as the home carousel
+// Match card — dark venue card, same aesthetic as the home carousel
 // ---------------------------------------------------------------------------
 
 const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
@@ -108,7 +118,7 @@ const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
         wrapperClass: "border-emerald-400/20 bg-emerald-500/14 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
       }
     }
-    // Upcoming — the time is already shown in the score panel, badge says "Por jugar"
+    // Time is shown in the score panel — badge says "Por jugar" to avoid repetition
     return {
       isLive: false,
       dotClass: "bg-white/40",
@@ -135,14 +145,12 @@ const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
         />
 
         <div className="relative flex h-full flex-col justify-between p-4">
-          {/* Date shown on the card */}
           <div className="flex justify-end">
             <span className="text-[11px] font-medium text-white/60">
               {formatMatchDay(fixture.kickoffAt)}
             </span>
           </div>
 
-          {/* Teams + score / time */}
           <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <div className="flex min-w-0 items-center gap-2.5">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center">
@@ -183,7 +191,6 @@ const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
             </div>
           </div>
 
-          {/* Status badge */}
           <div>
             <div className={cn(
               "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-sm",
@@ -203,6 +210,120 @@ const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
         </div>
       </article>
     </Link>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Round selector — Embla carousel with outside arrows + gradient fades
+// ---------------------------------------------------------------------------
+
+interface RoundSelectorProps {
+  roundGroups: RoundGroup[]
+  effectiveRoundId: number | null
+  onSelectRound: (id: number) => void
+}
+
+const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSelectorProps) => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: "center",
+    dragFree: true,
+    loop: false,
+    containScroll: "keepSnaps",
+  })
+
+  const [canScrollPrev, setCanScrollPrev] = useState(false)
+  const [canScrollNext, setCanScrollNext] = useState(false)
+
+  // Track which arrows are available
+  useEffect(() => {
+    if (!emblaApi) return
+    const update = () => {
+      setCanScrollPrev(emblaApi.canScrollPrev())
+      setCanScrollNext(emblaApi.canScrollNext())
+    }
+    emblaApi.on("init", update)
+    emblaApi.on("scroll", update)
+    update()
+    return () => { emblaApi.off("init", update).off("scroll", update) }
+  }, [emblaApi])
+
+  // Auto-scroll to the active pill whenever the selection changes
+  useEffect(() => {
+    if (!emblaApi || effectiveRoundId === null) return
+    const index = roundGroups.findIndex(g => g.round.id === effectiveRoundId)
+    if (index >= 0) emblaApi.scrollTo(index)
+  }, [emblaApi, effectiveRoundId, roundGroups])
+
+  return (
+    <div className="relative">
+      {/* Outside arrows — same positioning pattern as the home carousel */}
+      <button
+        onClick={() => emblaApi?.scrollPrev()}
+        disabled={!canScrollPrev}
+        className={cn(
+          "absolute top-1/2 left-0 z-20 hidden h-8 w-8 -translate-x-[calc(100%+10px)] -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition-[opacity,box-shadow,background-color] hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm sm:flex",
+          !canScrollPrev && "pointer-events-none opacity-30"
+        )}
+        aria-label="Fechas anteriores"
+      >
+        <IconChevronLeft size={15} />
+      </button>
+
+      <button
+        onClick={() => emblaApi?.scrollNext()}
+        disabled={!canScrollNext}
+        className={cn(
+          "absolute top-1/2 right-0 z-20 hidden h-8 w-8 -translate-y-1/2 translate-x-[calc(100%+10px)] items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition-[opacity,box-shadow,background-color] hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm sm:flex",
+          !canScrollNext && "pointer-events-none opacity-30"
+        )}
+        aria-label="Fechas siguientes"
+      >
+        <IconChevronRight size={15} />
+      </button>
+
+      {/* Gradient edge fades — kept as requested */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[#f8fafc] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#f8fafc] to-transparent" />
+
+      {/* Embla viewport */}
+      <div ref={emblaRef} className="overflow-hidden">
+        <div className="flex -ml-2">
+          {roundGroups.map(group => {
+            const roundStatus = getRoundStatus(group.fixtures)
+            const isActive    = group.round.id === effectiveRoundId
+            return (
+              <div key={group.round.id} className="flex-none pl-2">
+                <button
+                  onClick={() => onSelectRound(group.round.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-1 rounded-2xl border px-4 py-2.5 transition-all duration-150",
+                    isActive
+                      ? "border-slate-900 bg-slate-900 shadow-md"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                  )}
+                >
+                  <span className={cn(
+                    "whitespace-nowrap text-xs font-black",
+                    isActive ? "text-white" : "text-slate-800"
+                  )}>
+                    Fecha {group.round.name}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className={cn("h-1.5 w-1.5 rounded-full", roundStatus.dotClass)} />
+                    <span className={cn(
+                      "whitespace-nowrap text-[10px] font-semibold",
+                      isActive ? "text-white/65" : roundStatus.textClass
+                    )}>
+                      {roundStatus.label}
+                    </span>
+                  </div>
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -240,12 +361,9 @@ interface MatchesBrowserProps {
 }
 
 const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrowserProps) => {
-  // Both start as null — resolved below using the "effective" pattern so they
-  // automatically fall back to sensible defaults when the season changes.
   const [selectedStageId, setSelectedStageId] = useState<number | null>(null)
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null)
 
-  // Derive valid stages (≥5 round-based fixtures filters out playoff/finals)
   const stages = useMemo<StageSummary[]>(() => {
     const stageMap   = new Map<number, StageSummary>()
     const roundCount = new Map<number, number>()
@@ -259,9 +377,10 @@ const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrows
       .sort((a, b) => a.id - b.id)
   }, [allFixtures])
 
-  // If the stored selection is invalid (e.g. after a season switch) fall back to current/first
-  const defaultStageId    = stages.find(s => s.isCurrent)?.id ?? stages[0]?.id ?? null
-  const effectiveStageId  = stages.some(s => s.id === selectedStageId) ? selectedStageId : defaultStageId
+  // Resolve pattern: if the stored selection is no longer valid (e.g. after
+  // a season switch), fall back to current/first automatically — no useEffect needed.
+  const defaultStageId   = stages.find(s => s.isCurrent)?.id ?? stages[0]?.id ?? null
+  const effectiveStageId = stages.some(s => s.id === selectedStageId) ? selectedStageId : defaultStageId
 
   const stageFixtures = useMemo(
     () => effectiveStageId ? allFixtures.filter(f => f.stage?.id === effectiveStageId) : allFixtures,
@@ -278,20 +397,13 @@ const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrows
     ? selectedRoundId
     : defaultRoundId
 
-  const activeGroup  = roundGroups.find(g => g.round.id === effectiveRoundId) ?? null
-  const activeIndex  = roundGroups.findIndex(g => g.round.id === effectiveRoundId)
+  const activeGroup = roundGroups.find(g => g.round.id === effectiveRoundId) ?? null
+  const activeIndex = roundGroups.findIndex(g => g.round.id === effectiveRoundId)
 
-  // Auto-scroll the round selector carousel so the active pill is centred
-  const roundSelectorRef = useRef<HTMLDivElement>(null)
+  const roundStatus  = activeGroup ? getRoundStatus(activeGroup.fixtures) : null
+  const firstKickoff = activeGroup?.fixtures.find(f => f.kickoffAt)?.kickoffAt ?? null
 
-  useEffect(() => {
-    const container = roundSelectorRef.current
-    if (!container || effectiveRoundId === null) return
-    const pill = container.querySelector<HTMLElement>(`[data-round-id="${effectiveRoundId}"]`)
-    if (!pill) return
-    const targetLeft = pill.offsetLeft - (container.clientWidth - pill.offsetWidth) / 2
-    container.scrollTo({ left: targetLeft, behavior: "smooth" })
-  }, [effectiveRoundId])
+  const handleSelectRound = (id: number) => setSelectedRoundId(id)
 
   const goToPrev = () => {
     const prevId = roundGroups[activeIndex - 1]?.round.id
@@ -302,8 +414,6 @@ const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrows
     if (nextId !== undefined) setSelectedRoundId(nextId)
   }
 
-  const firstKickoff = activeGroup?.fixtures.find(f => f.kickoffAt)?.kickoffAt ?? null
-
   return (
     <div className="flex flex-col gap-5">
 
@@ -312,9 +422,12 @@ const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrows
         {seasons.length > 1 && (
           <div className="flex gap-1.5">
             {seasons.map(season => (
+              // `replace` swaps the history entry instead of pushing — pressing back
+              // from a match always returns to this season's URL, not the previous season.
               <Link
                 key={season.id}
                 href={`/matches?seasonId=${season.id}`}
+                replace
                 className={cn(
                   "rounded-full border px-3.5 py-1.5 text-xs font-bold transition-colors",
                   season.id === selectedSeasonId
@@ -335,7 +448,7 @@ const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrows
                 key={stage.id}
                 onClick={() => {
                   setSelectedStageId(stage.id)
-                  setSelectedRoundId(null) // let the resolver pick the right default for this stage
+                  setSelectedRoundId(null)
                 }}
                 className={cn(
                   "rounded-full border px-3.5 py-1.5 text-xs font-bold transition-colors",
@@ -351,53 +464,13 @@ const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrows
         )}
       </div>
 
-      {/* Round carousel — auto-scrolls to the active pill */}
+      {/* Round carousel */}
       {roundGroups.length > 0 && (
-        <div className="relative">
-          {/* Gradient edge fades to give carousel depth */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[#f8fafc] to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#f8fafc] to-transparent" />
-
-          <div
-            ref={roundSelectorRef}
-            className="flex gap-2 overflow-x-auto px-5 pb-1"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
-          >
-            {roundGroups.map(group => {
-              const roundStatus = getRoundStatus(group.fixtures)
-              const isActive    = group.round.id === effectiveRoundId
-              return (
-                <button
-                  key={group.round.id}
-                  data-round-id={group.round.id}
-                  onClick={() => setSelectedRoundId(group.round.id)}
-                  className={cn(
-                    "flex shrink-0 flex-col items-center gap-1 rounded-2xl border px-4 py-2.5 transition-all duration-150",
-                    isActive
-                      ? "border-slate-900 bg-slate-900 shadow-md"
-                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
-                  )}
-                >
-                  <span className={cn(
-                    "text-xs font-black",
-                    isActive ? "text-white" : "text-slate-800"
-                  )}>
-                    Fecha {group.round.name}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <span className={cn("h-1.5 w-1.5 rounded-full", roundStatus.dotClass)} />
-                    <span className={cn(
-                      "text-[10px] font-semibold",
-                      isActive ? "text-white/65" : roundStatus.textClass
-                    )}>
-                      {roundStatus.label}
-                    </span>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        <RoundSelector
+          roundGroups={roundGroups}
+          effectiveRoundId={effectiveRoundId}
+          onSelectRound={handleSelectRound}
+        />
       )}
 
       {/* Active round */}
@@ -407,45 +480,45 @@ const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrows
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {/* Round header */}
-          <div className="flex items-start justify-between gap-4 px-0.5">
-            <div>
+          {/* Round header — centred, with date and round status */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={goToPrev}
+              disabled={activeIndex === 0}
+              aria-label="Fecha anterior"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-30"
+            >
+              <IconChevronLeft size={16} />
+            </button>
+
+            <div className="flex-1 text-center">
               <h2 className="text-xl font-black leading-tight text-slate-900">
                 Fecha {activeGroup.round.name}
               </h2>
               <p className="mt-0.5 text-sm text-slate-500">
                 {formatRoundDate(firstKickoff)}
-                {" · "}
-                {activeGroup.fixtures.length} partido{activeGroup.fixtures.length !== 1 ? "s" : ""}
               </p>
+              {roundStatus && (
+                <div className="mt-1.5 flex items-center justify-center gap-1.5">
+                  <span className={cn("h-1.5 w-1.5 rounded-full", roundStatus.dotClass)} />
+                  <span className={cn("text-xs font-semibold", roundStatus.textClass)}>
+                    {roundStatus.label}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* Prev / Next round navigation */}
-            <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
-              <button
-                onClick={goToPrev}
-                disabled={activeIndex === 0}
-                aria-label="Fecha anterior"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-30"
-              >
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                  <path d="M8 2.5L4.5 6.5 8 10.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-              <button
-                onClick={goToNext}
-                disabled={activeIndex === roundGroups.length - 1}
-                aria-label="Siguiente fecha"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-30"
-              >
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                  <path d="M5 2.5L8.5 6.5 5 10.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
+            <button
+              onClick={goToNext}
+              disabled={activeIndex === roundGroups.length - 1}
+              aria-label="Siguiente fecha"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-30"
+            >
+              <IconChevronRight size={16} />
+            </button>
           </div>
 
-          {/* Match cards grid */}
+          {/* Cards grid */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {activeGroup.fixtures.map(fixture => (
               <MatchCard key={fixture.id} fixture={fixture} />
