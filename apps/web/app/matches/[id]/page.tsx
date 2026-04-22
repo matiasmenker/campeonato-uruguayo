@@ -305,31 +305,61 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
   }
 
   const renderTeam = (lineup: LineupPlayer[], isHome: boolean) => {
-    // Only starters with valid formationField coordinates
-    const starters = lineup.filter(p => p.typeId === 11 && p.formationField != null)
+    const xMap = isHome ? HOME_X : AWAY_X
 
-    // Group by row number from "row:col"
-    const rowMap = new Map<number, LineupPlayer[]>()
-    for (const player of starters) {
-      const { row } = parseFormationField(player.formationField!)
-      const existing = rowMap.get(row) ?? []
-      existing.push(player)
-      rowMap.set(row, existing)
+    // ── New path: use typeId + formationField when available ──────────────────
+    const newStyleStarters = lineup.filter(p => p.typeId === 11 && p.formationField != null)
+    if (newStyleStarters.length > 0) {
+      const rowMap = new Map<number, LineupPlayer[]>()
+      for (const player of newStyleStarters) {
+        const { row } = parseFormationField(player.formationField!)
+        const existing = rowMap.get(row) ?? []
+        existing.push(player)
+        rowMap.set(row, existing)
+      }
+      const sortedRows = Array.from(rowMap.entries())
+        .sort(([rowA], [rowB]) => rowA - rowB)
+        .map(([, players]) =>
+          players.sort((playerA, playerB) => {
+            const { col: colA } = parseFormationField(playerA.formationField!)
+            const { col: colB } = parseFormationField(playerB.formationField!)
+            return colA - colB
+          })
+        )
+      return sortedRows.flatMap((rowPlayers, rowIndex) => {
+        const yPos = yPositions(rowPlayers.length)
+        return rowPlayers.map((player, playerIndex) => {
+          const subInfo = substitutedOutMap.get(player.player.id)
+          return (
+            <PlayerToken
+              key={player.id}
+              player={player}
+              events={eventsByPlayer.get(player.player.id) ?? []}
+              rating={ratingByPlayer.get(player.player.id) ?? null}
+              assists={assistsByPlayer.get(player.player.id) ?? 0}
+              x={xMap[rowIndex] ?? 50}
+              y={yPos[playerIndex]}
+              substitutedOut={subInfo != null}
+              subMinute={subInfo?.minute ?? null}
+              subExtraMinute={subInfo?.extraMinute ?? null}
+            />
+          )
+        })
+      })
     }
 
-    // Sort rows ascending, sort players within each row by col ascending
-    const sortedRows = Array.from(rowMap.entries())
-      .sort(([rowA], [rowB]) => rowA - rowB)
-      .map(([, players]) =>
-        players.sort((playerA, playerB) => {
-          const { col: colA } = parseFormationField(playerA.formationField!)
-          const { col: colB } = parseFormationField(playerB.formationField!)
-          return colA - colB
-        })
-      )
-
-    const xMap = isHome ? HOME_X : AWAY_X
-    return sortedRows.flatMap((rowPlayers, rowIndex) => {
+    // ── Legacy fallback: use formationPosition when new fields not yet synced ─
+    const legacyStarters = lineup
+      .filter(p => p.formationPosition !== null)
+      .sort((a, b) => (a.formationPosition ?? 0) - (b.formationPosition ?? 0))
+    const legacyRows: LineupPlayer[][] = [[], [], [], []]
+    for (const player of legacyStarters) {
+      const pos = player.formationPosition!
+      const row = pos === 1 ? 0 : pos <= 5 ? 1 : pos <= 8 ? 2 : 3
+      legacyRows[row].push(player)
+    }
+    return legacyRows.flatMap((rowPlayers, rowIndex) => {
+      if (!rowPlayers.length) return []
       const yPos = yPositions(rowPlayers.length)
       return rowPlayers.map((player, playerIndex) => {
         const subInfo = substitutedOutMap.get(player.player.id)
@@ -340,7 +370,7 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
             events={eventsByPlayer.get(player.player.id) ?? []}
             rating={ratingByPlayer.get(player.player.id) ?? null}
             assists={assistsByPlayer.get(player.player.id) ?? 0}
-            x={xMap[rowIndex] ?? 50}
+            x={xMap[rowIndex]}
             y={yPos[playerIndex]}
             substitutedOut={subInfo != null}
             subMinute={subInfo?.minute ?? null}
@@ -487,8 +517,9 @@ const BenchSection = ({
   homeTeamImage, awayTeamImage,
   eventsByPlayer, ratingByPlayer, assistsByPlayer,
 }: BenchSectionProps) => {
-  const homeBench = homeLineup.filter(p => p.typeId === 12)
-  const awayBench = awayLineup.filter(p => p.typeId === 12)
+  // typeId 12 = bench; fallback: players without formationPosition are bench
+  const homeBench = homeLineup.filter(p => p.typeId === 12 || (p.typeId == null && p.formationPosition === null))
+  const awayBench = awayLineup.filter(p => p.typeId === 12 || (p.typeId == null && p.formationPosition === null))
   if (!homeBench.length && !awayBench.length) return null
 
   return (
@@ -692,7 +723,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
     return minuteA - minuteB
   })
 
-  const hasLineups = lineups.some(p => p.typeId === 11 && p.formationField != null)
+  const hasLineups = lineups.some(p => (p.typeId === 11 && p.formationField != null) || p.formationPosition !== null)
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
