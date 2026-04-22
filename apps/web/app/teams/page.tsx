@@ -77,9 +77,18 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
             <HeroBackground />
             <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/15 to-black/60" />
 
+            {/* Season selector — top right */}
+            {seasons.length > 1 && (
+              <div className="absolute right-5 top-5">
+                <Suspense>
+                  <TeamsSeasonSelector seasons={seasons} selectedSeasonId={selectedSeason?.id ?? 0} />
+                </Suspense>
+              </div>
+            )}
+
+            {/* Title — bottom left */}
             <div className="absolute bottom-0 left-0 right-0 p-6">
-              {/* Title */}
-              <div className="mb-4 flex items-center gap-4">
+              <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
                   <IconShieldFilled size={28} className="text-white/80" />
                 </div>
@@ -91,15 +100,6 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
                   </p>
                 </div>
               </div>
-
-              {/* Season selector */}
-              {seasons.length > 1 && (
-                <div className="flex items-center gap-2">
-                  <Suspense>
-                    <TeamsSeasonSelector seasons={seasons} selectedSeasonId={selectedSeason?.id ?? 0} />
-                  </Suspense>
-                </div>
-              )}
             </div>
           </div>
         </div>

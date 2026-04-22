@@ -27,7 +27,7 @@ const useStandingsNav = () => {
 }
 
 // ---------------------------------------------------------------------------
-// Season filter — place at top-right of hero
+// Season filter
 // ---------------------------------------------------------------------------
 
 interface StandingsSeasonFilterProps {
@@ -44,13 +44,12 @@ export const StandingsSeasonFilter = ({ seasons, selectedSeasonId }: StandingsSe
       onValueChange={value => updateParam("seasonId", value)}
       options={seasons}
       disabled={isPending}
-      openUp
     />
   )
 }
 
 // ---------------------------------------------------------------------------
-// Stage filter — place at bottom-right of hero
+// Stage filter
 // ---------------------------------------------------------------------------
 
 interface StandingsStageFilterProps {
@@ -67,7 +66,6 @@ export const StandingsStageFilter = ({ stages, selectedStageId }: StandingsStage
       onValueChange={value => updateParam("stageId", value)}
       options={stages}
       disabled={isPending}
-      openUp
     />
   )
 }

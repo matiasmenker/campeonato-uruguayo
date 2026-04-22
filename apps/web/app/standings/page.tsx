@@ -345,9 +345,25 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
             <HeroBackground />
             <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/15 to-black/60" />
 
+            {/* Selectors — top right, side by side */}
+            {(seasons.length > 0 || visibleStages.length > 0) && (
+              <div className="absolute right-5 top-5 flex items-center gap-2">
+                {seasons.length > 0 && (
+                  <Suspense>
+                    <StandingsSeasonFilter seasons={seasons} selectedSeasonId={selectedSeasonId} />
+                  </Suspense>
+                )}
+                {visibleStages.length > 0 && (
+                  <Suspense>
+                    <StandingsStageFilter stages={visibleStages} selectedStageId={selectedStageId} />
+                  </Suspense>
+                )}
+              </div>
+            )}
+
+            {/* Title — bottom left */}
             <div className="absolute bottom-0 left-0 right-0 p-6">
-              {/* Title */}
-              <div className="mb-4 flex items-center gap-4">
+              <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
                   <IconTrophy size={28} className="text-white/80" />
                 </div>
@@ -359,22 +375,6 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
                   </p>
                 </div>
               </div>
-
-              {/* Selectors — side by side */}
-              {(seasons.length > 0 || visibleStages.length > 0) && (
-                <div className="flex items-center gap-2">
-                  {seasons.length > 0 && (
-                    <Suspense>
-                      <StandingsSeasonFilter seasons={seasons} selectedSeasonId={selectedSeasonId} />
-                    </Suspense>
-                  )}
-                  {visibleStages.length > 0 && (
-                    <Suspense>
-                      <StandingsStageFilter stages={visibleStages} selectedStageId={selectedStageId} />
-                    </Suspense>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         </div>
