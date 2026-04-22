@@ -32,7 +32,7 @@ const getMatchStatus = (fixture: FixtureListItem) => {
   return "upcoming" as const
 }
 
-const formatTime = (value: string | null) => {
+const formatKickoffTime = (value: string | null) => {
   if (!value) return "--:--"
   return new Intl.DateTimeFormat("es-UY", {
     hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Montevideo",
@@ -47,79 +47,144 @@ const formatDateShort = (value: string | null) => {
   return formatted.charAt(0).toUpperCase() + formatted.slice(1)
 }
 
-const StatusPill = ({ fixture }: { fixture: FixtureListItem }) => {
+const formatMatchDay = (value: string | null) => {
+  if (!value) return "Sin fecha"
+  const formatted = new Intl.DateTimeFormat("es-UY", {
+    weekday: "long", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Montevideo",
+  }).format(new Date(value))
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
+}
+
+const getLiveLabel = (code: string | null) => {
+  if (code === "HT") return "Entretiempo"
+  if (code === "INPLAY_ET" || code === "INPLAY_ET_SECOND_HALF") return "Prórroga"
+  if (code === "INPLAY_PENALTIES") return "Penales"
+  return "En vivo"
+}
+
+const getStatusBadge = (fixture: FixtureListItem) => {
   const status = getMatchStatus(fixture)
   const code = fixture.state?.developerName ?? null
 
   if (status === "live") {
-    const label =
-      code === "HT" ? "Entretiempo"
-      : code === "INPLAY_ET" || code === "INPLAY_ET_SECOND_HALF" ? "Prórroga"
-      : code === "INPLAY_PENALTIES" ? "Penales"
-      : "En vivo"
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-600">
-        <span className="relative flex h-1.5 w-1.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-500" />
-        </span>
-        {label}
-      </span>
-    )
+    return {
+      isLive: true,
+      dotClassName: "bg-red-500",
+      label: getLiveLabel(code),
+      textClassName: "text-red-200",
+      wrapperClassName: "border-red-400/20 bg-red-500/16 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+    }
   }
 
   if (status === "finished") {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-        Finalizado
-      </span>
-    )
+    return {
+      isLive: false,
+      dotClassName: "bg-emerald-400",
+      label: "Finalizado",
+      textClassName: "text-emerald-100",
+      wrapperClassName: "border-emerald-400/20 bg-emerald-500/14 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
+    }
   }
 
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-500">
-      <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-      {formatTime(fixture.kickoffAt)}
-    </span>
-  )
+  return {
+    isLive: false,
+    dotClassName: "bg-white/45",
+    label: formatKickoffTime(fixture.kickoffAt),
+    textClassName: "text-white/80",
+    wrapperClassName: "border-white/12 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
+  }
 }
 
-const TeamCell = ({ team, align }: { team: FixtureListItem["homeTeam"]; align: "left" | "right" }) => (
-  <div className={cn("flex min-w-0 flex-1 items-center gap-2.5", align === "right" && "flex-row-reverse")}>
-    <div className="flex h-9 w-9 shrink-0 items-center justify-center">
-      {team?.imagePath
-        ? <img src={team.imagePath} alt={team.name} className="h-7 w-7 object-contain" />
-        : <IconShield size={20} className="text-slate-300" />}
-    </div>
-    <p className={cn("min-w-0 truncate text-sm font-semibold text-slate-800", align === "right" && "text-right")}>
-      {team?.name ?? "Equipo"}
-    </p>
-  </div>
-)
-
-const MatchRow = ({ fixture }: { fixture: FixtureListItem }) => {
+const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
   const status = getMatchStatus(fixture)
+  const badge = getStatusBadge(fixture)
   const showScore = status === "finished" || status === "live"
+  const backgroundImage = fixture.venue?.imagePath ? `url("${fixture.venue.imagePath}")` : undefined
+
   return (
-    <Link
-      href={`/matches/${fixture.id}`}
-      className="flex items-center gap-3 border-b border-slate-100 px-4 py-3 transition-colors last:border-0 hover:bg-slate-50 sm:px-5"
-    >
-      <TeamCell team={fixture.homeTeam} align="left" />
-      <div className="flex w-32 shrink-0 flex-col items-center gap-1 sm:w-40">
-        {showScore ? (
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-black tabular-nums text-slate-900">{fixture.homeScore ?? 0}</span>
-            <span className="text-sm font-medium text-slate-300">–</span>
-            <span className="text-xl font-black tabular-nums text-slate-900">{fixture.awayScore ?? 0}</span>
+    <Link href={`/matches/${fixture.id}`} className="block">
+      <article className="group relative h-[172px] overflow-hidden rounded-[24px] bg-slate-900 cursor-pointer">
+        <div
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+          style={{ backgroundImage, backgroundColor: "#0f172a" }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: backgroundImage
+              ? "linear-gradient(145deg, rgba(2,6,23,0.84) 0%, rgba(15,23,42,0.54) 42%, rgba(6,95,70,0.42) 100%)"
+              : "linear-gradient(145deg, #0f172a 0%, #123528 50%, #0b1b16 100%)",
+          }}
+        />
+
+        <div className="relative flex h-full flex-col justify-between p-4">
+          {/* Date */}
+          <div className="flex justify-end">
+            <span className="text-[11px] font-medium text-white/65">
+              {formatMatchDay(fixture.kickoffAt)}
+            </span>
           </div>
-        ) : (
-          <div className="text-base font-black tracking-tight text-slate-700">{formatTime(fixture.kickoffAt)}</div>
-        )}
-        <StatusPill fixture={fixture} />
-      </div>
-      <TeamCell team={fixture.awayTeam} align="right" />
+
+          {/* Teams + score */}
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center">
+                {fixture.homeTeam?.imagePath
+                  ? <img src={fixture.homeTeam.imagePath} alt={fixture.homeTeam.name} className="h-9 w-9 object-contain drop-shadow-sm" />
+                  : <IconShield className="h-9 w-9 text-white/80 drop-shadow-sm" />
+                }
+              </div>
+              <p className="min-w-0 truncate text-[13px] font-semibold text-white">
+                {fixture.homeTeam?.name ?? "Equipo"}
+              </p>
+            </div>
+
+            <div className="flex min-w-[88px] flex-col items-center rounded-[18px] border border-white/10 bg-black/20 px-4 py-2 text-center backdrop-blur-sm">
+              {showScore ? (
+                <div className="flex items-center gap-2.5 text-white">
+                  <span className="text-2xl leading-none font-black tabular-nums">{fixture.homeScore ?? 0}</span>
+                  <span className="text-sm leading-none font-medium text-white/35">—</span>
+                  <span className="text-2xl leading-none font-black tabular-nums">{fixture.awayScore ?? 0}</span>
+                </div>
+              ) : (
+                <div className="text-2xl leading-none font-black tracking-tight text-white">
+                  {formatKickoffTime(fixture.kickoffAt)}
+                </div>
+              )}
+            </div>
+
+            <div className="flex min-w-0 flex-row-reverse items-center gap-2.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center">
+                {fixture.awayTeam?.imagePath
+                  ? <img src={fixture.awayTeam.imagePath} alt={fixture.awayTeam.name} className="h-9 w-9 object-contain drop-shadow-sm" />
+                  : <IconShield className="h-9 w-9 text-white/80 drop-shadow-sm" />
+                }
+              </div>
+              <p className="min-w-0 truncate text-right text-[13px] font-semibold text-white">
+                {fixture.awayTeam?.name ?? "Equipo"}
+              </p>
+            </div>
+          </div>
+
+          {/* Status badge */}
+          <div>
+            <div className={cn(
+              "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-sm",
+              badge.wrapperClassName
+            )}>
+              <span className="relative flex h-2 w-2">
+                {badge.isLive && (
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                )}
+                <span className={cn("relative inline-flex h-2 w-2 rounded-full", badge.dotClassName)} />
+              </span>
+              <span className={cn("text-[11px] font-semibold", badge.textClassName)}>
+                {badge.label}
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
     </Link>
   )
 }
@@ -167,8 +232,8 @@ const RoundAccordion = ({ group, defaultOpen = false }: { group: RoundGroup; def
       </button>
 
       {open && (
-        <div className="border-t border-slate-100">
-          {group.fixtures.map(fixture => <MatchRow key={fixture.id} fixture={fixture} />)}
+        <div className="border-t border-slate-100 p-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {group.fixtures.map(fixture => <MatchCard key={fixture.id} fixture={fixture} />)}
         </div>
       )}
     </div>
@@ -201,21 +266,19 @@ interface MatchesBrowserProps {
 }
 
 const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrowserProps) => {
-  // Only keep stages that have fixtures with rounds — filters out playoff/finals stages
   const stages = useMemo<StageSummary[]>(() => {
     const map = new Map<number, StageSummary>()
     const roundedFixtureCount = new Map<number, number>()
-    for (const f of allFixtures) {
-      if (!f.stage) continue
-      if (!map.has(f.stage.id)) map.set(f.stage.id, f.stage)
-      if (f.round) roundedFixtureCount.set(f.stage.id, (roundedFixtureCount.get(f.stage.id) ?? 0) + 1)
+    for (const fixture of allFixtures) {
+      if (!fixture.stage) continue
+      if (!map.has(fixture.stage.id)) map.set(fixture.stage.id, fixture.stage)
+      if (fixture.round) roundedFixtureCount.set(fixture.stage.id, (roundedFixtureCount.get(fixture.stage.id) ?? 0) + 1)
     }
     return Array.from(map.values())
       .filter(stage => (roundedFixtureCount.get(stage.id) ?? 0) >= 5)
       .sort((a, b) => a.id - b.id)
   }, [allFixtures])
 
-  // Current stage → Apertura (first) as fallback, never last
   const defaultStageId = stages.find(s => s.isCurrent)?.id ?? stages[0]?.id ?? null
   const [selectedStageId, setSelectedStageId] = useState<number | null>(defaultStageId)
 
@@ -258,8 +321,8 @@ const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrows
           </div>
         )}
 
-        {/* Stage selector */}
-        {stages.length > 1 && (
+        {/* Stage selector — always show when there's at least one */}
+        {stages.length >= 1 && (
           <div className="flex gap-1.5">
             {stages.map(stage => (
               <button
