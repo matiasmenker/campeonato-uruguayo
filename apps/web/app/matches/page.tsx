@@ -180,15 +180,8 @@ interface MatchesPageProps {
 const MatchesPage = async ({ searchParams }: MatchesPageProps) => {
   const { seasonId: seasonIdParam, stageId: stageIdParam, roundId: roundIdParam } = await searchParams
 
-  const [seasonsResult, fixturesResult] = await Promise.allSettled([
-    getSeasons(),
-    getFixtures({
-      seasonId: seasonIdParam ? Number(seasonIdParam) : undefined,
-      pageSize: 200,
-    }),
-  ])
-
-  const seasons: Season[] = seasonsResult.status === "fulfilled" ? seasonsResult.value : []
+  const seasonsResult = await getSeasons().catch(() => [] as Season[])
+  const seasons: Season[] = seasonsResult
   const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0] ?? null
   const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? null)
   const selectedSeason = seasons.find((season) => season.id === selectedSeasonId) ?? currentSeason
@@ -196,15 +189,20 @@ const MatchesPage = async ({ searchParams }: MatchesPageProps) => {
   let allFixtures: FixtureListItem[] = []
   let errorMessage: string | null = null
 
-  if (fixturesResult.status === "fulfilled") {
-    allFixtures = fixturesResult.value.data
-  } else {
-    errorMessage = "No se pudieron cargar los partidos."
+  const fetchAllFixtures = async (seasonId: number): Promise<FixtureListItem[]> => {
+    const [page1, page2] = await Promise.all([
+      getFixtures({ seasonId, pageSize: 100, page: 1 }),
+      getFixtures({ seasonId, pageSize: 100, page: 2 }),
+    ])
+    return [...page1.data, ...page2.data]
   }
 
-  if (!seasonIdParam && selectedSeasonId && fixturesResult.status === "fulfilled") {
-    const refetched = await getFixtures({ seasonId: selectedSeasonId, pageSize: 200 }).catch(() => null)
-    if (refetched) allFixtures = refetched.data
+  if (selectedSeasonId) {
+    try {
+      allFixtures = await fetchAllFixtures(selectedSeasonId)
+    } catch {
+      errorMessage = "No se pudieron cargar los partidos."
+    }
   }
 
   // Extract stages from fixtures
