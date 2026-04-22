@@ -558,20 +558,19 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
         </div>
       )}
 
-      {/* White card — round carousel + round header + cards.
-          No overflow-hidden so the carousel's outside arrows are visible. */}
+      {/* Round carousel — standalone card, separated from the round content */}
+      {roundGroups.length > 0 && (
+        <div className="rounded-2xl border border-slate-200/80 bg-white py-4 shadow-sm">
+          <RoundSelector
+            roundGroups={roundGroups}
+            effectiveRoundId={effectiveRoundId}
+            onSelectRound={handleRoundSelect}
+          />
+        </div>
+      )}
+
+      {/* Round header + cards — own card, no overflow-hidden for outside arrows */}
       <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-
-        {roundGroups.length > 0 && (
-          <div className="border-b border-slate-100 py-4">
-            <RoundSelector
-              roundGroups={roundGroups}
-              effectiveRoundId={effectiveRoundId}
-              onSelectRound={handleRoundSelect}
-            />
-          </div>
-        )}
-
         {activeGroup === null ? (
           <div className="flex h-36 items-center justify-center text-sm text-slate-400">
             No hay partidos disponibles
@@ -626,8 +625,8 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
             </div>
           </>
         )}
-
       </div>
+
     </div>
   )
 }
