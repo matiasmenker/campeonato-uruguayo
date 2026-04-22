@@ -201,25 +201,22 @@ interface MatchesBrowserProps {
 }
 
 const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrowserProps) => {
+  // Only keep stages that have fixtures with rounds — filters out playoff/finals stages
   const stages = useMemo<StageSummary[]>(() => {
     const map = new Map<number, StageSummary>()
+    const roundedFixtureCount = new Map<number, number>()
     for (const f of allFixtures) {
-      if (f.stage && !map.has(f.stage.id)) map.set(f.stage.id, f.stage)
+      if (!f.stage) continue
+      if (!map.has(f.stage.id)) map.set(f.stage.id, f.stage)
+      if (f.round) roundedFixtureCount.set(f.stage.id, (roundedFixtureCount.get(f.stage.id) ?? 0) + 1)
     }
-    return Array.from(map.values()).sort((a, b) => a.id - b.id)
+    return Array.from(map.values())
+      .filter(stage => (roundedFixtureCount.get(stage.id) ?? 0) >= 5)
+      .sort((a, b) => a.id - b.id)
   }, [allFixtures])
 
-  // Count rounds per stage to know which ones have data
-  const roundCountByStage = useMemo(() => {
-    const count = new Map<number, number>()
-    for (const f of allFixtures) {
-      if (!f.stage || !f.round) continue
-      count.set(f.stage.id, (count.get(f.stage.id) ?? 0) + 1)
-    }
-    return count
-  }, [allFixtures])
-
-  const defaultStageId = stages.find(s => s.isCurrent)?.id ?? stages[stages.length - 1]?.id ?? null
+  // Current stage → Apertura (first) as fallback, never last
+  const defaultStageId = stages.find(s => s.isCurrent)?.id ?? stages[0]?.id ?? null
   const [selectedStageId, setSelectedStageId] = useState<number | null>(defaultStageId)
 
   const stageFixtures = useMemo(
@@ -264,27 +261,20 @@ const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrows
         {/* Stage selector */}
         {stages.length > 1 && (
           <div className="flex gap-1.5">
-            {stages.map(stage => {
-              const hasData = (roundCountByStage.get(stage.id) ?? 0) > 0
-              const isSelected = stage.id === selectedStageId
-              return (
-                <button
-                  key={stage.id}
-                  onClick={() => hasData && setSelectedStageId(stage.id)}
-                  disabled={!hasData}
-                  className={cn(
-                    "rounded-full border px-3.5 py-1.5 text-xs font-bold transition-colors",
-                    isSelected && hasData
-                      ? "border-slate-800 bg-slate-800 text-white"
-                      : hasData
-                        ? "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-800"
-                        : "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300"
-                  )}
-                >
-                  {stage.name}
-                </button>
-              )
-            })}
+            {stages.map(stage => (
+              <button
+                key={stage.id}
+                onClick={() => setSelectedStageId(stage.id)}
+                className={cn(
+                  "rounded-full border px-3.5 py-1.5 text-xs font-bold transition-colors",
+                  stage.id === selectedStageId
+                    ? "border-slate-800 bg-slate-800 text-white"
+                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-800"
+                )}
+              >
+                {stage.name}
+              </button>
+            ))}
           </div>
         )}
       </div>
