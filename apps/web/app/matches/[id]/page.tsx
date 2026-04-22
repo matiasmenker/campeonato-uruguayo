@@ -270,12 +270,12 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: 
       </div>
 
       <div
-        className="flex items-center justify-between gap-1 rounded-lg px-2 py-0.5"
-        style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)", width: TOKEN_WIDTH }}
+        className="flex items-center gap-1.5 rounded-lg px-2 py-0.5"
+        style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)", maxWidth: TOKEN_WIDTH }}
       >
         <span
           className="text-white font-semibold leading-none"
-          style={{ fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 1, minWidth: 0 }}
+          style={{ fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}
           title={fullName}
         >
           {shortName}
