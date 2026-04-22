@@ -4,18 +4,17 @@ const TeamsLoading = () => (
 
       {/* Hero skeleton */}
       <div className="overflow-hidden rounded-2xl shadow-lg">
-        <div className="relative min-h-44 animate-pulse bg-slate-800">
-          {/* "All teams" button placeholder */}
-          <div className="absolute left-5 top-5 h-9 w-28 rounded-xl bg-white/10" />
-          {/* Season selector placeholder */}
-          <div className="absolute right-5 top-5 h-9 w-32 rounded-xl bg-white/10" />
-          {/* Title area */}
-          <div className="absolute bottom-0 left-0 right-0 flex items-end gap-5 p-6">
-            <div className="h-16 w-16 shrink-0 rounded-2xl bg-white/10" />
-            <div className="flex flex-col gap-2 pb-1">
-              <div className="h-7 w-24 rounded bg-white/15" />
-              <div className="h-4 w-44 rounded bg-white/10" />
+        <div className="relative min-h-52 animate-pulse bg-slate-800">
+          {/* Bottom — title left, season selector right */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 shrink-0 rounded-2xl bg-white/10" />
+              <div className="flex flex-col gap-2">
+                <div className="h-7 w-24 rounded bg-white/15" />
+                <div className="h-4 w-48 rounded bg-white/10" />
+              </div>
             </div>
+            <div className="h-8 w-24 shrink-0 rounded-xl bg-white/15" />
           </div>
         </div>
       </div>

@@ -30,17 +30,24 @@ const StatCardSkeleton = () => (
 const StandingsLoading = () => (
   <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-5 w-5 animate-pulse rounded bg-slate-200" />
-          <div>
-            <div className="mb-1.5 h-5 w-24 animate-pulse rounded bg-slate-200" />
-            <div className="h-3.5 w-36 animate-pulse rounded bg-slate-100" />
+
+      {/* Hero skeleton */}
+      <div className="overflow-hidden rounded-2xl shadow-lg">
+        <div className="relative min-h-52 animate-pulse bg-slate-800">
+          {/* Bottom — title left, selectors right */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 shrink-0 rounded-2xl bg-white/10" />
+              <div className="flex flex-col gap-2">
+                <div className="h-7 w-20 rounded bg-white/15" />
+                <div className="h-4 w-44 rounded bg-white/10" />
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <div className="h-8 w-24 rounded-xl bg-white/15" />
+              <div className="h-8 w-28 rounded-xl bg-white/15" />
+            </div>
           </div>
-        </div>
-        <div className="flex gap-3">
-          <div className="h-9 w-24 animate-pulse rounded-xl bg-slate-200" />
-          <div className="h-9 w-32 animate-pulse rounded-xl bg-slate-200" />
         </div>
       </div>
 
