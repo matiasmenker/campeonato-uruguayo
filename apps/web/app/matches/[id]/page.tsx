@@ -17,6 +17,18 @@ import { resolvePlayerImageUrl } from "@/lib/player"
 
 export const dynamic = "force-dynamic"
 
+// Dot-grid texture — same as team detail, shown when no venue photo
+const HeroTexture = () => (
+  <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="matchDots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <circle cx="2" cy="2" r="1.5" fill="rgba(255,255,255,0.08)" />
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#matchDots)" />
+  </svg>
+)
+
 const EVENT_GOAL         = 14
 const EVENT_GOAL_PENALTY = 16
 const EVENT_GOAL_OWN     = 15
@@ -722,7 +734,8 @@ const MatchPage = async ({ params }: MatchPageProps) => {
             className="relative min-h-52 bg-slate-900"
             style={fixture.venue?.imagePath ? { backgroundImage: `url(${fixture.venue.imagePath})`, backgroundSize: "cover", backgroundPosition: "center 40%" } : undefined}
           >
-            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/85" />
+            {!fixture.venue?.imagePath && <HeroTexture />}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/55 to-black/85" />
 
             <div className="absolute left-5 top-5">
               <HeroBackLink href="/matches" label="Back" />
@@ -730,7 +743,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
 
             {(fixture.stage || fixture.round) && (
               <div className="absolute right-5 top-5">
-                <span className="inline-flex h-8 items-center rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-bold text-white/70 backdrop-blur-sm">
+                <span className="inline-flex h-8 items-center rounded-xl border border-white/20 bg-white/15 px-3 text-sm font-semibold text-white backdrop-blur-sm">
                   {fixture.stage?.name ?? ""}{fixture.round ? ` · Round ${fixture.round.name}` : ""}
                 </span>
               </div>
