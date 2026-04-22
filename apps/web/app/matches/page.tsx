@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation"
 import { IconBallFootball } from "@tabler/icons-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { getFixtures, type FixtureListItem } from "@/lib/matches"
@@ -59,12 +58,6 @@ const MatchesPage = async ({ searchParams }: MatchesPageProps) => {
 
   const seasons: Season[] = await getSeasons().catch(() => [])
   const currentSeason = seasons.find((s) => s.isCurrent) ?? seasons[0] ?? null
-
-  // Always include seasonId in the URL so the browser back button preserves the
-  // selected season when returning from a match detail page.
-  if (!seasonIdParam && currentSeason) {
-    redirect(`/matches?seasonId=${currentSeason.id}`)
-  }
 
   const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? null)
   const selectedSeason = seasons.find((s) => s.id === selectedSeasonId) ?? currentSeason
