@@ -30,11 +30,11 @@ const parseFormationField = (formationField: string): { row: number; col: number
   return { row: parseInt(rowStr ?? "0", 10), col: parseInt(colStr ?? "0", 10) }
 }
 
-const AVATAR_SIZE = 40
-const TOKEN_WIDTH = 88
+const AVATAR_SIZE = 52
+const TOKEN_WIDTH = 112
 
 const buildRowXPositions = (numRows: number, isHome: boolean): number[] => {
-  const gkX  = isHome ? 13 : 87
+  const gkX  = isHome ? 6 : 94
   const fwdX = isHome ? 44 : 56
   if (numRows <= 1) return [gkX]
   const step = (fwdX - gkX) / (numRows - 1)
@@ -221,16 +221,16 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut, su
         {player.jerseyNumber != null && (
           <span
             className="absolute flex items-center justify-center rounded-full font-black text-white leading-none"
-            style={{ width: 15, height: 15, fontSize: 7, bottom: -2, left: -2, background: "#0f172a", boxShadow: "0 1px 3px rgba(0,0,0,0.7)" }}
+            style={{ width: 17, height: 17, fontSize: 8, bottom: -2, left: -2, background: "#0f172a", boxShadow: "0 1px 3px rgba(0,0,0,0.7)" }}
           >
             {player.jerseyNumber}
           </span>
         )}
         {substitutedOut && (
           <span
-            style={{ position: "absolute", bottom: -2, right: -2, width: 14, height: 14, display: "flex", alignItems: "center", justifyContent: "center", cursor: "default" }}
+            style={{ position: "absolute", bottom: -2, right: -2, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", cursor: "default" }}
           >
-            <SubOutIcon size={14} />
+            <SubOutIcon size={16} />
           </span>
         )}
       </div>
@@ -241,14 +241,14 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut, su
       >
         <span
           className="text-white font-semibold leading-none"
-          style={{ fontSize: 9, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 1, minWidth: 0 }}
+          style={{ fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 1, minWidth: 0 }}
           title={fullName}
         >
           {shortName}
         </span>
         <span
           className="flex items-center justify-center rounded font-black text-white leading-none shrink-0"
-          style={{ fontSize: 8, background: rating !== null ? getRatingFill(rating) : "rgba(255,255,255,0.18)", minWidth: 20, height: 12, paddingLeft: 2, paddingRight: 2 }}
+          style={{ fontSize: 9, background: rating !== null ? getRatingFill(rating) : "rgba(255,255,255,0.18)", minWidth: 22, height: 14, paddingLeft: 2, paddingRight: 2 }}
         >
           {rating !== null ? formatRating(rating) : "—"}
         </span>
