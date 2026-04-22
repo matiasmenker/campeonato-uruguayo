@@ -30,17 +30,22 @@ const parseFormationField = (formationField: string): { row: number; col: number
   return { row: parseInt(rowStr ?? "0", 10), col: parseInt(colStr ?? "0", 10) }
 }
 
-const HOME_X: Record<number, number> = { 0: 14, 1: 25, 2: 36, 3: 46, 4: 50, 5: 50 }
-const AWAY_X: Record<number, number> = { 0: 86, 1: 75, 2: 64, 3: 54, 4: 50, 5: 50 }
-
 const AVATAR_SIZE = 40
 const TOKEN_WIDTH = 88
 
+const buildRowXPositions = (numRows: number, isHome: boolean): number[] => {
+  const gkX  = isHome ? 13 : 87
+  const fwdX = isHome ? 44 : 56
+  if (numRows <= 1) return [gkX]
+  const step = (fwdX - gkX) / (numRows - 1)
+  return Array.from({ length: numRows }, (_, i) => gkX + i * step)
+}
+
 const yPositions = (count: number): number[] => {
   if (count === 1) return [50]
-  if (count === 2) return [28, 72]
-  const min = count >= 5 ? 12 : 14
-  const max = count >= 5 ? 88 : 86
+  if (count === 2) return [27, 73]
+  const min = count >= 5 ? 10 : count >= 4 ? 13 : 15
+  const max = count >= 5 ? 90 : count >= 4 ? 87 : 85
   const step = (max - min) / (count - 1)
   return Array.from({ length: count }, (_, i) => min + i * step)
 }
@@ -270,8 +275,6 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
   }
 
   const renderTeam = (lineup: LineupPlayer[], isHome: boolean) => {
-    const xMap = isHome ? HOME_X : AWAY_X
-
     const newStyleStarters = lineup.filter(p => p.typeId === 11 && p.formationField != null)
     if (newStyleStarters.length > 0) {
       const rowMap = new Map<number, LineupPlayer[]>()
@@ -290,6 +293,7 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
             return colA - colB
           })
         )
+      const xPositions = buildRowXPositions(sortedRows.length, isHome)
       return sortedRows.flatMap((rowPlayers, rowIndex) => {
         const yPos = yPositions(rowPlayers.length)
         return rowPlayers.map((player, playerIndex) => {
@@ -301,8 +305,8 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
               events={eventsByPlayer.get(player.player.id) ?? []}
               rating={ratingByPlayer.get(player.player.id) ?? null}
               assists={assistsByPlayer.get(player.player.id) ?? 0}
-              x={xMap[rowIndex] ?? 50}
-              y={yPos[playerIndex]}
+              x={xPositions[rowIndex] ?? 50}
+              y={yPos[playerIndex] ?? 50}
               substitutedOut={subInfo != null}
               subMinute={subInfo?.minute ?? null}
               subExtraMinute={subInfo?.extraMinute ?? null}
@@ -321,8 +325,9 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
       const row = pos === 1 ? 0 : pos <= 5 ? 1 : pos <= 8 ? 2 : 3
       legacyRows[row].push(player)
     }
-    return legacyRows.flatMap((rowPlayers, rowIndex) => {
-      if (!rowPlayers.length) return []
+    const filledLegacyRows = legacyRows.filter(row => row.length > 0)
+    const xPositions = buildRowXPositions(filledLegacyRows.length, isHome)
+    return filledLegacyRows.flatMap((rowPlayers, rowIndex) => {
       const yPos = yPositions(rowPlayers.length)
       return rowPlayers.map((player, playerIndex) => {
         const subInfo = substitutedOutMap.get(player.player.id)
@@ -333,8 +338,8 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
             events={eventsByPlayer.get(player.player.id) ?? []}
             rating={ratingByPlayer.get(player.player.id) ?? null}
             assists={assistsByPlayer.get(player.player.id) ?? 0}
-            x={xMap[rowIndex]}
-            y={yPos[playerIndex]}
+            x={xPositions[rowIndex] ?? 50}
+            y={yPos[playerIndex] ?? 50}
             substitutedOut={subInfo != null}
             subMinute={subInfo?.minute ?? null}
             subExtraMinute={subInfo?.extraMinute ?? null}
