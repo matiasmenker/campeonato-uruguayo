@@ -503,7 +503,12 @@ const getItemMinuteStr = (item: TimelineItem): string => {
   return extraMin != null ? `${minute}+${extraMin}'` : `${minute}'`
 }
 
-const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
+interface AssisterInfo {
+  name: string
+  imagePath: string | null
+}
+
+const TimelineEventCard = ({ item, assisters = [] }: { item: TimelineItem; assisters?: AssisterInfo[] }) => {
   if (item.kind === "goal") {
     const { event } = item
     const name      = event.player?.displayName ?? event.player?.name ?? "—"
@@ -511,17 +516,28 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
     const isPenalty = event.typeId === EVENT_GOAL_PENALTY
     const playerImg = resolvePlayerImageUrl(event.player?.imagePath ?? null)
     return (
-      <div className="flex items-center gap-2.5 rounded-xl bg-white border border-slate-100 px-3 py-2.5 shadow-sm w-full">
+      <div className="flex items-start gap-2.5 rounded-xl bg-white border border-slate-100 px-3 py-2.5 shadow-sm w-full">
         <BallIcon size={15} variant={isOwnGoal ? "own" : "goal"} />
-        <img src={playerImg} alt={name} style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold text-slate-900 truncate leading-tight">{name}</p>
-          {(isPenalty || isOwnGoal || event.result) && (
-            <p className="text-[10px] leading-tight mt-0.5 flex items-center gap-1.5">
-              {isPenalty && <span className="text-slate-400 font-bold">Pen</span>}
-              {isOwnGoal && <span className="text-red-400 font-bold">A.G.</span>}
-              {event.result && <span className="text-emerald-600 font-black tabular-nums">{event.result}</span>}
-            </p>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <img src={playerImg} alt={name} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+            <p className="text-xs font-semibold text-slate-900 truncate leading-tight">{name}</p>
+          </div>
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            {isPenalty && <span className="text-[10px] text-slate-400 font-bold">Pen</span>}
+            {isOwnGoal && <span className="text-[10px] text-red-400 font-bold">OG</span>}
+            {event.result && <span className="text-[10px] text-emerald-600 font-black tabular-nums">{event.result}</span>}
+          </div>
+          {assisters.length > 0 && (
+            <div className="mt-1.5 flex flex-col gap-1">
+              {assisters.map((assister, i) => (
+                <div key={i} className="flex items-center gap-1.5 min-w-0">
+                  <AssistIcon size={12} />
+                  <img src={resolvePlayerImageUrl(assister.imagePath)} alt={assister.name} style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+                  <span className="text-[10px] text-slate-500 truncate">{assister.name}</span>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -620,6 +636,17 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const playerSideMap = new Map<number, "home" | "away">()
   for (const lp of homeLineup) playerSideMap.set(lp.player.id, "home")
   for (const lp of awayLineup) playerSideMap.set(lp.player.id, "away")
+
+  const assistsBySide = new Map<"home" | "away", AssisterInfo[]>()
+  for (const stat of assists) {
+    const value = stat.value.normalizedValue
+    if (typeof value !== "number" || value <= 0) continue
+    const side = playerSideMap.get(stat.player.id)
+    if (!side) continue
+    const existing = assistsBySide.get(side) ?? []
+    existing.push({ name: stat.player.displayName ?? stat.player.name, imagePath: stat.player.imagePath ?? null })
+    assistsBySide.set(side, existing)
+  }
 
   const goalEvents = events.filter(e => GOAL_TYPES.has(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
   const cardEvents = events.filter(e => [EVENT_YELLOW, EVENT_RED, EVENT_YELLOW_RED].includes(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
@@ -772,13 +799,14 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                   const minuteStr = getItemMinuteStr(item)
                   const isHome    = side === "home"
                   const isAway    = side === "away"
+                  const assisters = (item.kind === "goal" && side) ? (assistsBySide.get(side) ?? []) : []
 
                   return (
                     <div key={index} className="grid grid-cols-[1fr_40px_1fr] items-center">
                       <div className="flex justify-end items-center">
                         {isHome && (
                           <>
-                            <TimelineEventCard item={item} />
+                            <TimelineEventCard item={item} assisters={assisters} />
                             <div className="h-px w-2 bg-slate-200 shrink-0" />
                           </>
                         )}
@@ -795,13 +823,24 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                         {isAway && (
                           <>
                             <div className="h-px w-2 bg-slate-200 shrink-0" />
-                            <TimelineEventCard item={item} />
+                            <TimelineEventCard item={item} assisters={assisters} />
                           </>
                         )}
                       </div>
                     </div>
                   )
                 })}
+
+                {isFinished && (
+                  <div className="grid grid-cols-[1fr_40px_1fr] items-center">
+                    <div />
+                    <div className="relative z-10 flex flex-col items-center gap-0.5">
+                      <div className="w-3 h-3 rounded-full bg-slate-700 border-2 border-white shadow-sm" />
+                      <span className="text-[9px] font-black text-slate-600 leading-none">FT</span>
+                    </div>
+                    <div />
+                  </div>
+                )}
               </div>
             </div>
           </div>
