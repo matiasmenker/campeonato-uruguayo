@@ -611,13 +611,13 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
         <div className="flex items-center gap-2 min-w-0">
           <SubOutIcon size={14} />
           <img src={imgOut} alt={nameOut} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
-          <span className="text-xs text-slate-400 truncate">{nameOut}</span>
+          <span className="text-xs font-semibold text-slate-900 truncate">{nameOut}</span>
         </div>
       )}
       <div className="flex items-center gap-2 min-w-0">
         <SubInIcon size={14} />
         <img src={imgIn} alt={nameIn} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
-        <span className="text-xs font-semibold text-emerald-700 truncate">{nameIn}</span>
+        <span className="text-xs font-semibold text-slate-900 truncate">{nameIn}</span>
       </div>
     </div>
   )
@@ -720,8 +720,8 @@ const MatchPage = async ({ params }: MatchPageProps) => {
             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/85" />
 
             <div className="absolute left-5 top-5">
-              <Link href="/matches" className="flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 py-2 pl-3 pr-4 text-sm font-medium text-white/80 backdrop-blur-sm transition-colors hover:bg-white/20 hover:text-white">
-                <IconArrowLeft size={15} />
+              <Link href="/matches" className="flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white/70 backdrop-blur-sm transition-colors hover:bg-white/20">
+                <IconArrowLeft size={13} />
                 Back
               </Link>
             </div>
