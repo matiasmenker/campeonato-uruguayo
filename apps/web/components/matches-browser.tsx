@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import Link from "next/link"
-import { IconShield, IconChevronDown } from "@tabler/icons-react"
+import { IconShield } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 import type { FixtureListItem, Round } from "@/lib/matches"
 import type { Season } from "@/lib/seasons"
@@ -62,44 +62,75 @@ const getLiveLabel = (code: string | null) => {
   return "En vivo"
 }
 
-const getStatusBadge = (fixture: FixtureListItem) => {
-  const status = getMatchStatus(fixture)
-  const code = fixture.state?.developerName ?? null
+// Status label + style for each round pill in the selector
+const getRoundStatus = (fixtures: FixtureListItem[]) => {
+  const live     = fixtures.filter(f => getMatchStatus(f) === "live").length
+  const finished = fixtures.filter(f => getMatchStatus(f) === "finished").length
 
-  if (status === "live") {
+  if (live > 0) {
     return {
-      isLive: true,
-      dotClassName: "bg-red-500",
-      label: getLiveLabel(code),
-      textClassName: "text-red-200",
-      wrapperClassName: "border-red-400/20 bg-red-500/16 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+      label: "En vivo",
+      dotClass: "bg-red-500 animate-pulse",
+      textClass: "text-red-500",
     }
   }
-
-  if (status === "finished") {
+  if (finished === fixtures.length && fixtures.length > 0) {
     return {
-      isLive: false,
-      dotClassName: "bg-emerald-400",
       label: "Finalizado",
-      textClassName: "text-emerald-100",
-      wrapperClassName: "border-emerald-400/20 bg-emerald-500/14 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
+      dotClass: "bg-emerald-500",
+      textClass: "text-emerald-600",
     }
   }
-
+  if (finished > 0) {
+    return {
+      label: "En curso",
+      dotClass: "bg-amber-400",
+      textClass: "text-amber-600",
+    }
+  }
   return {
-    isLive: false,
-    dotClassName: "bg-white/45",
-    label: formatKickoffTime(fixture.kickoffAt),
-    textClassName: "text-white/80",
-    wrapperClassName: "border-white/12 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
+    label: "Por jugar",
+    dotClass: "bg-slate-300",
+    textClass: "text-slate-400",
   }
 }
 
+// Dark venue card matching the carousel aesthetic.
+// For upcoming matches the badge shows "Por jugar" — the time is already prominent in the score panel.
 const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
-  const status = getMatchStatus(fixture)
-  const badge = getStatusBadge(fixture)
+  const status    = getMatchStatus(fixture)
   const showScore = status === "finished" || status === "live"
+  const code      = fixture.state?.developerName ?? null
   const backgroundImage = fixture.venue?.imagePath ? `url("${fixture.venue.imagePath}")` : undefined
+
+  const badge = (() => {
+    if (status === "live") {
+      return {
+        isLive: true,
+        dotClass: "bg-red-500",
+        label: getLiveLabel(code),
+        textClass: "text-red-200",
+        wrapperClass: "border-red-400/20 bg-red-500/16 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+      }
+    }
+    if (status === "finished") {
+      return {
+        isLive: false,
+        dotClass: "bg-emerald-400",
+        label: "Finalizado",
+        textClass: "text-emerald-100",
+        wrapperClass: "border-emerald-400/20 bg-emerald-500/14 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
+      }
+    }
+    // Upcoming — show "Por jugar" so the time in the score panel is not repeated
+    return {
+      isLive: false,
+      dotClass: "bg-white/40",
+      label: "Por jugar",
+      textClass: "text-white/75",
+      wrapperClass: "border-white/12 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
+    }
+  })()
 
   return (
     <Link href={`/matches/${fixture.id}`} className="block">
@@ -120,7 +151,7 @@ const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
         <div className="relative flex h-full flex-col justify-between p-4">
           {/* Date */}
           <div className="flex justify-end">
-            <span className="text-[11px] font-medium text-white/65">
+            <span className="text-[11px] font-medium text-white/60">
               {formatMatchDay(fixture.kickoffAt)}
             </span>
           </div>
@@ -131,7 +162,7 @@ const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
               <div className="flex h-11 w-11 shrink-0 items-center justify-center">
                 {fixture.homeTeam?.imagePath
                   ? <img src={fixture.homeTeam.imagePath} alt={fixture.homeTeam.name} className="h-9 w-9 object-contain drop-shadow-sm" />
-                  : <IconShield className="h-9 w-9 text-white/80 drop-shadow-sm" />
+                  : <IconShield className="h-9 w-9 text-white/80" />
                 }
               </div>
               <p className="min-w-0 truncate text-[13px] font-semibold text-white">
@@ -157,7 +188,7 @@ const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
               <div className="flex h-11 w-11 shrink-0 items-center justify-center">
                 {fixture.awayTeam?.imagePath
                   ? <img src={fixture.awayTeam.imagePath} alt={fixture.awayTeam.name} className="h-9 w-9 object-contain drop-shadow-sm" />
-                  : <IconShield className="h-9 w-9 text-white/80 drop-shadow-sm" />
+                  : <IconShield className="h-9 w-9 text-white/80" />
                 }
               </div>
               <p className="min-w-0 truncate text-right text-[13px] font-semibold text-white">
@@ -170,15 +201,15 @@ const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
           <div>
             <div className={cn(
               "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-sm",
-              badge.wrapperClassName
+              badge.wrapperClass
             )}>
               <span className="relative flex h-2 w-2">
                 {badge.isLive && (
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
                 )}
-                <span className={cn("relative inline-flex h-2 w-2 rounded-full", badge.dotClassName)} />
+                <span className={cn("relative inline-flex h-2 w-2 rounded-full", badge.dotClass)} />
               </span>
-              <span className={cn("text-[11px] font-semibold", badge.textClassName)}>
+              <span className={cn("text-[11px] font-semibold", badge.textClass)}>
                 {badge.label}
               </span>
             </div>
@@ -186,57 +217,6 @@ const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
         </div>
       </article>
     </Link>
-  )
-}
-
-const RoundSummaryBadges = ({ fixtures }: { fixtures: FixtureListItem[] }) => {
-  const finished = fixtures.filter(f => getMatchStatus(f) === "finished").length
-  const live     = fixtures.filter(f => getMatchStatus(f) === "live").length
-  const upcoming = fixtures.filter(f => getMatchStatus(f) === "upcoming").length
-  return (
-    <div className="flex items-center gap-2 text-xs">
-      {live > 0 && (
-        <span className="flex items-center gap-1 font-semibold text-red-500">
-          <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />{live} en vivo
-        </span>
-      )}
-      {finished > 0 && <span className="text-slate-400">{finished} finalizado{finished > 1 ? "s" : ""}</span>}
-      {upcoming > 0 && <span className="text-slate-400">{upcoming} por jugar</span>}
-    </div>
-  )
-}
-
-const RoundAccordion = ({ group, defaultOpen = false }: { group: RoundGroup; defaultOpen?: boolean }) => {
-  const [open, setOpen] = useState(defaultOpen)
-  const firstKickoff = group.fixtures.find(f => f.kickoffAt)?.kickoffAt ?? null
-
-  return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-slate-50"
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="text-sm font-black text-slate-900 shrink-0">Fecha {group.round.name}</span>
-          {firstKickoff && (
-            <span className="text-xs text-slate-400 truncate">{formatDateShort(firstKickoff)}</span>
-          )}
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          {!open && <RoundSummaryBadges fixtures={group.fixtures} />}
-          <IconChevronDown
-            size={16}
-            className={cn("text-slate-400 transition-transform duration-200", open && "rotate-180")}
-          />
-        </div>
-      </button>
-
-      {open && (
-        <div className="border-t border-slate-100 p-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {group.fixtures.map(fixture => <MatchCard key={fixture.id} fixture={fixture} />)}
-        </div>
-      )}
-    </div>
   )
 }
 
@@ -266,42 +246,54 @@ interface MatchesBrowserProps {
 }
 
 const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrowserProps) => {
+  // Stage state — null means "not explicitly chosen by user"
+  const [selectedStageId, setSelectedStageId] = useState<number | null>(null)
+  // Round state — null means "not explicitly chosen by user"
+  const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null)
+
+  // Derive valid stages (those with ≥5 round-based fixtures, filters playoff/finals)
   const stages = useMemo<StageSummary[]>(() => {
-    const map = new Map<number, StageSummary>()
-    const roundedFixtureCount = new Map<number, number>()
+    const stageMap  = new Map<number, StageSummary>()
+    const roundCount = new Map<number, number>()
     for (const fixture of allFixtures) {
       if (!fixture.stage) continue
-      if (!map.has(fixture.stage.id)) map.set(fixture.stage.id, fixture.stage)
-      if (fixture.round) roundedFixtureCount.set(fixture.stage.id, (roundedFixtureCount.get(fixture.stage.id) ?? 0) + 1)
+      if (!stageMap.has(fixture.stage.id)) stageMap.set(fixture.stage.id, fixture.stage)
+      if (fixture.round) roundCount.set(fixture.stage.id, (roundCount.get(fixture.stage.id) ?? 0) + 1)
     }
-    return Array.from(map.values())
-      .filter(stage => (roundedFixtureCount.get(stage.id) ?? 0) >= 5)
+    return Array.from(stageMap.values())
+      .filter(stage => (roundCount.get(stage.id) ?? 0) >= 5)
       .sort((a, b) => a.id - b.id)
   }, [allFixtures])
 
+  // Resolve effective stage: if stored selection is valid use it, else fall back to current/first.
+  // This automatically corrects stale state after a season change without needing useEffect.
   const defaultStageId = stages.find(s => s.isCurrent)?.id ?? stages[0]?.id ?? null
-  const [selectedStageId, setSelectedStageId] = useState<number | null>(defaultStageId)
+  const effectiveStageId = stages.some(s => s.id === selectedStageId) ? selectedStageId : defaultStageId
 
   const stageFixtures = useMemo(
-    () => selectedStageId ? allFixtures.filter(f => f.stage?.id === selectedStageId) : allFixtures,
-    [allFixtures, selectedStageId]
+    () => effectiveStageId ? allFixtures.filter(f => f.stage?.id === effectiveStageId) : allFixtures,
+    [allFixtures, effectiveStageId]
   )
 
   const roundGroups = useMemo(() => buildRoundGroups(stageFixtures), [stageFixtures])
 
-  const currentGroupIndex = roundGroups.findIndex(g => g.round.isCurrent)
-  const splitIndex = currentGroupIndex >= 0 ? currentGroupIndex : roundGroups.length - 1
+  // Resolve effective round: same pattern as stage
+  const defaultRoundId =
+    roundGroups.find(g => g.round.isCurrent)?.round.id ??
+    roundGroups[roundGroups.length - 1]?.round.id ??
+    null
+  const effectiveRoundId = roundGroups.some(g => g.round.id === selectedRoundId)
+    ? selectedRoundId
+    : defaultRoundId
 
-  const activeGroups = roundGroups.slice(splitIndex)
-  const pastGroups   = roundGroups.slice(0, splitIndex).reverse()
+  const activeGroup = roundGroups.find(g => g.round.id === effectiveRoundId) ?? null
+  const activeIndex  = roundGroups.findIndex(g => g.round.id === effectiveRoundId)
 
   return (
     <div className="flex flex-col gap-4">
 
-      {/* Selectors row */}
+      {/* Season + stage selectors */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-
-        {/* Season selector */}
         {seasons.length > 1 && (
           <div className="flex gap-1.5">
             {seasons.map(season => (
@@ -321,16 +313,18 @@ const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrows
           </div>
         )}
 
-        {/* Stage selector — always show when there's at least one */}
         {stages.length >= 1 && (
           <div className="flex gap-1.5">
             {stages.map(stage => (
               <button
                 key={stage.id}
-                onClick={() => setSelectedStageId(stage.id)}
+                onClick={() => {
+                  setSelectedStageId(stage.id)
+                  setSelectedRoundId(null) // reset round when stage changes
+                }}
                 className={cn(
                   "rounded-full border px-3.5 py-1.5 text-xs font-bold transition-colors",
-                  stage.id === selectedStageId
+                  stage.id === effectiveStageId
                     ? "border-slate-800 bg-slate-800 text-white"
                     : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-800"
                 )}
@@ -342,32 +336,90 @@ const MatchesBrowser = ({ seasons, selectedSeasonId, allFixtures }: MatchesBrows
         )}
       </div>
 
-      {/* Matches */}
-      {roundGroups.length === 0 ? (
+      {/* Round selector */}
+      {roundGroups.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {roundGroups.map(group => {
+            const roundStatus = getRoundStatus(group.fixtures)
+            const isActive    = group.round.id === effectiveRoundId
+            return (
+              <button
+                key={group.round.id}
+                onClick={() => setSelectedRoundId(group.round.id)}
+                className={cn(
+                  "flex shrink-0 flex-col items-center gap-1 rounded-2xl border px-4 py-2.5 transition-all",
+                  isActive
+                    ? "border-slate-900 bg-slate-900 shadow-md"
+                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                )}
+              >
+                <span className={cn(
+                  "text-xs font-black",
+                  isActive ? "text-white" : "text-slate-800"
+                )}>
+                  Fecha {group.round.name}
+                </span>
+                <div className="flex items-center gap-1">
+                  <span className={cn("h-1.5 w-1.5 rounded-full", roundStatus.dotClass)} />
+                  <span className={cn(
+                    "text-[10px] font-semibold",
+                    isActive ? "text-white/65" : roundStatus.textClass
+                  )}>
+                    {roundStatus.label}
+                  </span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Active round fixtures */}
+      {activeGroup === null ? (
         <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
           No hay partidos disponibles
         </div>
       ) : (
-        <>
-          {activeGroups.map((group, index) => (
-            <RoundAccordion
-              key={group.round.id}
-              group={group}
-              defaultOpen={index === 0}
-            />
-          ))}
-
-          {pastGroups.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <p className="px-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Fechas anteriores
-              </p>
-              {pastGroups.map(group => (
-                <RoundAccordion key={group.round.id} group={group} defaultOpen={false} />
-              ))}
+        <div className="flex flex-col gap-3">
+          {/* Round subtitle */}
+          <div className="flex items-center justify-between px-1">
+            <p className="text-xs font-semibold text-slate-500">
+              {formatDateShort(activeGroup.fixtures.find(f => f.kickoffAt)?.kickoffAt ?? null)}
+              {" · "}
+              {activeGroup.fixtures.length} partido{activeGroup.fixtures.length !== 1 ? "s" : ""}
+            </p>
+            {/* Prev / Next navigation */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setSelectedRoundId(roundGroups[activeIndex - 1]?.round.id ?? null)}
+                disabled={activeIndex === 0}
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-30"
+                aria-label="Fecha anterior"
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M7.5 2L4 6l3.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setSelectedRoundId(roundGroups[activeIndex + 1]?.round.id ?? null)}
+                disabled={activeIndex === roundGroups.length - 1}
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-30"
+                aria-label="Siguiente fecha"
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M4.5 2L8 6l-3.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
-          )}
-        </>
+          </div>
+
+          {/* Cards grid */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {activeGroup.fixtures.map(fixture => (
+              <MatchCard key={fixture.id} fixture={fixture} />
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )
