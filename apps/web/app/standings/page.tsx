@@ -43,7 +43,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import ChampionBadge from "@/components/champion-badge"
-import StandingsFilters from "@/components/standings-filters"
+import { StandingsSeasonFilter, StandingsStageFilter } from "@/components/standings-filters"
 import { getLeaders, type LeadersContract } from "@/lib/metrics"
 import { getStandings, type StandingEntry } from "@/lib/standings"
 import { getSeasons, getStages, getSeasonChampion, type Season, type Stage, type SeasonChampion } from "@/lib/seasons"
@@ -343,29 +343,32 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
             {seasons.length > 0 && (
               <div className="absolute right-5 top-5">
                 <Suspense>
-                  <StandingsFilters
-                    seasons={seasons}
-                    stages={stages}
-                    selectedSeasonId={selectedSeasonId}
-                    selectedStageId={selectedStageId}
-                    isDark
-                  />
+                  <StandingsSeasonFilter seasons={seasons} selectedSeasonId={selectedSeasonId} />
                 </Suspense>
               </div>
             )}
 
-            <div className="absolute bottom-0 left-0 right-0 flex items-end gap-5 p-6">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
-                <IconTrophy size={32} className="text-white/70" />
+            <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between p-6">
+              <div className="flex items-end gap-5">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
+                  <IconTrophy size={32} className="text-white/70" />
+                </div>
+                <div className="flex flex-col gap-1 pb-1">
+                  <h1 className="text-3xl font-black text-white leading-none drop-shadow">Tabla</h1>
+                  <p className="text-sm text-white/70">
+                    Primera División
+                    {selectedSeason && <span className="font-semibold text-white/90"> · {selectedSeason.name}</span>}
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col gap-1 pb-1">
-                <h1 className="text-3xl font-black text-white leading-none drop-shadow">Tabla</h1>
-                <p className="text-sm text-white/70">
-                  Primera División
-                  {selectedSeason && <span className="font-semibold text-white/90"> · {selectedSeason.name}</span>}
-                  {selectedStage && <span className="text-white/60"> · {selectedStage.name}</span>}
-                </p>
-              </div>
+
+              {visibleStages.length > 0 && (
+                <div className="pb-1">
+                  <Suspense>
+                    <StandingsStageFilter stages={visibleStages} selectedStageId={selectedStageId} />
+                  </Suspense>
+                </div>
+              )}
             </div>
           </div>
         </div>

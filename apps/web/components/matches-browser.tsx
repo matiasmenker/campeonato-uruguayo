@@ -5,6 +5,7 @@ import useEmblaCarousel from "embla-carousel-react"
 import Link from "next/link"
 import { IconBallFootball, IconChevronLeft, IconChevronRight, IconShield } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
+import HeroSelect from "@/components/hero-select"
 import type { FixtureListItem } from "@/lib/matches"
 import type { Season } from "@/lib/seasons"
 
@@ -559,64 +560,46 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
           <HeroBackground />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
 
-          {/* Selectors — top right, stacked if both present */}
-          {(showSeasonSelector || showStageSelector) && (
-            <div className="absolute right-5 top-5 flex flex-col items-end gap-2">
-              {showSeasonSelector && (
-                <div className="flex flex-wrap justify-end gap-1.5">
-                  {seasons.map(season => (
-                    <button
-                      key={season.id}
-                      onClick={() => handleSeasonChange(season.id)}
-                      disabled={isFetching}
-                      className={cn(
-                        "rounded-full border px-3.5 py-1.5 text-xs font-bold backdrop-blur-sm transition-colors disabled:opacity-60",
-                        season.id === currentSeasonId
-                          ? "border-white/40 bg-white/25 text-white"
-                          : "border-white/20 bg-white/10 text-white/65 hover:bg-white/20 hover:text-white"
-                      )}
-                    >
-                      {season.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {showStageSelector && (
-                <div className="flex flex-wrap justify-end gap-1.5">
-                  {stages.map(stage => (
-                    <button
-                      key={stage.id}
-                      onClick={() => handleStageChange(stage.id)}
-                      disabled={isFetching}
-                      className={cn(
-                        "rounded-full border px-3.5 py-1.5 text-xs font-bold backdrop-blur-sm transition-colors disabled:opacity-60",
-                        stage.id === effectiveStageId
-                          ? "border-white/40 bg-white/25 text-white"
-                          : "border-white/20 bg-white/10 text-white/65 hover:bg-white/20 hover:text-white"
-                      )}
-                    >
-                      {stage.name}
-                    </button>
-                  ))}
-                </div>
-              )}
+          {/* Season select — top right */}
+          {showSeasonSelector && (
+            <div className="absolute right-5 top-5">
+              <HeroSelect
+                value={String(currentSeasonId ?? "")}
+                onValueChange={value => handleSeasonChange(Number(value))}
+                options={seasons}
+                disabled={isFetching}
+              />
             </div>
           )}
 
-          {/* Title — bottom left */}
-          <div className="absolute bottom-0 left-0 right-0 flex items-end gap-5 p-6">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
-              <IconBallFootball size={32} className="text-white/70" />
+          {/* Title left + stage select right — bottom */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between p-6">
+            <div className="flex items-end gap-5">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
+                <IconBallFootball size={32} className="text-white/70" />
+              </div>
+              <div className="flex flex-col gap-1 pb-1">
+                <h1 className="text-3xl font-black text-white leading-none drop-shadow">Partidos</h1>
+                <p className="text-sm text-white/70">
+                  Primera División
+                  {selectedSeason && (
+                    <span className="font-semibold text-white/90"> · {selectedSeason.name}</span>
+                  )}
+                </p>
+              </div>
             </div>
-            <div className="flex flex-col gap-1 pb-1">
-              <h1 className="text-3xl font-black text-white leading-none drop-shadow">Partidos</h1>
-              <p className="text-sm text-white/70">
-                Primera División
-                {selectedSeason && (
-                  <span className="font-semibold text-white/90"> · {selectedSeason.name}</span>
-                )}
-              </p>
-            </div>
+
+            {showStageSelector && (
+              <div className="pb-1">
+                <HeroSelect
+                  value={String(effectiveStageId ?? "")}
+                  onValueChange={value => handleStageChange(Number(value))}
+                  options={stages}
+                  disabled={isFetching}
+                  openUp
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
