@@ -2,6 +2,37 @@ import { Suspense } from "react"
 import { getRatingFill } from "@/lib/rating"
 import Link from "next/link"
 import { IconBallFootball, IconStar, IconTrophy, IconUsers } from "@tabler/icons-react"
+
+const HeroBackground = () => (
+  <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="standingsBase" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stopColor="#0d0a00" />
+        <stop offset="40%"  stopColor="#2a1f00" />
+        <stop offset="75%"  stopColor="#3d2e00" />
+        <stop offset="100%" stopColor="#1e1600" />
+      </linearGradient>
+      <radialGradient id="standingsGA" cx="80%" cy="15%" r="45%">
+        <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.22" />
+        <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+      </radialGradient>
+      <radialGradient id="standingsGB" cx="20%" cy="70%" r="50%">
+        <stop offset="0%" stopColor="#d97706" stopOpacity="0.14" />
+        <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+      </radialGradient>
+      <pattern id="standingsDots" x="0" y="0" width="18" height="18" patternUnits="userSpaceOnUse">
+        <circle cx="9" cy="9" r="0.8" fill="rgba(251,191,36,0.08)" />
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#standingsBase)" />
+    <rect width="100%" height="100%" fill="url(#standingsGA)" />
+    <rect width="100%" height="100%" fill="url(#standingsGB)" />
+    <rect width="100%" height="100%" fill="url(#standingsDots)" />
+    <circle cx="-5%" cy="110%" r="65%" fill="none" stroke="rgba(245,158,11,0.07)" strokeWidth="1.5" />
+    <circle cx="-5%" cy="110%" r="48%" fill="none" stroke="rgba(245,158,11,0.05)" strokeWidth="1" />
+    <circle cx="108%" cy="-8%" r="48%" fill="none" stroke="rgba(251,191,36,0.06)" strokeWidth="1" />
+  </svg>
+)
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Table,
@@ -304,26 +335,39 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <IconTrophy size={20} className="text-slate-400" />
-            <div>
-              <h1 className="text-xl font-bold text-slate-950">Standings</h1>
-              <p className="text-sm text-slate-400">
-                {selectedStage?.name ?? "—"} · {selectedSeason?.name ?? "—"}
-              </p>
+        <div className="overflow-hidden rounded-2xl shadow-lg">
+          <div className="relative min-h-44 bg-slate-900">
+            <HeroBackground />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
+
+            {seasons.length > 0 && (
+              <div className="absolute right-5 top-5">
+                <Suspense>
+                  <StandingsFilters
+                    seasons={seasons}
+                    stages={stages}
+                    selectedSeasonId={selectedSeasonId}
+                    selectedStageId={selectedStageId}
+                    isDark
+                  />
+                </Suspense>
+              </div>
+            )}
+
+            <div className="absolute bottom-0 left-0 right-0 flex items-end gap-5 p-6">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
+                <IconTrophy size={32} className="text-white/70" />
+              </div>
+              <div className="flex flex-col gap-1 pb-1">
+                <h1 className="text-3xl font-black text-white leading-none drop-shadow">Tabla</h1>
+                <p className="text-sm text-white/70">
+                  Primera División
+                  {selectedSeason && <span className="font-semibold text-white/90"> · {selectedSeason.name}</span>}
+                  {selectedStage && <span className="text-white/60"> · {selectedStage.name}</span>}
+                </p>
+              </div>
             </div>
           </div>
-          {seasons.length > 0 && (
-            <Suspense>
-              <StandingsFilters
-                seasons={seasons}
-                stages={stages}
-                selectedSeasonId={selectedSeasonId}
-                selectedStageId={selectedStageId}
-              />
-            </Suspense>
-          )}
         </div>
 
         {errorMessage ? (

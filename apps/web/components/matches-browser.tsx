@@ -3,10 +3,45 @@
 import { useState, useMemo, useEffect, useCallback } from "react"
 import useEmblaCarousel from "embla-carousel-react"
 import Link from "next/link"
-import { IconChevronLeft, IconChevronRight, IconShield } from "@tabler/icons-react"
+import { IconBallFootball, IconChevronLeft, IconChevronRight, IconShield } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 import type { FixtureListItem } from "@/lib/matches"
 import type { Season } from "@/lib/seasons"
+
+// ---------------------------------------------------------------------------
+// Hero background — same green palette as the matches page
+// ---------------------------------------------------------------------------
+
+const HeroBackground = () => (
+  <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="matchesBase" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#0a1628" />
+        <stop offset="40%" stopColor="#0d2a1a" />
+        <stop offset="75%" stopColor="#0f4a2a" />
+        <stop offset="100%" stopColor="#0a3320" />
+      </linearGradient>
+      <radialGradient id="matchesGA" cx="80%" cy="15%" r="45%">
+        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.18" />
+        <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+      </radialGradient>
+      <radialGradient id="matchesGB" cx="20%" cy="70%" r="50%">
+        <stop offset="0%" stopColor="#16a34a" stopOpacity="0.12" />
+        <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+      </radialGradient>
+      <pattern id="matchesDots" x="0" y="0" width="18" height="18" patternUnits="userSpaceOnUse">
+        <circle cx="9" cy="9" r="0.8" fill="rgba(134,239,172,0.08)" />
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#matchesBase)" />
+    <rect width="100%" height="100%" fill="url(#matchesGA)" />
+    <rect width="100%" height="100%" fill="url(#matchesGB)" />
+    <rect width="100%" height="100%" fill="url(#matchesDots)" />
+    <circle cx="-5%" cy="110%" r="65%" fill="none" stroke="rgba(34,197,94,0.07)" strokeWidth="1.5" />
+    <circle cx="-5%" cy="110%" r="48%" fill="none" stroke="rgba(34,197,94,0.05)" strokeWidth="1" />
+    <circle cx="108%" cy="-8%" r="48%" fill="none" stroke="rgba(134,239,174,0.06)" strokeWidth="1" />
+  </svg>
+)
 
 // ---------------------------------------------------------------------------
 // Types
@@ -513,54 +548,82 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
   const showSeasonSelector = seasons.length > 1
   const showStageSelector  = stages.length >= 1
 
+  const selectedSeason = seasons.find(s => s.id === currentSeasonId) ?? null
+
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-6">
 
-      {/* Season + stage selectors — floating outside the card */}
-      {(showSeasonSelector || showStageSelector) && (
-        <div className="flex flex-wrap items-center justify-between gap-y-2">
-          {showSeasonSelector && (
-            <div className="flex gap-1.5">
-              {seasons.map(season => (
-                <button
-                  key={season.id}
-                  onClick={() => handleSeasonChange(season.id)}
-                  disabled={isFetching}
-                  className={cn(
-                    "rounded-full border px-3.5 py-1.5 text-xs font-bold transition-colors disabled:opacity-60",
-                    season.id === currentSeasonId
-                      ? "border-slate-800 bg-slate-800 text-white"
-                      : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-800"
-                  )}
-                >
-                  {season.name}
-                </button>
-              ))}
+      {/* Hero — season + stage selectors live here */}
+      <div className="overflow-hidden rounded-2xl shadow-lg">
+        <div className="relative min-h-44 bg-slate-900">
+          <HeroBackground />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
+
+          {/* Selectors — top right, stacked if both present */}
+          {(showSeasonSelector || showStageSelector) && (
+            <div className="absolute right-5 top-5 flex flex-col items-end gap-2">
+              {showSeasonSelector && (
+                <div className="flex flex-wrap justify-end gap-1.5">
+                  {seasons.map(season => (
+                    <button
+                      key={season.id}
+                      onClick={() => handleSeasonChange(season.id)}
+                      disabled={isFetching}
+                      className={cn(
+                        "rounded-full border px-3.5 py-1.5 text-xs font-bold backdrop-blur-sm transition-colors disabled:opacity-60",
+                        season.id === currentSeasonId
+                          ? "border-white/40 bg-white/25 text-white"
+                          : "border-white/20 bg-white/10 text-white/65 hover:bg-white/20 hover:text-white"
+                      )}
+                    >
+                      {season.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {showStageSelector && (
+                <div className="flex flex-wrap justify-end gap-1.5">
+                  {stages.map(stage => (
+                    <button
+                      key={stage.id}
+                      onClick={() => handleStageChange(stage.id)}
+                      disabled={isFetching}
+                      className={cn(
+                        "rounded-full border px-3.5 py-1.5 text-xs font-bold backdrop-blur-sm transition-colors disabled:opacity-60",
+                        stage.id === effectiveStageId
+                          ? "border-white/40 bg-white/25 text-white"
+                          : "border-white/20 bg-white/10 text-white/65 hover:bg-white/20 hover:text-white"
+                      )}
+                    >
+                      {stage.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {showStageSelector && (
-            <div className="flex gap-1.5">
-              {stages.map(stage => (
-                <button
-                  key={stage.id}
-                  onClick={() => handleStageChange(stage.id)}
-                  className={cn(
-                    "rounded-full border px-3.5 py-1.5 text-xs font-bold transition-colors",
-                    stage.id === effectiveStageId
-                      ? "border-slate-800 bg-slate-800 text-white"
-                      : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-800"
-                  )}
-                >
-                  {stage.name}
-                </button>
-              ))}
+          {/* Title — bottom left */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-end gap-5 p-6">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
+              <IconBallFootball size={32} className="text-white/70" />
             </div>
-          )}
+            <div className="flex flex-col gap-1 pb-1">
+              <h1 className="text-3xl font-black text-white leading-none drop-shadow">Partidos</h1>
+              <p className="text-sm text-white/70">
+                Primera División
+                {selectedSeason && (
+                  <span className="font-semibold text-white/90"> · {selectedSeason.name}</span>
+                )}
+              </p>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
 
-      {/* Round carousel — no wrapper card, floats at the same visual level */}
+      <div className="flex flex-col gap-3">
+
+      {/* Round carousel */}
       {roundGroups.length > 0 && (
         <RoundSelector
           roundGroups={roundGroups}
@@ -605,6 +668,7 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
         )}
       </div>
 
+      </div>
     </div>
   )
 }
