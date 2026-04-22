@@ -155,7 +155,7 @@ const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
 
   return (
     <Link href={`/matches/${fixture.id}`} className="block">
-      <article className="group relative h-[172px] overflow-hidden rounded-[24px] bg-slate-900 cursor-pointer">
+      <article className="group relative h-[132px] overflow-hidden rounded-[18px] bg-slate-900 cursor-pointer">
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
           style={{ backgroundImage, backgroundColor: "#0f172a" }}
@@ -168,48 +168,48 @@ const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
               : "linear-gradient(145deg, #0f172a 0%, #123528 50%, #0b1b16 100%)",
           }}
         />
-        <div className="relative flex h-full flex-col justify-between p-4">
+        <div className="relative flex h-full flex-col justify-between p-3.5">
           <div className="flex justify-end">
-            <span className="text-[11px] font-medium text-white/60">
+            <span className="text-[10px] font-medium text-white/60">
               {formatMatchDay(fixture.kickoffAt)}
             </span>
           </div>
 
           <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center">
                 {fixture.homeTeam?.imagePath
-                  ? <img src={fixture.homeTeam.imagePath} alt={fixture.homeTeam.name} className="h-9 w-9 object-contain drop-shadow-sm" />
-                  : <IconShield className="h-9 w-9 text-white/80" />
+                  ? <img src={fixture.homeTeam.imagePath} alt={fixture.homeTeam.name} className="h-7 w-7 object-contain drop-shadow-sm" />
+                  : <IconShield className="h-7 w-7 text-white/80" />
                 }
               </div>
-              <p className="min-w-0 truncate text-[13px] font-semibold text-white">
+              <p className="min-w-0 truncate text-[12px] font-semibold text-white">
                 {fixture.homeTeam?.name ?? "Equipo"}
               </p>
             </div>
 
-            <div className="flex min-w-[88px] flex-col items-center rounded-[18px] border border-white/10 bg-black/20 px-4 py-2 text-center backdrop-blur-sm">
+            <div className="flex min-w-[76px] flex-col items-center rounded-[14px] border border-white/10 bg-black/20 px-3 py-1.5 text-center backdrop-blur-sm">
               {showScore ? (
-                <div className="flex items-center gap-2.5 text-white">
-                  <span className="text-2xl leading-none font-black tabular-nums">{fixture.homeScore ?? 0}</span>
-                  <span className="text-sm leading-none font-medium text-white/35">—</span>
-                  <span className="text-2xl leading-none font-black tabular-nums">{fixture.awayScore ?? 0}</span>
+                <div className="flex items-center gap-2 text-white">
+                  <span className="text-xl leading-none font-black tabular-nums">{fixture.homeScore ?? 0}</span>
+                  <span className="text-xs leading-none font-medium text-white/35">—</span>
+                  <span className="text-xl leading-none font-black tabular-nums">{fixture.awayScore ?? 0}</span>
                 </div>
               ) : (
-                <div className="text-2xl leading-none font-black tracking-tight text-white">
+                <div className="text-xl leading-none font-black tracking-tight text-white">
                   {formatKickoffTime(fixture.kickoffAt)}
                 </div>
               )}
             </div>
 
-            <div className="flex min-w-0 flex-row-reverse items-center gap-2.5">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center">
+            <div className="flex min-w-0 flex-row-reverse items-center gap-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center">
                 {fixture.awayTeam?.imagePath
-                  ? <img src={fixture.awayTeam.imagePath} alt={fixture.awayTeam.name} className="h-9 w-9 object-contain drop-shadow-sm" />
-                  : <IconShield className="h-9 w-9 text-white/80" />
+                  ? <img src={fixture.awayTeam.imagePath} alt={fixture.awayTeam.name} className="h-7 w-7 object-contain drop-shadow-sm" />
+                  : <IconShield className="h-7 w-7 text-white/80" />
                 }
               </div>
-              <p className="min-w-0 truncate text-right text-[13px] font-semibold text-white">
+              <p className="min-w-0 truncate text-right text-[12px] font-semibold text-white">
                 {fixture.awayTeam?.name ?? "Equipo"}
               </p>
             </div>
@@ -217,16 +217,16 @@ const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
 
           <div>
             <div className={cn(
-              "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-sm",
+              "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 backdrop-blur-sm",
               badge.wrapperClass
             )}>
-              <span className="relative flex h-2 w-2">
+              <span className="relative flex h-1.5 w-1.5">
                 {badge.isLive && (
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
                 )}
-                <span className={cn("relative inline-flex h-2 w-2 rounded-full", badge.dotClass)} />
+                <span className={cn("relative inline-flex h-1.5 w-1.5 rounded-full", badge.dotClass)} />
               </span>
-              <span className={cn("text-[11px] font-semibold", badge.textClass)}>
+              <span className={cn("text-[10px] font-semibold", badge.textClass)}>
                 {badge.label}
               </span>
             </div>
@@ -307,6 +307,14 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
       >
         <IconChevronRight size={15} />
       </button>
+
+      {/* Gradient fades — pointer-events-none so they don't block arrow clicks */}
+      {canScrollPrev && (
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 z-10 w-16 bg-gradient-to-r from-white via-white/70 to-transparent" />
+      )}
+      {canScrollNext && (
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-16 bg-gradient-to-l from-white via-white/70 to-transparent" />
+      )}
 
       {/* Embla viewport is inset mx-14 (56 px each side) so its overflow-hidden
           boundary sits 12 px past the arrow buttons (which end at ~44 px).
