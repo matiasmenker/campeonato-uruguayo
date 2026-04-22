@@ -57,7 +57,7 @@ interface FixtureStateSummary {
   developerName: string
 }
 
-interface PlayerSummary {
+export interface PlayerSummary {
   id: number
   name: string
   displayName: string | null

@@ -9,6 +9,7 @@ import {
   getFixturePlayerAssists,
   type LineupPlayer,
   type FixtureEvent,
+  type PlayerSummary,
 } from "@/lib/matches"
 import { getRatingFill } from "@/lib/rating"
 import { resolvePlayerImageUrl } from "@/lib/player"
@@ -491,7 +492,7 @@ const BenchSection = ({
 }
 
 type TimelineItem =
-  | { kind: "goal"; event: FixtureEvent }
+  | { kind: "goal"; event: FixtureEvent; assister: PlayerSummary | null }
   | { kind: "card"; event: FixtureEvent }
   | { kind: "sub";  subEvent: SubstitutionEvent }
 
@@ -509,7 +510,7 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
     const isOwnGoal = event.typeId === EVENT_GOAL_OWN
     const isPenalty = event.typeId === EVENT_GOAL_PENALTY
     const playerImg = resolvePlayerImageUrl(event.player?.imagePath ?? null)
-    const assister  = (!isPenalty && !isOwnGoal) ? event.relatedPlayer : null
+    const assister  = item.assister
     return (
       <div className="flex items-start gap-2.5 rounded-xl bg-white border border-slate-100 px-3 py-2.5 shadow-sm w-full">
         <BallIcon size={15} variant={isOwnGoal ? "own" : "goal"} />
@@ -641,8 +642,46 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const cardEvents = events.filter(e => [EVENT_YELLOW, EVENT_RED, EVENT_YELLOW_RED].includes(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
   const subEvents  = buildSubEvents(events)
 
+  const assisterPlayerBySide = new Map<"home" | "away", PlayerSummary[]>()
+  for (const stat of assists) {
+    const value = stat.value.normalizedValue
+    if (typeof value !== "number" || value <= 0) continue
+    const side = playerSideMap.get(stat.player.id)
+    if (!side) continue
+    const existing = assisterPlayerBySide.get(side) ?? []
+    for (let i = 0; i < value; i++) existing.push(stat.player)
+    assisterPlayerBySide.set(side, existing)
+  }
+
+  const assisterByGoalEventId = new Map<number, PlayerSummary>()
+  for (const side of ["home", "away"] as const) {
+    const eligibleGoals = goalEvents.filter(e =>
+      e.typeId !== EVENT_GOAL_PENALTY &&
+      e.typeId !== EVENT_GOAL_OWN &&
+      e.player != null &&
+      playerSideMap.get(e.player.id) === side
+    )
+    const sideAssisters = assisterPlayerBySide.get(side) ?? []
+
+    if (eligibleGoals.length > 0 && eligibleGoals.length === sideAssisters.length) {
+      eligibleGoals.forEach((goalEvent, i) => {
+        assisterByGoalEventId.set(goalEvent.id, sideAssisters[i]!)
+      })
+    } else {
+      for (const goalEvent of eligibleGoals) {
+        if (goalEvent.relatedPlayer != null) {
+          assisterByGoalEventId.set(goalEvent.id, goalEvent.relatedPlayer)
+        }
+      }
+    }
+  }
+
   const sortedTimeline: TimelineItem[] = [
-    ...goalEvents.map(event  => ({ kind: "goal" as const, event })),
+    ...goalEvents.map(event => ({
+      kind: "goal" as const,
+      event,
+      assister: assisterByGoalEventId.get(event.id) ?? null,
+    })),
     ...cardEvents.map(event  => ({ kind: "card" as const, event })),
     ...subEvents.map(subEvent => ({ kind: "sub" as const, subEvent })),
   ].sort((itemA, itemB) => {
