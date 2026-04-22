@@ -282,12 +282,12 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
     // No overflow-hidden here — only the embla viewport clips the pills.
     <div className="relative rounded-2xl border border-slate-200/80 bg-white shadow-sm">
 
-      {/* Left arrow — inside the card, clears the pills with px-14 below */}
+      {/* Left arrow — frosted glass so pills scrolling behind are partially visible */}
       <button
         onClick={() => emblaApi?.scrollPrev()}
         disabled={!canScrollPrev}
         className={cn(
-          "absolute top-1/2 left-3 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition-[opacity,box-shadow,background-color] hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm",
+          "absolute top-1/2 left-3 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200/60 bg-white/60 text-slate-600 shadow-xs backdrop-blur-sm transition-[opacity,background-color] hover:bg-white/80 hover:text-slate-900",
           !canScrollPrev && "pointer-events-none opacity-30"
         )}
         aria-label="Fechas anteriores"
@@ -295,12 +295,12 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
         <IconChevronLeft size={15} />
       </button>
 
-      {/* Right arrow — inside the card */}
+      {/* Right arrow — frosted glass */}
       <button
         onClick={() => emblaApi?.scrollNext()}
         disabled={!canScrollNext}
         className={cn(
-          "absolute top-1/2 right-3 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition-[opacity,box-shadow,background-color] hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm",
+          "absolute top-1/2 right-3 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200/60 bg-white/60 text-slate-600 shadow-xs backdrop-blur-sm transition-[opacity,background-color] hover:bg-white/80 hover:text-slate-900",
           !canScrollNext && "pointer-events-none opacity-30"
         )}
         aria-label="Fechas siguientes"
@@ -483,7 +483,6 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
     : defaultRoundId
 
   const activeGroup  = roundGroups.find(g => g.round.id === effectiveRoundId) ?? null
-  const activeIndex  = roundGroups.findIndex(g => g.round.id === effectiveRoundId)
   const roundStatus  = activeGroup ? getRoundStatus(activeGroup.fixtures) : null
   const firstKickoff = activeGroup?.fixtures.find(f => f.kickoffAt)?.kickoffAt ?? null
 
@@ -503,15 +502,6 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
     }
   }
 
-  const goToPrev = () => {
-    const previousId = roundGroups[activeIndex - 1]?.round.id
-    if (previousId !== undefined) handleRoundSelect(previousId)
-  }
-  const goToNext = () => {
-    const nextId = roundGroups[activeIndex + 1]?.round.id
-    if (nextId !== undefined) handleRoundSelect(nextId)
-  }
-
   const showSeasonSelector = seasons.length > 1
   const showStageSelector  = stages.length >= 1
 
@@ -520,7 +510,7 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
 
       {/* Season + stage selectors — floating outside the card */}
       {(showSeasonSelector || showStageSelector) && (
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-y-2">
           {showSeasonSelector && (
             <div className="flex gap-1.5">
               {seasons.map(season => (
@@ -580,43 +570,21 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
         ) : (
           <>
             {/* Round header — centred title + date + status */}
-            <div className="px-5 py-10">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={goToPrev}
-                  disabled={activeIndex === 0}
-                  aria-label="Fecha anterior"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-xs transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-30"
-                >
-                  <IconChevronLeft size={16} />
-                </button>
-
-                <div className="flex-1 text-center">
-                  <h2 className="text-2xl font-black leading-tight text-slate-900">
-                    Fecha {activeGroup.round.name}
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {formatRoundDate(firstKickoff)}
-                  </p>
-                  {roundStatus && (
-                    <div className="mt-2 flex items-center justify-center gap-1.5">
-                      <span className={cn("h-1.5 w-1.5 rounded-full", roundStatus.dotClass)} />
-                      <span className={cn("text-xs font-semibold", roundStatus.textClass)}>
-                        {roundStatus.label}
-                      </span>
-                    </div>
-                  )}
+            <div className="px-5 py-10 text-center">
+              <h2 className="text-2xl font-black leading-tight text-slate-900">
+                Fecha {activeGroup.round.name}
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                {formatRoundDate(firstKickoff)}
+              </p>
+              {roundStatus && (
+                <div className="mt-2 flex items-center justify-center gap-1.5">
+                  <span className={cn("h-1.5 w-1.5 rounded-full", roundStatus.dotClass)} />
+                  <span className={cn("text-xs font-semibold", roundStatus.textClass)}>
+                    {roundStatus.label}
+                  </span>
                 </div>
-
-                <button
-                  onClick={goToNext}
-                  disabled={activeIndex === roundGroups.length - 1}
-                  aria-label="Siguiente fecha"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-xs transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-30"
-                >
-                  <IconChevronRight size={16} />
-                </button>
-              </div>
+              )}
             </div>
 
             {/* Cards grid */}
