@@ -278,13 +278,16 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
   }, [emblaApi, effectiveRoundId, roundGroups])
 
   return (
-    <div className="relative">
-      {/* Outside arrows — positioned identically to the home carousel */}
+    // Outer card: position:relative so arrows can be absolute inside it.
+    // No overflow-hidden here — only the embla viewport clips the pills.
+    <div className="relative rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+
+      {/* Left arrow — inside the card, clears the pills with px-14 below */}
       <button
         onClick={() => emblaApi?.scrollPrev()}
         disabled={!canScrollPrev}
         className={cn(
-          "absolute top-1/2 left-0 z-20 hidden h-8 w-8 -translate-x-[calc(100%+10px)] -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition-[opacity,box-shadow,background-color] hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm sm:flex",
+          "absolute top-1/2 left-3 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition-[opacity,box-shadow,background-color] hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm",
           !canScrollPrev && "pointer-events-none opacity-30"
         )}
         aria-label="Fechas anteriores"
@@ -292,11 +295,12 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
         <IconChevronLeft size={15} />
       </button>
 
+      {/* Right arrow — inside the card */}
       <button
         onClick={() => emblaApi?.scrollNext()}
         disabled={!canScrollNext}
         className={cn(
-          "absolute top-1/2 right-0 z-20 hidden h-8 w-8 -translate-y-1/2 translate-x-[calc(100%+10px)] items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition-[opacity,box-shadow,background-color] hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm sm:flex",
+          "absolute top-1/2 right-3 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition-[opacity,box-shadow,background-color] hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm",
           !canScrollNext && "pointer-events-none opacity-30"
         )}
         aria-label="Fechas siguientes"
@@ -304,16 +308,10 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
         <IconChevronRight size={15} />
       </button>
 
-      {/* Gradient fades — only shown when there's content hidden in that direction */}
-      {canScrollPrev && (
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-slate-50 to-transparent" />
-      )}
-      {canScrollNext && (
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-slate-50 to-transparent" />
-      )}
-
-      <div ref={emblaRef} className="overflow-hidden">
-        <div className="flex -ml-2 px-5">
+      {/* Embla viewport — px-14 on the pills flex leaves 56 px clear on each side
+          so pills never scroll under the arrow buttons (arrow ends at ~44 px) */}
+      <div ref={emblaRef} className="overflow-hidden py-3">
+        <div className="flex -ml-2 px-14">
           {roundGroups.map(group => {
             const roundStatus = getRoundStatus(group.fixtures)
             const isActive    = group.round.id === effectiveRoundId
@@ -349,6 +347,7 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
           })}
         </div>
       </div>
+
     </div>
   )
 }
@@ -516,7 +515,7 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
   const showStageSelector  = stages.length >= 1
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
 
       {/* Season + stage selectors — floating outside the card */}
       {(showSeasonSelector || showStageSelector) && (
