@@ -252,7 +252,7 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
     align: "center",
     dragFree: true,
     loop: false,
-    containScroll: "keepSnaps",
+    containScroll: false,
   })
 
   const [canScrollPrev, setCanScrollPrev] = useState(false)
@@ -278,7 +278,7 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
   }, [emblaApi, effectiveRoundId, roundGroups])
 
   return (
-    <div className="relative">
+    <div className="relative py-1">
       {/* Outside arrows — positioned identically to the home carousel */}
       <button
         onClick={() => emblaApi?.scrollPrev()}
@@ -562,15 +562,13 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
         </div>
       )}
 
-      {/* Round carousel — gradient strip, no card border */}
+      {/* Round carousel — no wrapper card, floats at the same visual level */}
       {roundGroups.length > 0 && (
-        <div className="rounded-2xl bg-gradient-to-b from-slate-100/80 to-slate-50 py-4">
-          <RoundSelector
-            roundGroups={roundGroups}
-            effectiveRoundId={effectiveRoundId}
-            onSelectRound={handleRoundSelect}
-          />
-        </div>
+        <RoundSelector
+          roundGroups={roundGroups}
+          effectiveRoundId={effectiveRoundId}
+          onSelectRound={handleRoundSelect}
+        />
       )}
 
       {/* Round header + cards — own card, no overflow-hidden for outside arrows */}
