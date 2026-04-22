@@ -642,45 +642,13 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const cardEvents = events.filter(e => [EVENT_YELLOW, EVENT_RED, EVENT_YELLOW_RED].includes(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
   const subEvents  = buildSubEvents(events)
 
-  const assisterPlayerBySide = new Map<"home" | "away", PlayerSummary[]>()
-  for (const stat of assists) {
-    const value = stat.value.normalizedValue
-    if (typeof value !== "number" || value <= 0) continue
-    const side = playerSideMap.get(stat.player.id)
-    if (!side) continue
-    const existing = assisterPlayerBySide.get(side) ?? []
-    for (let i = 0; i < value; i++) existing.push(stat.player)
-    assisterPlayerBySide.set(side, existing)
-  }
-
-  const assisterByGoalEventId = new Map<number, PlayerSummary>()
-  for (const side of ["home", "away"] as const) {
-    const eligibleGoals = goalEvents.filter(e =>
-      e.typeId !== EVENT_GOAL_PENALTY &&
-      e.typeId !== EVENT_GOAL_OWN &&
-      e.player != null &&
-      playerSideMap.get(e.player.id) === side
-    )
-    const sideAssisters = assisterPlayerBySide.get(side) ?? []
-
-    if (eligibleGoals.length > 0 && eligibleGoals.length === sideAssisters.length) {
-      eligibleGoals.forEach((goalEvent, i) => {
-        assisterByGoalEventId.set(goalEvent.id, sideAssisters[i]!)
-      })
-    } else {
-      for (const goalEvent of eligibleGoals) {
-        if (goalEvent.relatedPlayer != null) {
-          assisterByGoalEventId.set(goalEvent.id, goalEvent.relatedPlayer)
-        }
-      }
-    }
-  }
-
   const sortedTimeline: TimelineItem[] = [
     ...goalEvents.map(event => ({
       kind: "goal" as const,
       event,
-      assister: assisterByGoalEventId.get(event.id) ?? null,
+      assister: (event.typeId !== EVENT_GOAL_PENALTY && event.typeId !== EVENT_GOAL_OWN)
+        ? (event.relatedPlayer ?? null)
+        : null,
     })),
     ...cardEvents.map(event  => ({ kind: "card" as const, event })),
     ...subEvents.map(subEvent => ({ kind: "sub" as const, subEvent })),
