@@ -104,8 +104,8 @@ const MatchesPage = async ({ searchParams }: MatchesPageProps) => {
         ) : (
           <MatchesBrowser
             seasons={seasons}
-            selectedSeasonId={selectedSeasonId}
-            allFixtures={allFixtures}
+            initialSeasonId={selectedSeasonId}
+            initialFixtures={allFixtures}
           />
         )}
 
