@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import HeroBackLink from "@/components/hero-back-link"
+import HeroTexture from "@/components/hero-texture"
 import {
   getFixture,
   getFixtureEvents,
@@ -16,18 +17,6 @@ import { getRatingFill } from "@/lib/rating"
 import { resolvePlayerImageUrl } from "@/lib/player"
 
 export const dynamic = "force-dynamic"
-
-// Dot-grid texture — same as team detail, shown when no venue photo
-const HeroTexture = () => (
-  <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <pattern id="matchDots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <circle cx="2" cy="2" r="1.5" fill="rgba(255,255,255,0.08)" />
-      </pattern>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#matchDots)" />
-  </svg>
-)
 
 const EVENT_GOAL         = 14
 const EVENT_GOAL_PENALTY = 16

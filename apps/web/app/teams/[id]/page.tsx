@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { IconShieldFilled, IconTrophy } from "@tabler/icons-react"
 import HeroBackLink from "@/components/hero-back-link"
+import HeroTexture from "@/components/hero-texture"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamSeasonSelector from "@/components/team-season-selector"
 import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, type SquadMember, type TeamFixture } from "@/lib/teams"
@@ -56,18 +57,6 @@ const getMatchResult = (
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-
-// SVG dot-grid texture for teams without a stadium photo
-const HeroTexture = () => (
-  <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <circle cx="2" cy="2" r="1.5" fill="rgba(255,255,255,0.08)" />
-      </pattern>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#dots)" />
-  </svg>
-)
 
 const FixtureCard = ({ fixture, teamId }: { fixture: TeamFixture; teamId: number }) => {
   const isFinished = fixture.homeScore !== null && fixture.awayScore !== null

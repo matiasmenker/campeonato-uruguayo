@@ -6,48 +6,10 @@ import Link from "next/link"
 import { IconBallFootball, IconChevronLeft, IconChevronRight, IconShield } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 import HeroSelect from "@/components/hero-select"
+import HeroTexture from "@/components/hero-texture"
 import type { FixtureListItem } from "@/lib/matches"
 import type { Season } from "@/lib/seasons"
 
-// ---------------------------------------------------------------------------
-// Hero background — same green palette as the matches page
-// ---------------------------------------------------------------------------
-
-const HeroBackground = () => (
-  <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <defs>
-      <linearGradient id="matchesBase" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%"   stopColor="#062b12" />
-        <stop offset="35%"  stopColor="#0a4020" />
-        <stop offset="70%"  stopColor="#0e5628" />
-        <stop offset="100%" stopColor="#0a3d1c" />
-      </linearGradient>
-      <radialGradient id="matchesGA" cx="78%" cy="18%" r="52%">
-        <stop offset="0%" stopColor="#4ade80" stopOpacity="0.32" />
-        <stop offset="100%" stopColor="#4ade80" stopOpacity="0" />
-      </radialGradient>
-      <radialGradient id="matchesGB" cx="18%" cy="75%" r="55%">
-        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.26" />
-        <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-      </radialGradient>
-      <radialGradient id="matchesGC" cx="50%" cy="45%" r="45%">
-        <stop offset="0%" stopColor="#16a34a" stopOpacity="0.14" />
-        <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
-      </radialGradient>
-      <pattern id="matchesDots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <circle cx="10" cy="10" r="1" fill="rgba(134,239,172,0.14)" />
-      </pattern>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#matchesBase)" />
-    <rect width="100%" height="100%" fill="url(#matchesGA)" />
-    <rect width="100%" height="100%" fill="url(#matchesGB)" />
-    <rect width="100%" height="100%" fill="url(#matchesGC)" />
-    <rect width="100%" height="100%" fill="url(#matchesDots)" />
-    <circle cx="-5%" cy="108%" r="62%" fill="none" stroke="rgba(74,222,128,0.1)" strokeWidth="1.5" />
-    <circle cx="-5%" cy="108%" r="46%" fill="none" stroke="rgba(74,222,128,0.07)" strokeWidth="1" />
-    <circle cx="106%" cy="-6%" r="46%" fill="none" stroke="rgba(134,239,172,0.08)" strokeWidth="1" />
-  </svg>
-)
 
 // ---------------------------------------------------------------------------
 // Types
@@ -562,8 +524,8 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
       {/* Hero — title bottom-left, selectors top-right */}
       <div className="overflow-hidden rounded-2xl shadow-lg">
         <div className="relative min-h-52 bg-slate-900">
-          <HeroBackground />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/15 to-black/60" />
+          <HeroTexture />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/55 to-black/85" />
 
           {/* Bottom — title left, selectors right */}
           <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">

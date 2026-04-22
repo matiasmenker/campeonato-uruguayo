@@ -5,45 +5,9 @@ import { getTeams, type Team } from "@/lib/teams"
 import { getSeasons } from "@/lib/seasons"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamsSeasonSelector from "@/components/teams-season-selector"
+import HeroTexture from "@/components/hero-texture"
 
 export const dynamic = "force-dynamic"
-
-// Hero background — brand blues (primary hue ~250)
-const HeroBackground = () => (
-  <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <defs>
-      <linearGradient id="teamsBase" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%"   stopColor="#0d1535" />
-        <stop offset="35%"  stopColor="#162860" />
-        <stop offset="70%"  stopColor="#1e3d90" />
-        <stop offset="100%" stopColor="#162e78" />
-      </linearGradient>
-      <radialGradient id="teamsGA" cx="78%" cy="18%" r="52%">
-        <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.35" />
-        <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
-      </radialGradient>
-      <radialGradient id="teamsGB" cx="18%" cy="75%" r="55%">
-        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.28" />
-        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-      </radialGradient>
-      <radialGradient id="teamsGC" cx="50%" cy="45%" r="45%">
-        <stop offset="0%" stopColor="#2563eb" stopOpacity="0.16" />
-        <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
-      </radialGradient>
-      <pattern id="teamsDots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <circle cx="10" cy="10" r="1" fill="rgba(147,197,253,0.15)" />
-      </pattern>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#teamsBase)" />
-    <rect width="100%" height="100%" fill="url(#teamsGA)" />
-    <rect width="100%" height="100%" fill="url(#teamsGB)" />
-    <rect width="100%" height="100%" fill="url(#teamsGC)" />
-    <rect width="100%" height="100%" fill="url(#teamsDots)" />
-    <circle cx="-5%" cy="108%" r="62%" fill="none" stroke="rgba(96,165,250,0.1)" strokeWidth="1.5" />
-    <circle cx="-5%" cy="108%" r="46%" fill="none" stroke="rgba(96,165,250,0.07)" strokeWidth="1" />
-    <circle cx="106%" cy="-6%" r="46%" fill="none" stroke="rgba(147,197,253,0.08)" strokeWidth="1" />
-  </svg>
-)
 
 interface TeamsPageProps {
   searchParams: Promise<{ seasonId?: string }>
@@ -74,8 +38,8 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
 
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <div className="relative min-h-52 bg-slate-900">
-            <HeroBackground />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/15 to-black/60" />
+            <HeroTexture />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/55 to-black/85" />
 
             {/* Bottom — title left, season selector right */}
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">

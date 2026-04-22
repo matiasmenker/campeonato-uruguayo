@@ -2,42 +2,7 @@ import { Suspense } from "react"
 import { getRatingFill } from "@/lib/rating"
 import Link from "next/link"
 import { IconBallFootball, IconStar, IconTrophy, IconUsers } from "@tabler/icons-react"
-
-const HeroBackground = () => (
-  <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <defs>
-      <linearGradient id="standingsBase" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%"   stopColor="#1a1000" />
-        <stop offset="35%"  stopColor="#2e1e00" />
-        <stop offset="70%"  stopColor="#3d2a00" />
-        <stop offset="100%" stopColor="#2a1c00" />
-      </linearGradient>
-      <radialGradient id="standingsGA" cx="78%" cy="18%" r="52%">
-        <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.35" />
-        <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
-      </radialGradient>
-      <radialGradient id="standingsGB" cx="18%" cy="75%" r="55%">
-        <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.28" />
-        <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
-      </radialGradient>
-      <radialGradient id="standingsGC" cx="50%" cy="45%" r="45%">
-        <stop offset="0%" stopColor="#d97706" stopOpacity="0.16" />
-        <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-      </radialGradient>
-      <pattern id="standingsDots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <circle cx="10" cy="10" r="1" fill="rgba(251,191,36,0.16)" />
-      </pattern>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#standingsBase)" />
-    <rect width="100%" height="100%" fill="url(#standingsGA)" />
-    <rect width="100%" height="100%" fill="url(#standingsGB)" />
-    <rect width="100%" height="100%" fill="url(#standingsGC)" />
-    <rect width="100%" height="100%" fill="url(#standingsDots)" />
-    <circle cx="-5%" cy="108%" r="62%" fill="none" stroke="rgba(251,191,36,0.1)" strokeWidth="1.5" />
-    <circle cx="-5%" cy="108%" r="46%" fill="none" stroke="rgba(251,191,36,0.07)" strokeWidth="1" />
-    <circle cx="106%" cy="-6%" r="46%" fill="none" stroke="rgba(253,230,138,0.08)" strokeWidth="1" />
-  </svg>
-)
+import HeroTexture from "@/components/hero-texture"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Table,
@@ -342,8 +307,8 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
 
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <div className="relative min-h-52 bg-slate-900">
-            <HeroBackground />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/15 to-black/60" />
+            <HeroTexture />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/55 to-black/85" />
 
             {/* Bottom — title left, selectors right */}
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">
