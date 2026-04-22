@@ -524,17 +524,26 @@ const TimelineEventCard = ({ item, assisters = [] }: { item: TimelineItem; assis
             <p className="text-xs font-semibold text-slate-900 truncate leading-tight">{name}</p>
           </div>
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            {isPenalty && <span className="text-[10px] text-slate-400 font-bold">Pen</span>}
-            {isOwnGoal && <span className="text-[10px] text-red-400 font-bold">OG</span>}
+            {isPenalty && <span className="text-[10px] text-slate-400 font-semibold">Penalty</span>}
+            {isOwnGoal && <span className="text-[10px] text-red-400 font-semibold">Own goal</span>}
             {event.result && <span className="text-[10px] text-emerald-600 font-black tabular-nums">{event.result}</span>}
           </div>
           {assisters.length > 0 && (
-            <div className="mt-1.5 flex flex-col gap-1">
+            <div className="mt-2 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
               {assisters.map((assister, i) => (
-                <div key={i} className="flex items-center gap-1.5 min-w-0">
-                  <AssistIcon size={12} />
-                  <img src={resolvePlayerImageUrl(assister.imagePath)} alt={assister.name} style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
-                  <span className="text-[10px] text-slate-500 truncate">{assister.name}</span>
+                <div key={i} className="flex items-center gap-2 min-w-0">
+                  <img
+                    src={resolvePlayerImageUrl(assister.imagePath)}
+                    alt={assister.name}
+                    style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0, border: "1.5px solid #e2e8f0" }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-semibold text-slate-600 truncate leading-tight">{assister.name}</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <AssistIcon size={10} />
+                      <span className="text-[9px] text-slate-400 font-medium">Assist</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -662,6 +671,14 @@ const MatchPage = async ({ params }: MatchPageProps) => {
     return minuteA - minuteB
   })
 
+  // Assign assisters only to the first goal from each side to avoid duplication
+  const firstGoalIndexBySide = new Map<"home" | "away", number>()
+  sortedTimeline.forEach((item, index) => {
+    if (item.kind !== "goal") return
+    const side = item.kind === "goal" ? (playerSideMap.get(item.event.player?.id ?? -1) ?? null) : null
+    if (side && !firstGoalIndexBySide.has(side)) firstGoalIndexBySide.set(side, index)
+  })
+
   const getItemSide = (item: TimelineItem): "home" | "away" | null => {
     const playerId = item.kind === "sub" ? item.subEvent.playerIn?.id : item.event.player?.id
     return playerId != null ? (playerSideMap.get(playerId) ?? null) : null
@@ -780,7 +797,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
             </div>
 
             <div className="relative">
-              <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-slate-200" />
+              <div className="absolute top-0 bottom-0 left-1/2 w-px -translate-x-1/2 bg-slate-200" style={{ bottom: 6 }} />
 
               <div className="flex flex-col gap-3 py-1">
 
@@ -799,7 +816,9 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                   const minuteStr = getItemMinuteStr(item)
                   const isHome    = side === "home"
                   const isAway    = side === "away"
-                  const assisters = (item.kind === "goal" && side) ? (assistsBySide.get(side) ?? []) : []
+                  const assisters = (item.kind === "goal" && side && firstGoalIndexBySide.get(side) === index)
+                    ? (assistsBySide.get(side) ?? [])
+                    : []
 
                   return (
                     <div key={index} className="grid grid-cols-[1fr_40px_1fr] items-center">
@@ -835,8 +854,8 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                   <div className="grid grid-cols-[1fr_40px_1fr] items-center">
                     <div />
                     <div className="relative z-10 flex flex-col items-center gap-0.5">
-                      <div className="w-3 h-3 rounded-full bg-slate-700 border-2 border-white shadow-sm" />
-                      <span className="text-[9px] font-black text-slate-600 leading-none">FT</span>
+                      <div className="w-3 h-3 rounded-full bg-slate-800 border-2 border-white shadow-sm" />
+                      <span className="text-[9px] font-black text-slate-700 leading-none tracking-tight">FT</span>
                     </div>
                     <div />
                   </div>
