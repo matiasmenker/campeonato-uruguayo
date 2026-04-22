@@ -476,7 +476,7 @@ const BenchSection = ({
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="px-1 text-sm font-bold text-slate-700">Banquillo</h2>
+      <h2 className="text-sm font-bold text-slate-700 text-center">Bench</h2>
       <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
         <div className="grid grid-cols-2 divide-x divide-slate-100">
           <div className="p-4">
@@ -549,11 +549,6 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
   const imgOut  = resolvePlayerImageUrl(subEvent.playerOut?.imagePath ?? null)
   return (
     <div className="flex flex-col gap-1.5 rounded-xl bg-white border border-slate-100 px-3 py-2.5 shadow-sm w-full">
-      <div className="flex items-center gap-2 min-w-0">
-        <SubInIcon size={14} />
-        <img src={imgIn} alt={nameIn} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
-        <span className="text-xs font-semibold text-emerald-700 truncate">{nameIn}</span>
-      </div>
       {nameOut && (
         <div className="flex items-center gap-2 min-w-0">
           <SubOutIcon size={14} />
@@ -561,6 +556,11 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
           <span className="text-xs text-slate-400 truncate">{nameOut}</span>
         </div>
       )}
+      <div className="flex items-center gap-2 min-w-0">
+        <SubInIcon size={14} />
+        <img src={imgIn} alt={nameIn} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+        <span className="text-xs font-semibold text-emerald-700 truncate">{nameIn}</span>
+      </div>
     </div>
   )
 }
@@ -657,14 +657,14 @@ const MatchPage = async ({ params }: MatchPageProps) => {
             <div className="absolute left-5 top-5">
               <Link href="/matches" className="flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 py-2 pl-3 pr-4 text-sm font-medium text-white/80 backdrop-blur-sm transition-colors hover:bg-white/20 hover:text-white">
                 <IconArrowLeft size={15} />
-                Volver
+                Back
               </Link>
             </div>
 
             {(fixture.stage || fixture.round) && (
               <div className="absolute right-5 top-5">
                 <span className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white/70 backdrop-blur-sm">
-                  {fixture.stage?.name ?? ""}{fixture.round ? ` · Fecha ${fixture.round.name}` : ""}
+                  {fixture.stage?.name ?? ""}{fixture.round ? ` · Round ${fixture.round.name}` : ""}
                 </span>
               </div>
             )}
@@ -676,7 +676,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                     ? <img src={homeTeam.imagePath} alt={homeTeam.name} className="h-16 w-16 object-contain drop-shadow-xl" />
                     : <div className="h-16 w-16 rounded-full bg-white/20" />}
                   <Link href={`/teams/${homeTeam?.id}`} className="hover:opacity-80">
-                    <h2 className="text-right text-xl font-black text-white leading-tight drop-shadow">{homeTeam?.name ?? "Local"}</h2>
+                    <h2 className="text-right text-xl font-black text-white leading-tight drop-shadow">{homeTeam?.name ?? "Home"}</h2>
                   </Link>
                 </div>
 
@@ -693,7 +693,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                     ? <img src={awayTeam.imagePath} alt={awayTeam.name} className="h-16 w-16 object-contain drop-shadow-xl" />
                     : <div className="h-16 w-16 rounded-full bg-white/20" />}
                   <Link href={`/teams/${awayTeam?.id}`} className="hover:opacity-80">
-                    <h2 className="text-left text-xl font-black text-white leading-tight drop-shadow">{awayTeam?.name ?? "Visitante"}</h2>
+                    <h2 className="text-left text-xl font-black text-white leading-tight drop-shadow">{awayTeam?.name ?? "Away"}</h2>
                   </Link>
                 </div>
               </div>
@@ -710,7 +710,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                 {fixture.homeFormation && <span className="text-xs text-slate-400">{fixture.homeFormation}</span>}
               </div>
             </div>
-            <span className="text-xs font-medium text-slate-400">Alineación</span>
+            <span className="text-xs font-medium text-slate-400">Lineup</span>
             <div className="flex items-center gap-2">
               <div className="flex flex-col items-end">
                 <span className="text-sm font-bold text-slate-700">{awayTeam?.name}</span>
@@ -725,29 +725,29 @@ const MatchPage = async ({ params }: MatchPageProps) => {
           <Pitch homeLineup={homeLineup} awayLineup={awayLineup} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} subEvents={subEvents} />
         ) : (
           <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
-            Alineación no disponible para este partido
+            Lineup not available
           </div>
         )}
 
         <BenchSection
           homeLineup={homeLineup} awayLineup={awayLineup}
-          homeTeamName={homeTeam?.name ?? "Local"} awayTeamName={awayTeam?.name ?? "Visitante"}
+          homeTeamName={homeTeam?.name ?? "Home"} awayTeamName={awayTeam?.name ?? "Away"}
           homeTeamImage={homeTeam?.imagePath ?? null} awayTeamImage={awayTeam?.imagePath ?? null}
           eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer}
         />
 
         {hasTimeline && (
           <div className="flex flex-col gap-3">
-            <h2 className="px-1 text-sm font-bold text-slate-700">Eventos del partido</h2>
+            <h2 className="text-sm font-bold text-slate-700 text-center">Match events</h2>
 
             <div className="grid grid-cols-[1fr_40px_1fr] items-center px-1">
               <div className="flex items-center gap-1.5">
                 {homeTeam?.imagePath && <img src={homeTeam.imagePath} alt={homeTeam.name} className="h-4 w-4 object-contain shrink-0" />}
-                <span className="text-xs font-bold text-slate-500 truncate">{homeTeam?.name ?? "Local"}</span>
+                <span className="text-xs font-bold text-slate-500 truncate">{homeTeam?.name ?? "Home"}</span>
               </div>
               <div />
               <div className="flex items-center justify-end gap-1.5">
-                <span className="text-xs font-bold text-slate-500 truncate">{awayTeam?.name ?? "Visitante"}</span>
+                <span className="text-xs font-bold text-slate-500 truncate">{awayTeam?.name ?? "Away"}</span>
                 {awayTeam?.imagePath && <img src={awayTeam.imagePath} alt={awayTeam.name} className="h-4 w-4 object-contain shrink-0" />}
               </div>
             </div>
@@ -756,6 +756,17 @@ const MatchPage = async ({ params }: MatchPageProps) => {
               <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-slate-200" />
 
               <div className="flex flex-col gap-3 py-1">
+
+                {/* Kick-off marker */}
+                <div className="grid grid-cols-[1fr_40px_1fr] items-center">
+                  <div />
+                  <div className="relative z-10 flex flex-col items-center gap-0.5">
+                    <div className="w-3 h-3 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
+                    <span className="text-[9px] font-black text-emerald-500 leading-none">0&apos;</span>
+                  </div>
+                  <div />
+                </div>
+
                 {sortedTimeline.map((item, index) => {
                   const side      = getItemSide(item)
                   const minuteStr = getItemMinuteStr(item)
@@ -763,20 +774,30 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                   const isAway    = side === "away"
 
                   return (
-                    <div key={index} className="grid grid-cols-[1fr_40px_1fr] items-center gap-x-2">
-                      <div className="flex justify-end">
-                        {isHome && <TimelineEventCard item={item} />}
+                    <div key={index} className="grid grid-cols-[1fr_40px_1fr] items-center">
+                      <div className="flex justify-end items-center">
+                        {isHome && (
+                          <>
+                            <TimelineEventCard item={item} />
+                            <div className="h-px w-2 bg-slate-200 shrink-0" />
+                          </>
+                        )}
                       </div>
 
                       <div className="relative z-10 flex flex-col items-center gap-0.5">
-                        <div className="w-2 h-2 rounded-full bg-slate-300 border-2 border-white" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-slate-400 border-2 border-white shadow-sm" />
                         <span className="text-[9px] font-black text-slate-400 tabular-nums leading-none whitespace-nowrap">
                           {minuteStr}
                         </span>
                       </div>
 
-                      <div className="flex justify-start">
-                        {isAway && <TimelineEventCard item={item} />}
+                      <div className="flex justify-start items-center">
+                        {isAway && (
+                          <>
+                            <div className="h-px w-2 bg-slate-200 shrink-0" />
+                            <TimelineEventCard item={item} />
+                          </>
+                        )}
                       </div>
                     </div>
                   )
