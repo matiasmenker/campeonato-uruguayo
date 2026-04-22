@@ -35,13 +35,17 @@ const parseFormationField = (formationField: string): { row: number; col: number
   return { row: parseInt(rowStr ?? "0", 10), col: parseInt(colStr ?? "0", 10) }
 }
 
-const HOME_X: Record<number, number> = { 0: 9, 1: 23, 2: 37, 3: 48, 4: 55 }
-const AWAY_X: Record<number, number> = { 0: 91, 1: 77, 2: 63, 3: 52, 4: 45 }
+// X positions per row for each team — kept inward to avoid clipping at edges
+// Supports up to 6 rows (e.g. GK + 4-1-2-3, 5-3-2, etc.)
+const HOME_X: Record<number, number> = { 0: 10, 1: 22, 2: 33, 3: 43, 4: 50, 5: 50 }
+const AWAY_X: Record<number, number> = { 0: 90, 1: 78, 2: 67, 3: 57, 4: 50, 5: 50 }
 
+// Y spread — 16% to 84% to keep players inside rounded corners
 const yPositions = (count: number): number[] => {
   if (count === 1) return [50]
-  const step = (88 - 12) / (count - 1)
-  return Array.from({ length: count }, (_, i) => 12 + i * step)
+  if (count === 2) return [30, 70]
+  const step = (84 - 16) / (count - 1)
+  return Array.from({ length: count }, (_, i) => 16 + i * step)
 }
 
 const formatRating = (rating: number): string => {
@@ -118,25 +122,17 @@ const AssistIcon = ({ size = 14 }: { size?: number }) => (
   </svg>
 )
 
-// Player going OUT — red arrow with silhouette
+// Player going OUT — red downward arrow
 const SubOutIcon = ({ size = 14 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="m17 5 6.54 6.25a1.08 1.08 0 0 1 0 1.58L17 19a1.18 1.18 0 0 1-2-.79v-1.73h-4.7a1.14 1.14 0 0 1-1.17-1.12V8.64a1.14 1.14 0 0 1 1.17-1.12H15V5.75A1.18 1.18 0 0 1 17 5Z" fill="#ef4444" />
-    <path fill="#fff" d="M12.39 5.52H10.3a3.15 3.15 0 0 0-3.17 3.12v2.27a4.5 4.5 0 1 1 5.26-5.39Z" />
-    <path d="m13.83 3.65-.17.19-.15.21-.14.22a4 4 0 0 0-.21.47 2.85 2.85 0 0 0-.13.48v.3h-.6a4.5 4.5 0 1 0-5.26 5.39v2a6.49 6.49 0 1 1 6.69-9.29Z" />
-    <path fill="#fff" d="M14 20.54V22H2v-2.37a4.63 4.63 0 0 1 1.68-3.57A10.46 10.46 0 0 0 7.6 17a3.16 3.16 0 0 0 2.7 1.5H13a3.11 3.11 0 0 0 1 2.04Z" />
-    <path d="M16 21.36V24H0v-4.37a6.61 6.61 0 0 1 3.58-5.88 8.59 8.59 0 0 0 3.55 1.19v.42a2.1 2.1 0 0 0 0 .36 2.73 2.73 0 0 0 .24.89 2.64 2.64 0 0 0 .2.37 10.46 10.46 0 0 1-3.92-.92A4.63 4.63 0 0 0 2 19.63V22h12v-1.46a2.54 2.54 0 0 0 .5.36 1.13 1.13 0 0 0 .21.12 1.59 1.59 0 0 0 .27.12 3.15 3.15 0 0 0 1.02.22Z" />
+  <svg width={size} height={size} viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7 1.5v9M3.5 7.5 7 11l3.5-3.5" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
   </svg>
 )
 
-// Player coming IN — green arrow with silhouette
+// Player coming IN — green upward arrow
 const SubInIcon = ({ size = 14 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="m16 19-6.53-6.21a1.08 1.08 0 0 1 0-1.58L16 5a1.18 1.18 0 0 1 2 .79v1.73h4.7a1.14 1.14 0 0 1 1.17 1.12v6.72a1.14 1.14 0 0 1-1.17 1.12H18v1.77a1.18 1.18 0 0 1-2 .75Z" fill="#16a34a" />
-    <path fill="#fff" d="M14 19.89V22H2v-2.37a4.63 4.63 0 0 1 1.68-3.57 10.21 10.21 0 0 0 6.93.59Z" />
-    <path d="M16 21.25V24H0v-4.37a6.61 6.61 0 0 1 3.58-5.88A8.43 8.43 0 0 0 8 15a7.36 7.36 0 0 0 .82-.06l1.79 1.71a10.21 10.21 0 0 1-6.93-.59A4.63 4.63 0 0 0 2 19.63V22h12v-2.11l.63.6.34.28a3 3 0 0 0 .3.19 3.58 3.58 0 0 0 .73.29Z" />
-    <path fill="#fff" d="M12.41 5.63 8.09 9.76a3.12 3.12 0 0 0-.76 1.17 4.49 4.49 0 1 1 5.08-5.3Z" />
-    <path d="m14 4.08-1.59 1.55a4.5 4.5 0 1 0-5.08 5.3 2.9 2.9 0 0 0-.18.76v.87a3 3 0 0 0 .11.4A6.5 6.5 0 1 1 14 4.08Z" />
+  <svg width={size} height={size} viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7 12.5v-9M3.5 6.5 7 3l3.5 3.5" stroke="#16a34a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
   </svg>
 )
 
@@ -251,11 +247,11 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut, su
             {player.jerseyNumber}
           </span>
         )}
-        {/* Sub out icon — bottom right, mirrored to jersey badge */}
+        {/* Sub out icon — bottom right, no background */}
         {substitutedOut && (
           <span
             title={subMinute != null ? `Sale en el minuto ${subMinute}${subExtraMinute != null ? `+${subExtraMinute}` : ""}'` : "Sale"}
-            style={{ position: "absolute", bottom: -3, right: -3, width: 18, height: 18, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.7)", cursor: "default" }}
+            style={{ position: "absolute", bottom: -2, right: -2, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", cursor: "default" }}
           >
             <SubOutIcon size={16} />
           </span>
@@ -382,7 +378,7 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl shadow-xl" style={{ aspectRatio: "16/9" }}>
+    <div className="relative w-full overflow-hidden rounded-2xl shadow-xl" style={{ aspectRatio: "16/10" }}>
       <img src="/pitch.avif" alt="Campo de fútbol" className="absolute inset-0 h-full w-full object-cover" />
       <div className="absolute inset-0">
         {renderTeam(homeLineup, true)}
@@ -693,15 +689,18 @@ const MatchPage = async ({ params }: MatchPageProps) => {
     if (typeof value === "number" && value > 0) assistsByPlayer.set(stat.player.id, value)
   }
 
-  // Set of starter player IDs — used to determine substitution direction when SportMonks
-  // only records one player per sub event (the player coming IN from the bench).
-  // Map: playerId → team (for showing team crest next to event rows)
+  // Map: playerId → team image (for crests in event rows)
   const playerTeamMap = new Map<number, { imagePath: string | null }>()
   for (const lp of lineups) {
     if (lp.player?.id != null && lp.team != null) {
       playerTeamMap.set(lp.player.id, { imagePath: lp.team.imagePath ?? null })
     }
   }
+
+  // Map: playerId → "home" | "away" — used to split the events timeline by team
+  const playerSideMap = new Map<number, "home" | "away">()
+  for (const lp of homeLineup) playerSideMap.set(lp.player.id, "home")
+  for (const lp of awayLineup) playerSideMap.set(lp.player.id, "away")
 
   // Build ordered timeline — one row per raw event
   const goalEvents = events.filter(e => GOAL_TYPES.has(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
@@ -713,7 +712,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
     | { kind: "card"; event: FixtureEvent }
     | { kind: "sub"; subEvent: SubstitutionEvent }
 
-  const timeline: TimelineItem[] = [
+  const sortedTimeline: TimelineItem[] = [
     ...goalEvents.map(event => ({ kind: "goal" as const, event })),
     ...cardEvents.map(event => ({ kind: "card" as const, event })),
     ...subEvents.map(subEvent => ({ kind: "sub" as const, subEvent })),
@@ -722,6 +721,15 @@ const MatchPage = async ({ params }: MatchPageProps) => {
     const minuteB = itemB.kind === "sub" ? (itemB.subEvent.minute ?? 0) : (itemB.event.minute ?? 0)
     return minuteA - minuteB
   })
+
+  const getItemSide = (item: TimelineItem): "home" | "away" | null => {
+    const playerId = item.kind === "sub" ? item.subEvent.playerIn?.id : item.event.player?.id
+    return playerId != null ? (playerSideMap.get(playerId) ?? null) : null
+  }
+
+  const homeTimeline = sortedTimeline.filter(item => getItemSide(item) === "home")
+  const awayTimeline = sortedTimeline.filter(item => getItemSide(item) === "away")
+  const hasTimeline  = homeTimeline.length > 0 || awayTimeline.length > 0
 
   const hasLineups = lineups.some(p => (p.typeId === 11 && p.formationField != null) || p.formationPosition !== null)
 
@@ -822,16 +830,47 @@ const MatchPage = async ({ params }: MatchPageProps) => {
           eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer}
         />
 
-        {/* ── Events timeline ────────────────────────────────────────────────── */}
-        {timeline.length > 0 && (
+        {/* ── Events timeline — two columns, one per team ───────────────────── */}
+        {hasTimeline && (
           <div className="flex flex-col gap-3">
             <h2 className="px-1 text-sm font-bold text-slate-700">Eventos del partido</h2>
-            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white px-5 shadow-sm">
-              {timeline.map((item, index) => {
-                if (item.kind === "goal") return <GoalRow key={`g-${item.event.id}`} event={item.event} playerTeamMap={playerTeamMap} />
-                if (item.kind === "card") return <CardRow key={`c-${item.event.id}`} event={item.event} playerTeamMap={playerTeamMap} />
-                return <SubstitutionRow key={`s-${index}`} subEvent={item.subEvent} playerTeamMap={playerTeamMap} />
-              })}
+            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+              {/* Column headers */}
+              <div className="grid grid-cols-2 border-b border-slate-100">
+                <div className="flex items-center gap-2 px-4 py-2.5">
+                  {homeTeam?.imagePath && <img src={homeTeam.imagePath} alt={homeTeam.name} className="h-4 w-4 object-contain shrink-0" />}
+                  <span className="text-xs font-bold text-slate-600 truncate">{homeTeam?.name ?? "Local"}</span>
+                </div>
+                <div className="flex items-center justify-end gap-2 px-4 py-2.5 border-l border-slate-100">
+                  <span className="text-xs font-bold text-slate-600 truncate">{awayTeam?.name ?? "Visitante"}</span>
+                  {awayTeam?.imagePath && <img src={awayTeam.imagePath} alt={awayTeam.name} className="h-4 w-4 object-contain shrink-0" />}
+                </div>
+              </div>
+              {/* Event rows */}
+              <div className="grid grid-cols-2 divide-x divide-slate-100">
+                {/* Home column */}
+                <div className="px-4">
+                  {homeTimeline.length === 0
+                    ? <p className="py-4 text-xs text-slate-300 text-center">—</p>
+                    : homeTimeline.map((item, index) => {
+                        if (item.kind === "goal") return <GoalRow key={`gh-${item.event.id}`} event={item.event} playerTeamMap={playerTeamMap} />
+                        if (item.kind === "card") return <CardRow key={`ch-${item.event.id}`} event={item.event} playerTeamMap={playerTeamMap} />
+                        return <SubstitutionRow key={`sh-${index}`} subEvent={item.subEvent} playerTeamMap={playerTeamMap} />
+                      })
+                  }
+                </div>
+                {/* Away column */}
+                <div className="px-4">
+                  {awayTimeline.length === 0
+                    ? <p className="py-4 text-xs text-slate-300 text-center">—</p>
+                    : awayTimeline.map((item, index) => {
+                        if (item.kind === "goal") return <GoalRow key={`ga-${item.event.id}`} event={item.event} playerTeamMap={playerTeamMap} />
+                        if (item.kind === "card") return <CardRow key={`ca-${item.event.id}`} event={item.event} playerTeamMap={playerTeamMap} />
+                        return <SubstitutionRow key={`sa-${index}`} subEvent={item.subEvent} playerTeamMap={playerTeamMap} />
+                      })
+                  }
+                </div>
+              </div>
             </div>
           </div>
         )}
