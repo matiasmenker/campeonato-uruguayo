@@ -63,51 +63,22 @@ const formatKickoffTime = (kickoffAt: string | null): string => {
   return new Intl.DateTimeFormat("es-UY", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Montevideo" }).format(new Date(kickoffAt))
 }
 
-// ─── Substitution pairing ─────────────────────────────────────────────────────
-// SportMonks encodes substitutions in two ways depending on the fixture:
-//   A) Pairs: two consecutive events at the same minute → first = OUT, second = IN
-//   B) Singles: one event per substitution → player is the one coming IN (bench → pitch)
-//
-// For case B we use starterIds to determine direction:
-//   - player in starterIds → going OUT (playerOut set, playerIn null)
-//   - player NOT in starterIds → coming IN (playerIn set, playerOut null)
+// ─── Substitution events ──────────────────────────────────────────────────────
+// SportMonks records the player coming IN (from bench) per substitution event.
+// The player going OUT is not captured in the events endpoint.
+// Each event is rendered as its own row in the timeline.
 
-interface SubstitutionPair {
+interface SubstitutionEvent {
   minute: number | null
   extraMinute: number | null
-  playerOut: FixtureEvent["player"] | null
-  playerIn: FixtureEvent["player"] | null
+  player: FixtureEvent["player"]  // the player entering the pitch
 }
 
-const buildSubstitutionPairs = (events: FixtureEvent[], starterIds: Set<number>): SubstitutionPair[] => {
-  const subs = events
-    .filter(e => e.typeId === EVENT_SUBSTITUTION)
-    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-
-  const pairs: SubstitutionPair[] = []
-  let i = 0
-  while (i < subs.length) {
-    const current = subs[i]
-    const next = subs[i + 1]
-    // Case A: two events at the same minute → true pair (out + in)
-    if (next && current.minute === next.minute) {
-      pairs.push({ minute: current.minute, extraMinute: current.extraMinute, playerOut: current.player, playerIn: next.player })
-      i += 2
-    } else {
-      // Case B: single event — determine direction from lineup
-      const playerId = current.player?.id
-      const isStarter = playerId != null && starterIds.has(playerId)
-      pairs.push({
-        minute: current.minute,
-        extraMinute: current.extraMinute,
-        playerOut: isStarter ? current.player : null,
-        playerIn:  isStarter ? null : current.player,
-      })
-      i += 1
-    }
-  }
-  return pairs
-}
+const buildSubEvents = (events: FixtureEvent[]): SubstitutionEvent[] =>
+  events
+    .filter(e => e.typeId === EVENT_SUBSTITUTION && e.player != null)
+    .sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    .map(e => ({ minute: e.minute, extraMinute: e.extraMinute, player: e.player }))
 
 // ─── Shared player avatar ─────────────────────────────────────────────────────
 
@@ -127,6 +98,7 @@ const BallIcon = ({ size = 14, variant = "goal" }: { size?: number; variant?: "g
   const fill = variant === "own" ? "#b91c1c" : "#1a1a1a"
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="11" fill="#fff" />
       <path fill={fill} d="M12 0a12 12 0 1 0 12 12A12 12 0 0 0 12 0Zm8.42 6.63-.48 1.74-4.18 1.36-2.76-2v-4.4l1.5-1a10 10 0 0 1 5.92 4.3ZM9.5 2.33l1.5 1v4.4l-2.76 2-4.18-1.36-.48-1.74a10 10 0 0 1 5.92-4.3ZM2 12v-.49l1.55-1.21 4.11 1.34 1 3.2-2.54 3.5-1.94-.08A9.89 9.89 0 0 1 2 12Zm6.24 9.26-.58-1.58L10.33 16h3.34l2.67 3.68-.58 1.58a9.92 9.92 0 0 1-7.52 0Zm11.54-3-1.94.08-2.54-3.5 1-3.2 4.11-1.34L22 11.51V12a9.89 9.89 0 0 1-2.22 6.26Z" />
     </svg>
   )
@@ -314,17 +286,12 @@ interface PitchProps {
   eventsByPlayer: Map<number, FixtureEvent[]>
   ratingByPlayer: Map<number, number>
   assistsByPlayer: Map<number, number>
-  subPairs: SubstitutionPair[]
 }
 
-const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assistsByPlayer, subPairs }: PitchProps) => {
-  // Build a map: playerId → { minute, extraMinute } for players who went OUT
+const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assistsByPlayer }: PitchProps) => {
+  // SportMonks only records who comes IN per substitution event, not who goes OUT.
+  // SubOutIcon on pitch is omitted because the exiting player is unknown from available data.
   const substitutedOutMap = new Map<number, { minute: number | null; extraMinute: number | null }>()
-  for (const pair of subPairs) {
-    if (pair.playerOut?.id != null) {
-      substitutedOutMap.set(pair.playerOut.id, { minute: pair.minute, extraMinute: pair.extraMinute })
-    }
-  }
 
   const renderTeam = (lineup: LineupPlayer[], isHome: boolean) => {
     const starters = lineup
@@ -515,87 +482,89 @@ const BenchSection = ({
 
 // ─── Events timeline ──────────────────────────────────────────────────────────
 
-const GoalRow = ({ event }: { event: FixtureEvent }) => {
-  const name = event.player?.displayName ?? event.player?.name ?? "—"
-  const minute = event.minute != null ? `${event.minute}${event.extraMinute != null ? `+${event.extraMinute}` : ""}'` : "—"
+const GoalRow = ({ event, playerTeamMap }: { event: FixtureEvent; playerTeamMap: Map<number, { imagePath: string | null }> }) => {
+  const name      = event.player?.displayName ?? event.player?.name ?? "—"
+  const minute    = event.minute != null ? `${event.minute}${event.extraMinute != null ? `+${event.extraMinute}` : ""}'` : "—"
   const isPenalty = event.typeId === EVENT_GOAL_PENALTY
   const isOwnGoal = event.typeId === EVENT_GOAL_OWN
+  const playerId  = event.player?.id
+  const playerImg = resolvePlayerImageUrl(event.player?.imagePath ?? null)
+  const teamImg   = playerId != null ? (playerTeamMap.get(playerId)?.imagePath ?? null) : null
+
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-slate-100 last:border-0">
+      {/* Ball icon — no wrapper, white bg built into SVG */}
       <div className="flex w-6 items-center justify-center shrink-0">
-        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "50%", background: isOwnGoal ? "#fee2e2" : "#dcfce7" }}>
-          <BallIcon size={13} />
-        </span>
+        <BallIcon size={15} variant={isOwnGoal ? "own" : "goal"} />
       </div>
+      {/* Minute */}
       <span className="w-9 text-xs font-bold text-slate-400 tabular-nums shrink-0">{minute}</span>
+      {/* Player avatar */}
+      <img src={playerImg} alt={name} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+      {/* Name + labels */}
       <span className="text-sm font-semibold text-slate-900 flex-1 min-w-0 truncate">{name}</span>
       <div className="flex items-center gap-2 shrink-0">
         {isPenalty && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Pen</span>}
         {isOwnGoal && <span className="text-[10px] font-bold text-red-400 uppercase tracking-wide">A.G.</span>}
         {event.result && <span className="text-xs font-bold text-emerald-600 tabular-nums">{event.result}</span>}
       </div>
+      {/* Team crest */}
+      {teamImg && <img src={teamImg} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
     </div>
   )
 }
 
-const CardRow = ({ event }: { event: FixtureEvent }) => {
-  const name = event.player?.displayName ?? event.player?.name ?? "—"
-  const minute = event.minute != null ? `${event.minute}${event.extraMinute != null ? `+${event.extraMinute}` : ""}'` : "—"
+const CardRow = ({ event, playerTeamMap }: { event: FixtureEvent; playerTeamMap: Map<number, { imagePath: string | null }> }) => {
+  const name     = event.player?.displayName ?? event.player?.name ?? "—"
+  const minute   = event.minute != null ? `${event.minute}${event.extraMinute != null ? `+${event.extraMinute}` : ""}'` : "—"
   const isDouble = event.typeId === EVENT_YELLOW_RED
+  const playerId = event.player?.id
+  const playerImg = resolvePlayerImageUrl(event.player?.imagePath ?? null)
+  const teamImg   = playerId != null ? (playerTeamMap.get(playerId)?.imagePath ?? null) : null
 
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-slate-100 last:border-0">
+      {/* Card icon */}
       <div className="flex w-6 items-center justify-center shrink-0">
-        {isDouble ? (
-          <DoubleCard />
-        ) : (
-          <CardRect color={event.typeId === EVENT_YELLOW ? "#facc15" : "#ff0000"} />
-        )}
+        {isDouble ? <DoubleCard /> : <CardRect color={event.typeId === EVENT_YELLOW ? "#facc15" : "#ff0000"} />}
       </div>
+      {/* Minute */}
       <span className="w-9 text-xs font-bold text-slate-400 tabular-nums shrink-0">{minute}</span>
+      {/* Player avatar */}
+      <img src={playerImg} alt={name} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+      {/* Name */}
       <span className="text-sm font-medium text-slate-900 flex-1 min-w-0 truncate">{name}</span>
+      {/* Team crest */}
+      {teamImg && <img src={teamImg} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
     </div>
   )
 }
 
-const SubstitutionRow = ({ pair }: { pair: SubstitutionPair }) => {
-  const minute  = pair.minute != null ? `${pair.minute}${pair.extraMinute != null ? `+${pair.extraMinute}` : ""}'` : "—"
-  const nameOut = pair.playerOut?.displayName ?? pair.playerOut?.name ?? null
-  const nameIn  = pair.playerIn?.displayName  ?? pair.playerIn?.name  ?? null
+const SubstitutionRow = ({ subEvent, playerTeamMap }: { subEvent: SubstitutionEvent; playerTeamMap: Map<number, { imagePath: string | null }> }) => {
+  const minute = subEvent.minute != null ? `${subEvent.minute}${subEvent.extraMinute != null ? `+${subEvent.extraMinute}` : ""}'` : "—"
+  const name   = subEvent.player?.displayName ?? subEvent.player?.name ?? "—"
+  const playerId = subEvent.player?.id
+  const playerImg = resolvePlayerImageUrl(subEvent.player?.imagePath ?? null)
+  const teamImg   = playerId != null ? (playerTeamMap.get(playerId)?.imagePath ?? null) : null
 
   return (
-    <div
-      className="flex items-start gap-3 py-2.5 border-b border-slate-100 last:border-0"
-      title={`Cambio en el minuto ${minute}`}
-    >
-      {/* Icon column */}
-      <div className="flex w-6 items-center justify-center shrink-0 pt-0.5">
-        <div className="flex flex-col items-center gap-0.5">
-          {nameOut && <SubOutIcon size={13} />}
-          {nameIn  && <SubInIcon  size={13} />}
-        </div>
+    <div className="flex items-center gap-3 py-2.5 border-b border-slate-100 last:border-0">
+      {/* Sub-in icon */}
+      <div className="flex w-6 items-center justify-center shrink-0">
+        <SubInIcon size={15} />
       </div>
 
       {/* Minute */}
-      <span className="w-9 text-xs font-bold text-slate-400 tabular-nums shrink-0 pt-0.5">{minute}</span>
+      <span className="w-9 text-xs font-bold text-slate-400 tabular-nums shrink-0">{minute}</span>
 
-      {/* Players */}
-      <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-        {/* Out */}
-        {nameOut && (
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#dc2626", flexShrink: 0 }} />
-            <span className="text-sm font-medium text-slate-500 truncate">{nameOut}</span>
-          </div>
-        )}
-        {/* In */}
-        {nameIn && (
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#16a34a", flexShrink: 0 }} />
-            <span className="text-sm font-semibold text-slate-900 truncate">{nameIn}</span>
-          </div>
-        )}
-      </div>
+      {/* Player avatar */}
+      <img src={playerImg} alt={name} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+
+      {/* Name */}
+      <span className="text-sm font-semibold text-emerald-700 flex-1 min-w-0 truncate">{name}</span>
+
+      {/* Team crest */}
+      {teamImg && <img src={teamImg} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
     </div>
   )
 }
@@ -656,26 +625,31 @@ const MatchPage = async ({ params }: MatchPageProps) => {
 
   // Set of starter player IDs — used to determine substitution direction when SportMonks
   // only records one player per sub event (the player coming IN from the bench).
-  const starterIds = new Set(lineups.filter(p => p.formationPosition !== null).map(p => p.player.id))
+  // Map: playerId → team (for showing team crest next to event rows)
+  const playerTeamMap = new Map<number, { imagePath: string | null }>()
+  for (const lp of lineups) {
+    if (lp.player?.id != null && lp.team != null) {
+      playerTeamMap.set(lp.player.id, { imagePath: lp.team.imagePath ?? null })
+    }
+  }
 
-  // Build ordered timeline events
-  const goalEvents  = events.filter(e => GOAL_TYPES.has(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0))
-  const cardEvents  = events.filter(e => [EVENT_YELLOW, EVENT_RED, EVENT_YELLOW_RED].includes(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0))
-  const subPairs    = buildSubstitutionPairs(events, starterIds)
+  // Build ordered timeline — one row per raw event
+  const goalEvents = events.filter(e => GOAL_TYPES.has(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+  const cardEvents = events.filter(e => [EVENT_YELLOW, EVENT_RED, EVENT_YELLOW_RED].includes(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+  const subEvents  = buildSubEvents(events)
 
-  // Interleave all event types sorted by minute
   type TimelineItem =
     | { kind: "goal"; event: FixtureEvent }
     | { kind: "card"; event: FixtureEvent }
-    | { kind: "sub"; pair: SubstitutionPair }
+    | { kind: "sub"; subEvent: SubstitutionEvent }
 
   const timeline: TimelineItem[] = [
     ...goalEvents.map(event => ({ kind: "goal" as const, event })),
     ...cardEvents.map(event => ({ kind: "card" as const, event })),
-    ...subPairs.map(pair => ({ kind: "sub" as const, pair })),
+    ...subEvents.map(subEvent => ({ kind: "sub" as const, subEvent })),
   ].sort((itemA, itemB) => {
-    const minuteA = itemA.kind === "sub" ? (itemA.pair.minute ?? 0) : (itemA.event.minute ?? 0)
-    const minuteB = itemB.kind === "sub" ? (itemB.pair.minute ?? 0) : (itemB.event.minute ?? 0)
+    const minuteA = itemA.kind === "sub" ? (itemA.subEvent.minute ?? 0) : (itemA.event.minute ?? 0)
+    const minuteB = itemB.kind === "sub" ? (itemB.subEvent.minute ?? 0) : (itemB.event.minute ?? 0)
     return minuteA - minuteB
   })
 
@@ -757,7 +731,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
 
         {/* ── Pitch ─────────────────────────────────────────────────────────── */}
         {hasLineups ? (
-          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} subPairs={subPairs} />
+          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} />
         ) : (
           <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
             Alineación no disponible para este partido
@@ -778,9 +752,9 @@ const MatchPage = async ({ params }: MatchPageProps) => {
             <h2 className="px-1 text-sm font-bold text-slate-700">Eventos del partido</h2>
             <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white px-5 shadow-sm">
               {timeline.map((item, index) => {
-                if (item.kind === "goal") return <GoalRow key={`g-${item.event.id}`} event={item.event} />
-                if (item.kind === "card") return <CardRow key={`c-${item.event.id}`} event={item.event} />
-                return <SubstitutionRow key={`s-${index}`} pair={item.pair} />
+                if (item.kind === "goal") return <GoalRow key={`g-${item.event.id}`} event={item.event} playerTeamMap={playerTeamMap} />
+                if (item.kind === "card") return <CardRow key={`c-${item.event.id}`} event={item.event} playerTeamMap={playerTeamMap} />
+                return <SubstitutionRow key={`s-${index}`} subEvent={item.subEvent} playerTeamMap={playerTeamMap} />
               })}
             </div>
           </div>
