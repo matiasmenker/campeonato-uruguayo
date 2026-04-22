@@ -42,11 +42,15 @@ interface MatchesPageProps {
 }
 
 const fetchAllFixtures = async (seasonId: number): Promise<FixtureListItem[]> => {
-  const [page1, page2] = await Promise.all([
-    getFixtures({ seasonId, pageSize: 100, page: 1 }),
-    getFixtures({ seasonId, pageSize: 100, page: 2 }),
-  ])
-  return [...page1.data, ...page2.data]
+  const first = await getFixtures({ seasonId, pageSize: 100, page: 1 })
+  const { totalPages } = first.pagination
+  if (totalPages <= 1) return first.data
+  const rest = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, i) =>
+      getFixtures({ seasonId, pageSize: 100, page: i + 2 })
+    )
+  )
+  return [first.data, ...rest.map(r => r.data)].flat()
 }
 
 const MatchesPage = async ({ searchParams }: MatchesPageProps) => {
