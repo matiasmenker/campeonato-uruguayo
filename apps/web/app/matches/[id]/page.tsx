@@ -30,14 +30,19 @@ const parseFormationField = (formationField: string): { row: number; col: number
   return { row: parseInt(rowStr ?? "0", 10), col: parseInt(colStr ?? "0", 10) }
 }
 
-const HOME_X: Record<number, number> = { 0: 10, 1: 22, 2: 33, 3: 43, 4: 50, 5: 50 }
-const AWAY_X: Record<number, number> = { 0: 90, 1: 78, 2: 67, 3: 57, 4: 50, 5: 50 }
+const HOME_X: Record<number, number> = { 0: 14, 1: 25, 2: 36, 3: 46, 4: 50, 5: 50 }
+const AWAY_X: Record<number, number> = { 0: 86, 1: 75, 2: 64, 3: 54, 4: 50, 5: 50 }
+
+const AVATAR_SIZE = 40
+const TOKEN_WIDTH = 88
 
 const yPositions = (count: number): number[] => {
   if (count === 1) return [50]
-  if (count === 2) return [30, 70]
-  const step = (84 - 16) / (count - 1)
-  return Array.from({ length: count }, (_, i) => 16 + i * step)
+  if (count === 2) return [28, 72]
+  const min = count >= 5 ? 12 : 14
+  const max = count >= 5 ? 88 : 86
+  const step = (max - min) / (count - 1)
+  return Array.from({ length: count }, (_, i) => min + i * step)
 }
 
 const formatRating = (rating: number): string => {
@@ -198,47 +203,47 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut, su
   return (
     <div
       className="absolute flex flex-col items-center"
-      style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: 120, gap: 4 }}
+      style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: TOKEN_WIDTH, gap: 3 }}
     >
-      <div className="relative" style={{ width: 56, height: 56 }}>
-        <EventBadges events={events} assists={assists} offsetBottom={2} isStarter={true} />
+      <div className="relative" style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}>
+        <EventBadges events={events} assists={assists} offsetBottom={1} isStarter={true} />
         <div
           className="overflow-hidden rounded-full"
-          style={{ width: 56, height: 56, background: "#fff", border: "2.5px solid rgba(255,255,255,0.95)", boxShadow: "0 4px 14px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.4)" }}
+          style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, background: "#fff", border: "2px solid rgba(255,255,255,0.95)", boxShadow: "0 3px 10px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.35)" }}
         >
-          <PlayerAvatar player={player.player} size={56} />
+          <PlayerAvatar player={player.player} size={AVATAR_SIZE} />
         </div>
         {player.jerseyNumber != null && (
           <span
             className="absolute flex items-center justify-center rounded-full font-black text-white leading-none"
-            style={{ width: 18, height: 18, fontSize: 8, bottom: -3, left: -3, background: "#0f172a", boxShadow: "0 1px 4px rgba(0,0,0,0.7)" }}
+            style={{ width: 15, height: 15, fontSize: 7, bottom: -2, left: -2, background: "#0f172a", boxShadow: "0 1px 3px rgba(0,0,0,0.7)" }}
           >
             {player.jerseyNumber}
           </span>
         )}
         {substitutedOut && (
           <span
-            style={{ position: "absolute", bottom: -2, right: -2, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", cursor: "default" }}
+            style={{ position: "absolute", bottom: -2, right: -2, width: 14, height: 14, display: "flex", alignItems: "center", justifyContent: "center", cursor: "default" }}
           >
-            <SubOutIcon size={16} />
+            <SubOutIcon size={14} />
           </span>
         )}
       </div>
 
       <div
-        className="flex items-center gap-1.5 rounded-xl px-2.5 py-1"
-        style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)", maxWidth: 120 }}
+        className="flex items-center gap-1 rounded-lg px-2 py-0.5"
+        style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)", maxWidth: TOKEN_WIDTH }}
       >
         <span
           className="text-white font-semibold leading-none"
-          style={{ fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 1, minWidth: 0 }}
+          style={{ fontSize: 9, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 1, minWidth: 0 }}
           title={fullName}
         >
           {shortName}
         </span>
         <span
           className="flex items-center justify-center rounded font-black text-white leading-none shrink-0"
-          style={{ fontSize: 9, background: rating !== null ? getRatingFill(rating) : "rgba(255,255,255,0.18)", minWidth: 22, height: 14, paddingLeft: 3, paddingRight: 3 }}
+          style={{ fontSize: 8, background: rating !== null ? getRatingFill(rating) : "rgba(255,255,255,0.18)", minWidth: 20, height: 12, paddingLeft: 2, paddingRight: 2 }}
         >
           {rating !== null ? formatRating(rating) : "—"}
         </span>
@@ -340,8 +345,10 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl shadow-xl" style={{ aspectRatio: "16/10" }}>
-      <img src="/pitch.avif" alt="Campo de fútbol" className="absolute inset-0 h-full w-full object-cover" />
+    <div className="relative w-full" style={{ aspectRatio: "3/2" }}>
+      <div className="absolute inset-0 overflow-hidden rounded-2xl shadow-xl">
+        <img src="/pitch.avif" alt="" className="h-full w-full object-cover" />
+      </div>
       <div className="absolute inset-0">
         {renderTeam(homeLineup, true)}
         {renderTeam(awayLineup, false)}
