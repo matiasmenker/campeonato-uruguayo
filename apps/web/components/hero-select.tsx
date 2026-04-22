@@ -1,9 +1,15 @@
 "use client"
 
-// Styled native <select> for dark hero sections.
-// Uses the same chevron SVG as the team-season-selector to keep a consistent look.
+// Radix Select with a native-looking dark pill trigger and styled custom options.
 
-const CHEVRON_SVG = `url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.65)%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M6%209l6%206%206-6%22%2F%3E%3C%2Fsvg%3E')`
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { IconChevronDown } from "@tabler/icons-react"
 
 interface HeroSelectOption {
   id: number
@@ -16,7 +22,7 @@ interface HeroSelectProps {
   options: HeroSelectOption[]
   placeholder?: string
   disabled?: boolean
-  /** Ignored for native select — kept for API compatibility */
+  /** Opens upward — use for selects anchored near the bottom of a hero */
   openUp?: boolean
 }
 
@@ -24,21 +30,35 @@ const HeroSelect = ({
   value,
   onValueChange,
   options,
+  placeholder,
   disabled,
+  openUp = false,
 }: HeroSelectProps) => (
-  <select
-    value={value}
-    onChange={event => onValueChange(event.target.value)}
-    disabled={disabled}
-    className="h-8 min-w-28 cursor-pointer appearance-none rounded-xl border border-white/15 bg-black/40 pl-3 pr-8 text-sm font-semibold text-white/90 backdrop-blur-sm outline-none transition-colors hover:bg-black/55 disabled:cursor-not-allowed disabled:opacity-50"
-    style={{ backgroundImage: CHEVRON_SVG, backgroundPosition: "right 8px center", backgroundRepeat: "no-repeat" }}
-  >
-    {options.map(option => (
-      <option key={option.id} value={String(option.id)} className="bg-slate-900 text-white">
-        {option.name}
-      </option>
-    ))}
-  </select>
+  <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+    <SelectTrigger
+      className="h-8 min-w-28 gap-1.5 rounded-xl border border-white/15 bg-black/40 pl-3 pr-2.5 text-sm font-semibold text-white/90 backdrop-blur-sm outline-none ring-0 transition-colors hover:bg-black/55 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50 [&_svg[aria-hidden]]:hidden"
+    >
+      <SelectValue placeholder={placeholder} />
+      <IconChevronDown size={14} className="shrink-0 text-white/65" />
+    </SelectTrigger>
+    <SelectContent
+      position="popper"
+      align="end"
+      side={openUp ? "top" : "bottom"}
+      sideOffset={6}
+      className="min-w-36 overflow-hidden rounded-xl border border-slate-200/80 bg-white p-1 shadow-lg"
+    >
+      {options.map(option => (
+        <SelectItem
+          key={option.id}
+          value={String(option.id)}
+          className="cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100 focus:bg-slate-100 data-[state=checked]:text-slate-950"
+        >
+          {option.name}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
 )
 
 export default HeroSelect
