@@ -816,9 +816,12 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                   const minuteStr = getItemMinuteStr(item)
                   const isHome    = side === "home"
                   const isAway    = side === "away"
-                  const assisters = (item.kind === "goal" && side && firstGoalIndexBySide.get(side) === index)
-                    ? (assistsBySide.get(side) ?? [])
-                    : []
+                  const assisters = (
+                    item.kind === "goal" &&
+                    item.event.typeId !== EVENT_GOAL_PENALTY &&
+                    side &&
+                    firstGoalIndexBySide.get(side) === index
+                  ) ? (assistsBySide.get(side) ?? []) : []
 
                   return (
                     <div key={index} className="grid grid-cols-[1fr_40px_1fr] items-center">
