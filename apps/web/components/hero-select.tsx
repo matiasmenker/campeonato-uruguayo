@@ -36,7 +36,7 @@ const HeroSelect = ({
 }: HeroSelectProps) => (
   <Select value={value} onValueChange={onValueChange} disabled={disabled}>
     <SelectTrigger
-      className="h-8 min-w-28 border-white/20 bg-white/10 px-3 text-xs font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20 focus-visible:ring-white/30 focus-visible:ring-offset-0 data-placeholder:text-white/50 [&_[data-slot=select-value]]:text-white [&_svg]:text-white/60"
+      className="h-8 min-w-28 rounded-xl border-white/15 bg-black/40 px-3 text-xs font-semibold text-white/90 backdrop-blur-sm transition-colors hover:bg-black/55 focus-visible:ring-white/25 focus-visible:ring-offset-0 data-placeholder:text-white/50 [&_[data-slot=select-value]]:text-white [&_svg]:text-white/60"
     >
       <SelectValue placeholder={placeholder} />
     </SelectTrigger>

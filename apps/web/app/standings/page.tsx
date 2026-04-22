@@ -338,7 +338,7 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <div className="relative min-h-44 bg-slate-900">
             <HeroBackground />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-black/80" />
 
             {seasons.length > 0 && (
               <div className="absolute right-5 top-5">

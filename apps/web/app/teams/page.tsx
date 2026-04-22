@@ -86,7 +86,7 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
             <HeroBackground />
 
             {/* Gradient overlay — darkens bottom for text legibility */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/50 to-black/80" />
 
             {/* Season selector — top right */}
             {seasons.length > 1 && (
