@@ -7,6 +7,7 @@ import {
   getFixtureLineups,
   getFixturePlayerRatings,
   getFixturePlayerAssists,
+  getFixturePlayerMinutesPlayed,
   type LineupPlayer,
   type FixtureEvent,
   type PlayerSummary,
@@ -65,8 +66,8 @@ const groupLegacyByFormation = (starters: LineupPlayer[], formation: string | nu
   return rows
 }
 
-const AVATAR_SIZE = 52
-const TOKEN_WIDTH = 112
+const AVATAR_SIZE = 62
+const TOKEN_WIDTH = 124
 
 const buildRowXPositions = (numRows: number, isHome: boolean): number[] => {
   const gkX  = isHome ? 6 : 94
@@ -231,11 +232,9 @@ interface PlayerTokenProps {
   x: number
   y: number
   substitutedOut: boolean
-  subMinute: number | null
-  subExtraMinute: number | null
 }
 
-const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut, subMinute, subExtraMinute }: PlayerTokenProps) => {
+const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: PlayerTokenProps) => {
   const fullName = player.player.displayName ?? player.player.name
   const parts = fullName.trim().split(/\s+/)
   const shortName = parts.length > 2 ? parts[parts.length - 1] : parts.slice(-2).join(" ")
@@ -271,8 +270,8 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut, su
       </div>
 
       <div
-        className="flex items-center gap-1 rounded-lg px-2 py-0.5"
-        style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)", maxWidth: TOKEN_WIDTH }}
+        className="flex items-center justify-between gap-1 rounded-lg px-2 py-0.5"
+        style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)", width: TOKEN_WIDTH }}
       >
         <span
           className="text-white font-semibold leading-none"
@@ -300,16 +299,10 @@ interface PitchProps {
   eventsByPlayer: Map<number, FixtureEvent[]>
   ratingByPlayer: Map<number, number>
   assistsByPlayer: Map<number, number>
-  subEvents: SubstitutionEvent[]
+  substitutedOutIds: Set<number>
 }
 
-const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByPlayer, ratingByPlayer, assistsByPlayer, subEvents }: PitchProps) => {
-  const substitutedOutMap = new Map<number, { minute: number | null; extraMinute: number | null }>()
-  for (const subEvent of subEvents) {
-    if (subEvent.playerOut?.id != null) {
-      substitutedOutMap.set(subEvent.playerOut.id, { minute: subEvent.minute, extraMinute: subEvent.extraMinute })
-    }
-  }
+const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByPlayer, ratingByPlayer, assistsByPlayer, substitutedOutIds }: PitchProps) => {
 
   const renderTeam = (lineup: LineupPlayer[], isHome: boolean, formation: string | null) => {
     const newStyleStarters = lineup.filter(p => p.typeId === 11 && p.formationField != null)
@@ -333,34 +326,7 @@ const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByP
       const xPositions = buildRowXPositions(sortedRows.length, isHome)
       return sortedRows.flatMap((rowPlayers, rowIndex) => {
         const yPos = yPositions(rowPlayers.length)
-        return rowPlayers.map((player, playerIndex) => {
-          const subInfo = substitutedOutMap.get(player.player.id)
-          return (
-            <PlayerToken
-              key={player.id}
-              player={player}
-              events={eventsByPlayer.get(player.player.id) ?? []}
-              rating={ratingByPlayer.get(player.player.id) ?? null}
-              assists={assistsByPlayer.get(player.player.id) ?? 0}
-              x={xPositions[rowIndex] ?? 50}
-              y={yPos[playerIndex] ?? 50}
-              substitutedOut={subInfo != null}
-              subMinute={subInfo?.minute ?? null}
-              subExtraMinute={subInfo?.extraMinute ?? null}
-            />
-          )
-        })
-      })
-    }
-
-    const legacyStarters = lineup.filter(p => p.formationPosition !== null)
-    const filledLegacyRows = groupLegacyByFormation(legacyStarters, formation)
-    const xPositions = buildRowXPositions(filledLegacyRows.length, isHome)
-    return filledLegacyRows.flatMap((rowPlayers, rowIndex) => {
-      const yPos = yPositions(rowPlayers.length)
-      return rowPlayers.map((player, playerIndex) => {
-        const subInfo = substitutedOutMap.get(player.player.id)
-        return (
+        return rowPlayers.map((player, playerIndex) => (
           <PlayerToken
             key={player.id}
             player={player}
@@ -369,12 +335,29 @@ const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByP
             assists={assistsByPlayer.get(player.player.id) ?? 0}
             x={xPositions[rowIndex] ?? 50}
             y={yPos[playerIndex] ?? 50}
-            substitutedOut={subInfo != null}
-            subMinute={subInfo?.minute ?? null}
-            subExtraMinute={subInfo?.extraMinute ?? null}
+            substitutedOut={substitutedOutIds.has(player.player.id)}
           />
-        )
+        ))
       })
+    }
+
+    const legacyStarters = lineup.filter(p => p.formationPosition !== null)
+    const filledLegacyRows = groupLegacyByFormation(legacyStarters, formation)
+    const xPositions = buildRowXPositions(filledLegacyRows.length, isHome)
+    return filledLegacyRows.flatMap((rowPlayers, rowIndex) => {
+      const yPos = yPositions(rowPlayers.length)
+      return rowPlayers.map((player, playerIndex) => (
+        <PlayerToken
+          key={player.id}
+          player={player}
+          events={eventsByPlayer.get(player.player.id) ?? []}
+          rating={ratingByPlayer.get(player.player.id) ?? null}
+          assists={assistsByPlayer.get(player.player.id) ?? 0}
+          x={xPositions[rowIndex] ?? 50}
+          y={yPos[playerIndex] ?? 50}
+          substitutedOut={substitutedOutIds.has(player.player.id)}
+        />
+      ))
     })
   }
 
@@ -632,12 +615,13 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const fixtureId = Number(id)
   if (isNaN(fixtureId)) notFound()
 
-  const [fixtureResult, eventsResult, lineupsResult, ratingsResult, assistsResult] = await Promise.allSettled([
+  const [fixtureResult, eventsResult, lineupsResult, ratingsResult, assistsResult, minutesResult] = await Promise.allSettled([
     getFixture(fixtureId),
     getFixtureEvents(fixtureId),
     getFixtureLineups(fixtureId),
     getFixturePlayerRatings(fixtureId),
     getFixturePlayerAssists(fixtureId),
+    getFixturePlayerMinutesPlayed(fixtureId),
   ])
 
   if (fixtureResult.status === "rejected") notFound()
@@ -647,6 +631,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const lineups  = lineupsResult.status  === "fulfilled" ? lineupsResult.value  : []
   const ratings  = ratingsResult.status  === "fulfilled" ? ratingsResult.value  : []
   const assists  = assistsResult.status  === "fulfilled" ? assistsResult.value  : []
+  const minutes  = minutesResult.status  === "fulfilled" ? minutesResult.value  : []
 
   const homeTeam   = fixture.homeTeam
   const awayTeam   = fixture.awayTeam
@@ -674,6 +659,26 @@ const MatchPage = async ({ params }: MatchPageProps) => {
     const value = stat.value.normalizedValue
     if (typeof value === "number" && value > 0) assistsByPlayer.set(stat.player.id, value)
   }
+
+  const minutesByPlayer = new Map<number, number>()
+  for (const stat of minutes) {
+    const value = stat.value.normalizedValue
+    if (typeof value === "number") minutesByPlayer.set(stat.player.id, value)
+  }
+
+  // A starter is considered substituted out if they played fewer than 90 minutes
+  // and did not receive a red card (which also ends their game early).
+  const redCardedIds = new Set(
+    events
+      .filter(e => e.typeId === EVENT_RED || e.typeId === EVENT_YELLOW_RED)
+      .map(e => e.player?.id)
+      .filter((id): id is number => id != null)
+  )
+  const substitutedOutIds = new Set(
+    [...minutesByPlayer.entries()]
+      .filter(([playerId, mins]) => mins < 90 && !redCardedIds.has(playerId))
+      .map(([playerId]) => playerId)
+  )
 
   const playerSideMap = new Map<number, "home" | "away">()
   for (const lp of homeLineup) playerSideMap.set(lp.player.id, "home")
@@ -787,7 +792,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
         )}
 
         {hasLineups ? (
-          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} homeFormation={fixture.homeFormation ?? null} awayFormation={fixture.awayFormation ?? null} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} subEvents={subEvents} />
+          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} homeFormation={fixture.homeFormation ?? null} awayFormation={fixture.awayFormation ?? null} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} substitutedOutIds={substitutedOutIds} />
         ) : (
           <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
             Lineup not available
