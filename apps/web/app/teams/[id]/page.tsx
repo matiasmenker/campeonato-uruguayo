@@ -1,7 +1,8 @@
 import { Suspense } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { IconArrowLeft, IconShieldFilled, IconTrophy } from "@tabler/icons-react"
+import { IconShieldFilled, IconTrophy } from "@tabler/icons-react"
+import HeroBackLink from "@/components/hero-back-link"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamSeasonSelector from "@/components/team-season-selector"
 import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, type SquadMember, type TeamFixture } from "@/lib/teams"
@@ -252,13 +253,10 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 
             {/* Back link — top left, same level as season selector */}
             <div className="absolute left-5 top-5">
-              <Link
+              <HeroBackLink
                 href={`/teams${selectedSeasonId ? `?seasonId=${selectedSeasonId}` : ""}`}
-                className="flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 py-2 pl-3 pr-4 text-sm font-medium text-white/80 backdrop-blur-sm transition-colors hover:bg-white/20 hover:text-white"
-              >
-                <IconArrowLeft size={15} />
-                All teams
-              </Link>
+                label="All teams"
+              />
             </div>
 
             {/* Season selector — top right */}

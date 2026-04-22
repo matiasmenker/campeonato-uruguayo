@@ -1,6 +1,6 @@
-import { notFound } from "next/navigation"
 import Link from "next/link"
-import { IconArrowLeft } from "@tabler/icons-react"
+import { notFound } from "next/navigation"
+import HeroBackLink from "@/components/hero-back-link"
 import {
   getFixture,
   getFixtureEvents,
@@ -725,15 +725,12 @@ const MatchPage = async ({ params }: MatchPageProps) => {
             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/85" />
 
             <div className="absolute left-5 top-5">
-              <Link href="/matches" className="flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white/70 backdrop-blur-sm transition-colors hover:bg-white/20">
-                <IconArrowLeft size={13} />
-                Back
-              </Link>
+              <HeroBackLink href="/matches" label="Back" />
             </div>
 
             {(fixture.stage || fixture.round) && (
               <div className="absolute right-5 top-5">
-                <span className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white/70 backdrop-blur-sm">
+                <span className="inline-flex h-8 items-center rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-bold text-white/70 backdrop-blur-sm">
                   {fixture.stage?.name ?? ""}{fixture.round ? ` · Round ${fixture.round.name}` : ""}
                 </span>
               </div>
