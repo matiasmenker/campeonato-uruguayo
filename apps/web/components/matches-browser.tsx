@@ -565,30 +565,8 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
           <HeroBackground />
           <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/15 to-black/60" />
 
-          {/* Selectors — top right, side by side */}
-          {(showSeasonSelector || showStageSelector) && (
-            <div className="absolute right-5 top-5 flex items-center gap-2">
-              {showSeasonSelector && (
-                <HeroSelect
-                  value={String(currentSeasonId ?? "")}
-                  onValueChange={value => handleSeasonChange(Number(value))}
-                  options={seasons}
-                  disabled={isFetching}
-                />
-              )}
-              {showStageSelector && (
-                <HeroSelect
-                  value={String(effectiveStageId ?? "")}
-                  onValueChange={value => handleStageChange(Number(value))}
-                  options={stages}
-                  disabled={isFetching}
-                />
-              )}
-            </div>
-          )}
-
-          {/* Title — bottom left */}
-          <div className="absolute bottom-0 left-0 right-0 p-6">
+          {/* Bottom — title left, selectors right */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
                 <IconBallFootball size={28} className="text-white/80" />
@@ -603,6 +581,29 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
                 </p>
               </div>
             </div>
+
+            {(showSeasonSelector || showStageSelector) && (
+              <div className="flex shrink-0 items-center gap-2">
+                {showSeasonSelector && (
+                  <HeroSelect
+                    value={String(currentSeasonId ?? "")}
+                    onValueChange={value => handleSeasonChange(Number(value))}
+                    options={seasons}
+                    disabled={isFetching}
+                    openUp
+                  />
+                )}
+                {showStageSelector && (
+                  <HeroSelect
+                    value={String(effectiveStageId ?? "")}
+                    onValueChange={value => handleStageChange(Number(value))}
+                    options={stages}
+                    disabled={isFetching}
+                    openUp
+                  />
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

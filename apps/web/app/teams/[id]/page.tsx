@@ -255,20 +255,11 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
             <div className="absolute left-5 top-5">
               <HeroBackLink
                 href={`/teams${selectedSeasonId ? `?seasonId=${selectedSeasonId}` : ""}`}
-                label="All teams"
+                label="Back"
               />
             </div>
 
-            {/* Season selector — top right */}
-            {seasons.length > 1 && (
-              <div className="absolute right-5 top-5">
-                <Suspense>
-                  <TeamSeasonSelector seasons={seasons} selectedSeasonId={selectedSeason.id} />
-                </Suspense>
-              </div>
-            )}
-
-            {/* Team info — bottom left */}
+            {/* Bottom — team info left, selector + trophy right */}
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-5 p-6">
               <div className="flex items-end gap-5 min-w-0">
                 {team.imagePath && (
@@ -291,17 +282,23 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                 </div>
               </div>
 
-              {/* Champion trophy — bottom right */}
-              {isChampion && (
-                <div className="flex shrink-0 flex-col items-center gap-1 pb-1">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-400/20 ring-2 ring-amber-400/60 backdrop-blur-sm">
-                    <IconTrophy size={28} className="text-amber-300 drop-shadow" />
+              <div className="flex shrink-0 flex-col items-end gap-3">
+                {seasons.length > 1 && (
+                  <Suspense>
+                    <TeamSeasonSelector seasons={seasons} selectedSeasonId={selectedSeason.id} />
+                  </Suspense>
+                )}
+                {isChampion && (
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-400/20 ring-2 ring-amber-400/60 backdrop-blur-sm">
+                      <IconTrophy size={28} className="text-amber-300 drop-shadow" />
+                    </div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">
+                      {selectedSeason.name} Champion
+                    </p>
                   </div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">
-                    {selectedSeason.name} Champion
-                  </p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>

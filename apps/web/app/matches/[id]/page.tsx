@@ -741,15 +741,8 @@ const MatchPage = async ({ params }: MatchPageProps) => {
               <HeroBackLink href="/matches" label="Back" />
             </div>
 
-            {(fixture.stage || fixture.round) && (
-              <div className="absolute right-5 top-5">
-                <span className="inline-flex h-8 items-center rounded-xl border border-white/20 bg-white/15 px-3 text-sm font-semibold text-white backdrop-blur-sm">
-                  {fixture.stage?.name ?? ""}{fixture.round ? ` · Round ${fixture.round.name}` : ""}
-                </span>
-              </div>
-            )}
-
             <div className="absolute bottom-0 left-0 right-0 p-6">
+              <div className="relative">
               <div className="flex items-end justify-center gap-6">
                 <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
                   {homeTeam?.imagePath
@@ -776,6 +769,14 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                     <h2 className="text-left text-xl font-black text-white leading-tight drop-shadow">{awayTeam?.name ?? "Away"}</h2>
                   </Link>
                 </div>
+              </div>
+              {(fixture.stage || fixture.round) && (
+                <div className="absolute right-0 bottom-0">
+                  <span className="inline-flex h-8 items-center rounded-xl border border-white/20 bg-white/15 px-3 text-sm font-semibold text-white backdrop-blur-sm">
+                    {fixture.stage?.name ?? ""}{fixture.round ? ` · Round ${fixture.round.name}` : ""}
+                  </span>
+                </div>
+              )}
               </div>
             </div>
           </div>

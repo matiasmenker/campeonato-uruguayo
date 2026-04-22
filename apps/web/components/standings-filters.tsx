@@ -44,6 +44,7 @@ export const StandingsSeasonFilter = ({ seasons, selectedSeasonId }: StandingsSe
       onValueChange={value => updateParam("seasonId", value)}
       options={seasons}
       disabled={isPending}
+      openUp
     />
   )
 }

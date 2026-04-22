@@ -29,6 +29,7 @@ const TeamSeasonSelector = ({ seasons, selectedSeasonId }: TeamSeasonSelectorPro
       onValueChange={handleChange}
       options={seasons}
       disabled={isPending}
+      openUp
     />
   )
 }
