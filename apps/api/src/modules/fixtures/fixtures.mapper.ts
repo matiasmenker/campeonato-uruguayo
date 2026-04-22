@@ -32,6 +32,8 @@ export const toFixtureContract = (
     resultInfo: fixture.resultInfo,
     homeScore: fixture.homeScore,
     awayScore: fixture.awayScore,
+    homeFormation: fixture.homeFormation ?? null,
+    awayFormation: fixture.awayFormation ?? null,
     stateId: fixture.stateId,
     state: resolvedState ? toFixtureStateSummary(resolvedState) : null,
     season: toSeasonSummary(fixture.season),

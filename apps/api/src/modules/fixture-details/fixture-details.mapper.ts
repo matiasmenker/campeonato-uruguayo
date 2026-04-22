@@ -99,6 +99,8 @@ export const toLineupContract = (lineup: LineupWithPlayer, team: Team | null): L
     teamResolution,
     position: lineup.position,
     formationPosition: lineup.formationPosition,
+    typeId: lineup.typeId,
+    formationField: lineup.formationField,
     jerseyNumber: lineup.jerseyNumber,
     createdAt: lineup.createdAt.toISOString(),
     updatedAt: lineup.updatedAt.toISOString(),

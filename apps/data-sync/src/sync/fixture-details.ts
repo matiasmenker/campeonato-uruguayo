@@ -234,7 +234,7 @@ const syncFixtureDetails = async (
       log.info(`📡 Fetching fixture details from API...`);
       const apiStart = Date.now();
       const details = await client.get<FixtureDto[]>(`/fixtures/multi/${chunk.join(",")}`, {
-        include: "events;events.player;lineups;lineups.player;lineups.details;statistics",
+        include: "events;events.player;lineups;lineups.player;lineups.details;formations;statistics",
       });
       const apiMs = Date.now() - apiStart;
       log.info(
@@ -255,6 +255,28 @@ const syncFixtureDetails = async (
         returnedFixtureIds.push(fixtureId);
 
         const statistics = fixtureDto.statistics ?? [];
+
+        // Extract team formations (e.g. "4-3-3") from the formations include.
+        // SportMonks returns formations as an array with participant_id (home/away team sportmonksId).
+        const formations: { participant_id?: number; formation?: string; location?: string }[] =
+          fixtureDto.formations ?? [];
+        const homeSmId = fixtureDto.participants?.find((p: { meta?: { location?: string } }) => p.meta?.location === "home")?.id ?? null;
+        const awaySmId = fixtureDto.participants?.find((p: { meta?: { location?: string } }) => p.meta?.location === "away")?.id ?? null;
+        const homeFormationEntry = formations.find(
+          (f) => f.participant_id === homeSmId || f.location === "home"
+        );
+        const awayFormationEntry = formations.find(
+          (f) => f.participant_id === awaySmId || f.location === "away"
+        );
+        const homeFormation = homeFormationEntry?.formation ?? null;
+        const awayFormation = awayFormationEntry?.formation ?? null;
+
+        if (homeFormation || awayFormation) {
+          await db.fixture.update({
+            where: { id: fixtureId },
+            data: { homeFormation, awayFormation },
+          });
+        }
 
         const events = fixtureDto.events ?? [];
         for (const event of events) {
@@ -451,6 +473,8 @@ const syncFixtureDetails = async (
                 ? lineup.position
                 : (lineup.position?.name ?? null),
             formationPosition: lineup.formation_position ?? null,
+            typeId: lineup.type_id ?? null,                         // 11=starter, 12=bench
+            formationField: lineup.formation_field ?? null,         // pitch coordinates "row:col"
             jerseyNumber: lineup.jersey_number ?? null,
           });
 

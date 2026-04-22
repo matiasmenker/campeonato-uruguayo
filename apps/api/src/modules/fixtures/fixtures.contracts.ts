@@ -40,6 +40,8 @@ export interface FixtureContract {
   resultInfo: string | null;
   homeScore: number | null;
   awayScore: number | null;
+  homeFormation: string | null;
+  awayFormation: string | null;
   stateId: number | null;
   state: FixtureStateSummary | null;
   season: SeasonSummary;

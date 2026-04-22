@@ -29,15 +29,14 @@ const GOAL_TYPES = new Set([EVENT_GOAL, EVENT_GOAL_PENALTY, EVENT_GOAL_OWN])
 
 // ─── Formation helpers ────────────────────────────────────────────────────────
 
-const getFormationRow = (pos: number): number => {
-  if (pos === 1) return 0
-  if (pos <= 5) return 1
-  if (pos <= 8) return 2
-  return 3
+// formationField format: "row:col" (e.g. "0:0" = keeper, "1:2" = second row, third column)
+const parseFormationField = (formationField: string): { row: number; col: number } => {
+  const [rowStr, colStr] = formationField.split(":")
+  return { row: parseInt(rowStr ?? "0", 10), col: parseInt(colStr ?? "0", 10) }
 }
 
-const HOME_X: Record<number, number> = { 0: 9, 1: 23, 2: 37, 3: 48 }
-const AWAY_X: Record<number, number> = { 0: 91, 1: 77, 2: 63, 3: 52 }
+const HOME_X: Record<number, number> = { 0: 9, 1: 23, 2: 37, 3: 48, 4: 55 }
+const AWAY_X: Record<number, number> = { 0: 91, 1: 77, 2: 63, 3: 52, 4: 45 }
 
 const yPositions = (count: number): number[] => {
   if (count === 1) return [50]
@@ -306,14 +305,31 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
   }
 
   const renderTeam = (lineup: LineupPlayer[], isHome: boolean) => {
-    const starters = lineup
-      .filter(p => p.formationPosition !== null)
-      .sort((a, b) => (a.formationPosition ?? 0) - (b.formationPosition ?? 0))
-    const rows: LineupPlayer[][] = [[], [], [], []]
-    for (const player of starters) rows[getFormationRow(player.formationPosition!)].push(player)
+    // Only starters with valid formationField coordinates
+    const starters = lineup.filter(p => p.typeId === 11 && p.formationField != null)
+
+    // Group by row number from "row:col"
+    const rowMap = new Map<number, LineupPlayer[]>()
+    for (const player of starters) {
+      const { row } = parseFormationField(player.formationField!)
+      const existing = rowMap.get(row) ?? []
+      existing.push(player)
+      rowMap.set(row, existing)
+    }
+
+    // Sort rows ascending, sort players within each row by col ascending
+    const sortedRows = Array.from(rowMap.entries())
+      .sort(([rowA], [rowB]) => rowA - rowB)
+      .map(([, players]) =>
+        players.sort((playerA, playerB) => {
+          const { col: colA } = parseFormationField(playerA.formationField!)
+          const { col: colB } = parseFormationField(playerB.formationField!)
+          return colA - colB
+        })
+      )
+
     const xMap = isHome ? HOME_X : AWAY_X
-    return rows.flatMap((rowPlayers, rowIndex) => {
-      if (!rowPlayers.length) return []
+    return sortedRows.flatMap((rowPlayers, rowIndex) => {
       const yPos = yPositions(rowPlayers.length)
       return rowPlayers.map((player, playerIndex) => {
         const subInfo = substitutedOutMap.get(player.player.id)
@@ -324,7 +340,7 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
             events={eventsByPlayer.get(player.player.id) ?? []}
             rating={ratingByPlayer.get(player.player.id) ?? null}
             assists={assistsByPlayer.get(player.player.id) ?? 0}
-            x={xMap[rowIndex]}
+            x={xMap[rowIndex] ?? 50}
             y={yPos[playerIndex]}
             substitutedOut={subInfo != null}
             subMinute={subInfo?.minute ?? null}
@@ -471,8 +487,8 @@ const BenchSection = ({
   homeTeamImage, awayTeamImage,
   eventsByPlayer, ratingByPlayer, assistsByPlayer,
 }: BenchSectionProps) => {
-  const homeBench = homeLineup.filter(p => p.formationPosition === null)
-  const awayBench = awayLineup.filter(p => p.formationPosition === null)
+  const homeBench = homeLineup.filter(p => p.typeId === 12)
+  const awayBench = awayLineup.filter(p => p.typeId === 12)
   if (!homeBench.length && !awayBench.length) return null
 
   return (
@@ -676,7 +692,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
     return minuteA - minuteB
   })
 
-  const hasLineups = lineups.some(p => p.formationPosition !== null)
+  const hasLineups = lineups.some(p => p.typeId === 11 && p.formationField != null)
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
@@ -742,11 +758,17 @@ const MatchPage = async ({ params }: MatchPageProps) => {
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               {homeTeam?.imagePath && <img src={homeTeam.imagePath} alt={homeTeam?.name ?? ""} className="h-5 w-5 object-contain" />}
-              <span className="text-sm font-bold text-slate-700">{homeTeam?.name}</span>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-slate-700">{homeTeam?.name}</span>
+                {fixture.homeFormation && <span className="text-xs text-slate-400">{fixture.homeFormation}</span>}
+              </div>
             </div>
             <span className="text-xs font-medium text-slate-400">Alineación</span>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-slate-700">{awayTeam?.name}</span>
+              <div className="flex flex-col items-end">
+                <span className="text-sm font-bold text-slate-700">{awayTeam?.name}</span>
+                {fixture.awayFormation && <span className="text-xs text-slate-400">{fixture.awayFormation}</span>}
+              </div>
               {awayTeam?.imagePath && <img src={awayTeam.imagePath} alt={awayTeam?.name ?? ""} className="h-5 w-5 object-contain" />}
             </div>
           </div>

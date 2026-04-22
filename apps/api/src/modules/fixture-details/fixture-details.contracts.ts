@@ -75,6 +75,8 @@ export interface LineupContract {
   teamResolution: LineupTeamResolution;
   position: string | null;
   formationPosition: number | null;
+  typeId: number | null;          // 11 = starter, 12 = bench
+  formationField: string | null;  // pitch coordinates e.g. "2:2"
   jerseyNumber: number | null;
   createdAt: string;
   updatedAt: string;

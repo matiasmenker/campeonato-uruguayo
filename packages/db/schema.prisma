@@ -329,14 +329,16 @@ model Fixture {
   refereeId    Int?
   homeTeamId   Int?
   awayTeamId   Int?
-  name         String?
-  kickoffAt    DateTime?
-  stateId      Int?
-  resultInfo   String?
-  homeScore    Int?
-  awayScore    Int?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  name          String?
+  kickoffAt     DateTime?
+  stateId       Int?
+  resultInfo    String?
+  homeScore     Int?
+  awayScore     Int?
+  homeFormation String?  // tactical formation string e.g. "4-3-3"
+  awayFormation String?  // tactical formation string e.g. "4-5-1"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   season   Season   @relation(fields: [seasonId], references: [id], onDelete: Restrict)
   stage    Stage?   @relation(fields: [stageId], references: [id], onDelete: SetNull)
@@ -413,7 +415,9 @@ model Lineup {
   teamId            Int?
   playerId          Int
   position          String?
-  formationPosition Int?
+  formationPosition Int?      // legacy 1-11 ordering (kept for fallback)
+  typeId            Int?      // 11 = starter, 12 = bench (SportMonks type_id)
+  formationField    String?   // pitch coordinates e.g. "2:2" (row:col)
   jerseyNumber      Int?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

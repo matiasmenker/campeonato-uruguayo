@@ -72,6 +72,8 @@ export interface Fixture {
   resultInfo: string | null
   homeScore: number | null
   awayScore: number | null
+  homeFormation: string | null
+  awayFormation: string | null
   state: FixtureStateSummary | null
   season: SeasonSummary
   stage: StageSummary | null
@@ -104,6 +106,8 @@ export interface LineupPlayer {
   teamResolution: "resolved" | "unresolved"
   position: string | null
   formationPosition: number | null
+  typeId: number | null          // 11 = starter, 12 = bench
+  formationField: string | null  // pitch coordinates "row:col" e.g. "2:2"
   jerseyNumber: number | null
 }
 
