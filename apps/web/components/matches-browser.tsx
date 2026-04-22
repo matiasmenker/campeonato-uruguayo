@@ -252,7 +252,7 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
     align: "center",
     dragFree: true,
     loop: false,
-    containScroll: false,
+    containScroll: "keepSnaps",
   })
 
   const [canScrollPrev, setCanScrollPrev] = useState(false)
@@ -278,7 +278,7 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
   }, [emblaApi, effectiveRoundId, roundGroups])
 
   return (
-    <div className="relative py-1">
+    <div className="relative">
       {/* Outside arrows — positioned identically to the home carousel */}
       <button
         onClick={() => emblaApi?.scrollPrev()}
@@ -516,11 +516,11 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
   const showStageSelector  = stages.length >= 1
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
 
       {/* Season + stage selectors — floating outside the card */}
       {(showSeasonSelector || showStageSelector) && (
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           {showSeasonSelector && (
             <div className="flex gap-1.5">
               {seasons.map(season => (
