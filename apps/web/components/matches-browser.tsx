@@ -308,10 +308,11 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
         <IconChevronRight size={15} />
       </button>
 
-      {/* Embla viewport — px-14 on the pills flex leaves 56 px clear on each side
-          so pills never scroll under the arrow buttons (arrow ends at ~44 px) */}
-      <div ref={emblaRef} className="overflow-hidden py-3">
-        <div className="flex -ml-2 px-14">
+      {/* Embla viewport is inset mx-14 (56 px each side) so its overflow-hidden
+          boundary sits 12 px past the arrow buttons (which end at ~44 px).
+          Pills are clipped at the viewport edge — they can never reach the arrows. */}
+      <div ref={emblaRef} className="mx-14 overflow-hidden py-3">
+        <div className="flex -ml-2 px-2">
           {roundGroups.map(group => {
             const roundStatus = getRoundStatus(group.fixtures)
             const isActive    = group.round.id === effectiveRoundId
