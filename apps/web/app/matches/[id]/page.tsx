@@ -30,6 +30,41 @@ const parseFormationField = (formationField: string): { row: number; col: number
   return { row: parseInt(rowStr ?? "0", 10), col: parseInt(colStr ?? "0", 10) }
 }
 
+// Parses "4-2-3-1" → [4, 2, 3, 1] (outfield rows, GK excluded)
+const parseFormationRows = (formation: string | null | undefined): number[] => {
+  if (!formation) return []
+  return formation.split("-").map(Number).filter(n => !isNaN(n) && n > 0)
+}
+
+// Groups legacy starters (formationPosition 1–11) into rows using the formation string.
+// Position 1 is always GK; the remaining positions are split per formation row sizes.
+const groupLegacyByFormation = (starters: LineupPlayer[], formation: string | null | undefined): LineupPlayer[][] => {
+  const sorted = [...starters].sort((a, b) => (a.formationPosition ?? 0) - (b.formationPosition ?? 0))
+  const rowSizes = parseFormationRows(formation)
+  const rows: LineupPlayer[][] = []
+  const gk = sorted.filter(p => p.formationPosition === 1)
+  if (gk.length > 0) rows.push(gk)
+  if (rowSizes.length > 0) {
+    let cursor = 2
+    for (const rowSize of rowSizes) {
+      const rowPlayers = sorted.filter(
+        p => p.formationPosition != null && p.formationPosition >= cursor && p.formationPosition < cursor + rowSize
+      )
+      if (rowPlayers.length > 0) rows.push(rowPlayers)
+      cursor += rowSize
+    }
+  } else {
+    // No formation string — fall back to a generic 4-row split
+    const def = sorted.filter(p => p.formationPosition != null && p.formationPosition >= 2 && p.formationPosition <= 5)
+    const mid = sorted.filter(p => p.formationPosition != null && p.formationPosition >= 6 && p.formationPosition <= 8)
+    const fwd = sorted.filter(p => p.formationPosition != null && p.formationPosition >= 9)
+    if (def.length > 0) rows.push(def)
+    if (mid.length > 0) rows.push(mid)
+    if (fwd.length > 0) rows.push(fwd)
+  }
+  return rows
+}
+
 const AVATAR_SIZE = 52
 const TOKEN_WIDTH = 112
 
@@ -260,13 +295,15 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut, su
 interface PitchProps {
   homeLineup: LineupPlayer[]
   awayLineup: LineupPlayer[]
+  homeFormation: string | null
+  awayFormation: string | null
   eventsByPlayer: Map<number, FixtureEvent[]>
   ratingByPlayer: Map<number, number>
   assistsByPlayer: Map<number, number>
   subEvents: SubstitutionEvent[]
 }
 
-const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assistsByPlayer, subEvents }: PitchProps) => {
+const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByPlayer, ratingByPlayer, assistsByPlayer, subEvents }: PitchProps) => {
   const substitutedOutMap = new Map<number, { minute: number | null; extraMinute: number | null }>()
   for (const subEvent of subEvents) {
     if (subEvent.playerOut?.id != null) {
@@ -274,7 +311,7 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
     }
   }
 
-  const renderTeam = (lineup: LineupPlayer[], isHome: boolean) => {
+  const renderTeam = (lineup: LineupPlayer[], isHome: boolean, formation: string | null) => {
     const newStyleStarters = lineup.filter(p => p.typeId === 11 && p.formationField != null)
     if (newStyleStarters.length > 0) {
       const rowMap = new Map<number, LineupPlayer[]>()
@@ -316,16 +353,8 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
       })
     }
 
-    const legacyStarters = lineup
-      .filter(p => p.formationPosition !== null)
-      .sort((a, b) => (a.formationPosition ?? 0) - (b.formationPosition ?? 0))
-    const legacyRows: LineupPlayer[][] = [[], [], [], []]
-    for (const player of legacyStarters) {
-      const pos = player.formationPosition!
-      const row = pos === 1 ? 0 : pos <= 5 ? 1 : pos <= 8 ? 2 : 3
-      legacyRows[row].push(player)
-    }
-    const filledLegacyRows = legacyRows.filter(row => row.length > 0)
+    const legacyStarters = lineup.filter(p => p.formationPosition !== null)
+    const filledLegacyRows = groupLegacyByFormation(legacyStarters, formation)
     const xPositions = buildRowXPositions(filledLegacyRows.length, isHome)
     return filledLegacyRows.flatMap((rowPlayers, rowIndex) => {
       const yPos = yPositions(rowPlayers.length)
@@ -355,8 +384,8 @@ const Pitch = ({ homeLineup, awayLineup, eventsByPlayer, ratingByPlayer, assists
         <img src="/pitch.avif" alt="" className="h-full w-full object-cover" />
       </div>
       <div className="absolute inset-0">
-        {renderTeam(homeLineup, true)}
-        {renderTeam(awayLineup, false)}
+        {renderTeam(homeLineup, true, homeFormation)}
+        {renderTeam(awayLineup, false, awayFormation)}
       </div>
     </div>
   )
@@ -758,7 +787,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
         )}
 
         {hasLineups ? (
-          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} subEvents={subEvents} />
+          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} homeFormation={fixture.homeFormation ?? null} awayFormation={fixture.awayFormation ?? null} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} subEvents={subEvents} />
         ) : (
           <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
             Lineup not available
