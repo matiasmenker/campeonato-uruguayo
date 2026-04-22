@@ -101,17 +101,17 @@ const AssistIcon = ({ size = 14 }: { size?: number }) => (
   </svg>
 )
 
-const SubOutIcon = ({ size = 14 }: { size?: number }) => (
+const SubOutIcon = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
     <circle cx="7" cy="7" r="7" fill="#fff" />
-    <path d="M9 7H5m0 0 2-2M5 7l2 2" stroke="#ef4444" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M7 10V4m0 6-2.5-2.5M7 10l2.5-2.5" stroke="#ef4444" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
   </svg>
 )
 
-const SubInIcon = ({ size = 14 }: { size?: number }) => (
+const SubInIcon = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
     <circle cx="7" cy="7" r="7" fill="#fff" />
-    <path d="M5 7h4m0 0-2-2m2 2-2 2" stroke="#16a34a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <path d="M7 4v6m0-6 2.5 2.5M7 4 4.5 6.5" stroke="#16a34a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
   </svg>
 )
 
