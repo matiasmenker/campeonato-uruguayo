@@ -6,6 +6,7 @@ import {
   getFixtureEvents,
   getFixtureLineups,
   getFixturePlayerRatings,
+  getFixturePlayerAssists,
   type LineupPlayer,
   type FixtureEvent,
 } from "@/lib/matches"
@@ -21,8 +22,6 @@ const EVENT_SUBSTITUTION = 18
 const EVENT_YELLOW       = 19
 const EVENT_RED          = 20
 const EVENT_YELLOW_RED   = 21
-const EVENT_ASSIST       = 79
-
 const GOAL_TYPES = new Set([EVENT_GOAL, EVENT_GOAL_PENALTY, EVENT_GOAL_OWN])
 
 const parseFormationField = (formationField: string): { row: number; col: number } => {
@@ -492,10 +491,9 @@ const BenchSection = ({
 }
 
 type TimelineItem =
-  | { kind: "goal";   event: FixtureEvent }
-  | { kind: "assist"; event: FixtureEvent }
-  | { kind: "card";   event: FixtureEvent }
-  | { kind: "sub";    subEvent: SubstitutionEvent }
+  | { kind: "goal"; event: FixtureEvent }
+  | { kind: "card"; event: FixtureEvent }
+  | { kind: "sub";  subEvent: SubstitutionEvent }
 
 const getItemMinuteStr = (item: TimelineItem): string => {
   const minute   = item.kind === "sub" ? item.subEvent.minute    : item.event.minute
@@ -511,31 +509,37 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
     const isOwnGoal = event.typeId === EVENT_GOAL_OWN
     const isPenalty = event.typeId === EVENT_GOAL_PENALTY
     const playerImg = resolvePlayerImageUrl(event.player?.imagePath ?? null)
+    const assister  = (!isPenalty && !isOwnGoal) ? event.relatedPlayer : null
     return (
-      <div className="flex items-center gap-2.5 rounded-xl bg-white border border-slate-100 px-3 py-2.5 shadow-sm w-full">
+      <div className="flex items-start gap-2.5 rounded-xl bg-white border border-slate-100 px-3 py-2.5 shadow-sm w-full">
         <BallIcon size={15} variant={isOwnGoal ? "own" : "goal"} />
-        <img src={playerImg} alt={name} style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold text-slate-900 truncate leading-tight">{name}</p>
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <img src={playerImg} alt={name} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+            <p className="text-xs font-semibold text-slate-900 truncate leading-tight">{name}</p>
+          </div>
+          <div className="flex items-center gap-1.5 mt-0.5">
             {isPenalty && <span className="text-[10px] text-slate-400 font-semibold">Penalty</span>}
             {isOwnGoal && <span className="text-[10px] text-red-400 font-semibold">Own goal</span>}
             {event.result && <span className="text-[10px] text-emerald-600 font-black tabular-nums">{event.result}</span>}
           </div>
+          {assister && (
+            <div className="mt-2 pt-2 border-t border-slate-100 flex items-center gap-2 min-w-0">
+              <img
+                src={resolvePlayerImageUrl(assister.imagePath)}
+                alt={assister.displayName ?? assister.name}
+                style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0, border: "1.5px solid #e2e8f0" }}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold text-slate-600 truncate leading-tight">{assister.displayName ?? assister.name}</p>
+                <div className="flex items-center gap-1">
+                  <AssistIcon size={9} />
+                  <span className="text-[9px] text-slate-400 font-medium">Assist</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-    )
-  }
-
-  if (item.kind === "assist") {
-    const { event } = item
-    const name      = event.player?.displayName ?? event.player?.name ?? "—"
-    const playerImg = resolvePlayerImageUrl(event.player?.imagePath ?? null)
-    return (
-      <div className="flex items-center gap-2.5 rounded-xl bg-white border border-slate-100 px-3 py-2.5 shadow-sm w-full">
-        <AssistIcon size={15} />
-        <img src={playerImg} alt={name} style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
-        <p className="text-xs font-semibold text-slate-700 truncate flex-1 min-w-0">{name}</p>
       </div>
     )
   }
@@ -586,19 +590,21 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const fixtureId = Number(id)
   if (isNaN(fixtureId)) notFound()
 
-  const [fixtureResult, eventsResult, lineupsResult, ratingsResult] = await Promise.allSettled([
+  const [fixtureResult, eventsResult, lineupsResult, ratingsResult, assistsResult] = await Promise.allSettled([
     getFixture(fixtureId),
     getFixtureEvents(fixtureId),
     getFixtureLineups(fixtureId),
     getFixturePlayerRatings(fixtureId),
+    getFixturePlayerAssists(fixtureId),
   ])
 
   if (fixtureResult.status === "rejected") notFound()
 
-  const fixture = fixtureResult.value
-  const events  = eventsResult.status  === "fulfilled" ? eventsResult.value  : []
-  const lineups = lineupsResult.status === "fulfilled" ? lineupsResult.value : []
-  const ratings = ratingsResult.status === "fulfilled" ? ratingsResult.value : []
+  const fixture  = fixtureResult.value
+  const events   = eventsResult.status   === "fulfilled" ? eventsResult.value   : []
+  const lineups  = lineupsResult.status  === "fulfilled" ? lineupsResult.value  : []
+  const ratings  = ratingsResult.status  === "fulfilled" ? ratingsResult.value  : []
+  const assists  = assistsResult.status  === "fulfilled" ? assistsResult.value  : []
 
   const homeTeam   = fixture.homeTeam
   const awayTeam   = fixture.awayTeam
@@ -622,31 +628,29 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   }
 
   const assistsByPlayer = new Map<number, number>()
-  for (const event of events) {
-    if (event.typeId === EVENT_ASSIST && event.player != null) {
-      assistsByPlayer.set(event.player.id, (assistsByPlayer.get(event.player.id) ?? 0) + 1)
-    }
+  for (const stat of assists) {
+    const value = stat.value.normalizedValue
+    if (typeof value === "number" && value > 0) assistsByPlayer.set(stat.player.id, value)
   }
 
   const playerSideMap = new Map<number, "home" | "away">()
   for (const lp of homeLineup) playerSideMap.set(lp.player.id, "home")
   for (const lp of awayLineup) playerSideMap.set(lp.player.id, "away")
 
-  const goalEvents   = events.filter(e => GOAL_TYPES.has(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-  const assistEvents = events.filter(e => e.typeId === EVENT_ASSIST).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-  const cardEvents   = events.filter(e => [EVENT_YELLOW, EVENT_RED, EVENT_YELLOW_RED].includes(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-  const subEvents    = buildSubEvents(events)
+  const goalEvents = events.filter(e => GOAL_TYPES.has(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+  const cardEvents = events.filter(e => [EVENT_YELLOW, EVENT_RED, EVENT_YELLOW_RED].includes(e.typeId ?? -1)).sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+  const subEvents  = buildSubEvents(events)
 
   const sortedTimeline: TimelineItem[] = [
-    ...goalEvents.map(event   => ({ kind: "goal"   as const, event })),
-    ...assistEvents.map(event => ({ kind: "assist" as const, event })),
-    ...cardEvents.map(event   => ({ kind: "card"   as const, event })),
-    ...subEvents.map(subEvent => ({ kind: "sub"    as const, subEvent })),
+    ...goalEvents.map(event  => ({ kind: "goal" as const, event })),
+    ...cardEvents.map(event  => ({ kind: "card" as const, event })),
+    ...subEvents.map(subEvent => ({ kind: "sub" as const, subEvent })),
   ].sort((itemA, itemB) => {
     const minuteA = itemA.kind === "sub" ? (itemA.subEvent.minute ?? 0) : (itemA.event.minute ?? 0)
     const minuteB = itemB.kind === "sub" ? (itemB.subEvent.minute ?? 0) : (itemB.event.minute ?? 0)
     return minuteA - minuteB
   })
+
 
   const getItemSide = (item: TimelineItem): "home" | "away" | null => {
     const playerId = item.kind === "sub" ? item.subEvent.playerIn?.id : item.event.player?.id
