@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import HeroSelect from "@/components/hero-select"
+import { signalNavigationStart } from "@/components/search-params-loading-boundary"
 import type { Season } from "@/lib/seasons"
 
 interface TeamSeasonSelectorProps {
@@ -16,6 +17,7 @@ const TeamSeasonSelector = ({ seasons, selectedSeasonId }: TeamSeasonSelectorPro
   const handleChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set("seasonId", value)
+    signalNavigationStart()
     router.push(`?${params.toString()}`)
   }
 

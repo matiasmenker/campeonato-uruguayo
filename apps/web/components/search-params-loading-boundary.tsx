@@ -3,45 +3,20 @@
 import { useState, useEffect } from "react"
 import type { ReactNode } from "react"
 
-// ─── URL-change subscription ───────────────────────────────────────────────────
-// Next.js App Router wraps router.push() in startTransition internally. That
-// defers React state updates, so useSearchParams() still returns the OLD value
-// while the transition is pending — the Suspense fallback never fires.
-//
-// The fix: patch history.pushState directly. The browser URL changes
-// synchronously when pushState is called (before React touches anything), so
-// reading window.location.search at that point gives us the new params and lets
-// us show the skeleton immediately, outside of the transition machinery.
+// ─── Pub-sub signal ───────────────────────────────────────────────────────────
+// Selectors call signalNavigationStart() before router.push().
+// The boundary subscribes and shows skeleton immediately.
+// No history.pushState patching — avoids all useInsertionEffect issues.
 
-type Listener = () => void
-let listeners: Listener[] = []
-const notifyAll = () => listeners.forEach(fn => fn())
+type Listener = (loading: boolean) => void
+const listeners = new Set<Listener>()
 
-if (typeof window !== "undefined" && !(window as unknown as Record<string, unknown>).__splbPatched) {
-  ;(window as unknown as Record<string, unknown>).__splbPatched = true
-  const orig = history.pushState.bind(history)
-  history.pushState = (...args: Parameters<typeof history.pushState>) => {
-    orig(...args)
-    notifyAll()
-  }
-  window.addEventListener("popstate", notifyAll)
+export const signalNavigationStart = () => {
+  listeners.forEach(fn => fn(true))
 }
 
-// Returns window.location.search and updates whenever the URL changes.
-// Starts as "" to avoid SSR/hydration mismatch.
-const useWindowSearch = (): string => {
-  const [search, setSearch] = useState("")
-
-  useEffect(() => {
-    const sync = () => setSearch(window.location.search)
-    sync()
-    listeners.push(sync)
-    return () => {
-      listeners = listeners.filter(fn => fn !== sync)
-    }
-  }, [])
-
-  return search
+const signalNavigationEnd = () => {
+  listeners.forEach(fn => fn(false))
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -53,23 +28,25 @@ interface SearchParamsLoadingBoundaryProps {
   children: ReactNode
 }
 
-// Shows `skeleton` as soon as any URL param diverges from committedParams,
-// then switches to `children` once the new server render arrives with matching
-// committedParams. The switch happens outside React's transition so it is
-// always immediate — no frozen UI.
 const SearchParamsLoadingBoundary = ({
   committedParams,
   skeleton,
   children,
 }: SearchParamsLoadingBoundaryProps) => {
-  const urlParams = new URLSearchParams(useWindowSearch())
+  const [isNavigating, setIsNavigating] = useState(false)
 
-  const isNavigating = Object.entries(committedParams).some(([key, committedValue]) => {
-    const urlValue = urlParams.get(key)
-    // Param absent from URL → user hasn't touched it, default was rendered correctly
-    if (urlValue === null) return false
-    return urlValue !== committedValue
-  })
+  useEffect(() => {
+    listeners.add(setIsNavigating)
+    return () => { listeners.delete(setIsNavigating) }
+  }, [])
+
+  // When committedParams change it means the server delivered new content —
+  // navigation is complete, hide the skeleton.
+  const committedKey = JSON.stringify(committedParams)
+  useEffect(() => {
+    signalNavigationEnd()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [committedKey])
 
   if (isNavigating) return <>{skeleton}</>
   return <>{children}</>

@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import HeroSelect from "@/components/hero-select"
+import { signalNavigationStart } from "@/components/search-params-loading-boundary"
 import type { Season, Stage } from "@/lib/seasons"
 
 // ---------------------------------------------------------------------------
@@ -16,6 +17,7 @@ const useStandingsNav = () => {
     const params = new URLSearchParams(searchParams.toString())
     params.set(key, value)
     if (key === "seasonId") params.delete("stageId")
+    signalNavigationStart()
     router.push(`/standings?${params.toString()}`)
   }
 
