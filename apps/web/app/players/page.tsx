@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { IconShieldFilled } from "@tabler/icons-react"
+import { IconShieldFilled, IconUsers } from "@tabler/icons-react"
 import HeroTexture from "@/components/hero-texture"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import PlayerSeasonStageSelector from "@/components/player-season-stage-selector"
@@ -348,11 +348,16 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
             <HeroTexture />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40 pointer-events-none" />
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">
-              <div className="flex flex-col gap-0.5">
-                <h1 className="text-3xl font-black text-white drop-shadow leading-none">Players</h1>
-                <p className="text-sm text-white/60">
-                  {selectedStage?.name ?? selectedSeason.name} {selectedStage ? selectedSeason.name : ""}
-                </p>
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
+                  <IconUsers size={28} className="text-white/80" />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <h1 className="text-3xl font-black text-white drop-shadow leading-none">Players</h1>
+                  <p className="text-sm text-white/60">
+                    {selectedStage?.name ?? selectedSeason.name} {selectedStage ? selectedSeason.name : ""}
+                  </p>
+                </div>
               </div>
               <Suspense>
                 <PlayerSeasonStageSelector

@@ -470,8 +470,7 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
                 <div className="flex flex-col gap-0.5">
                   <h1 className="text-3xl font-black text-white leading-none drop-shadow">Standings</h1>
                   <p className="text-sm text-white/65">
-                    First Division
-                    {selectedSeason && <span className="font-semibold text-white/85"> · {selectedSeason.name}</span>}
+                    {selectedStage?.name ?? "First Division"}{selectedSeason && ` ${selectedSeason.name}`}
                   </p>
                 </div>
               </div>
