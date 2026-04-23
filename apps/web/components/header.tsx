@@ -17,7 +17,7 @@ const NAV_ITEMS = [
   { label: "Home", href: "/", icon: IconHomeFilled },
   { label: "Matches", href: "/matches", icon: IconBallFootball },
   { label: "Standings", href: "/standings", icon: IconTrophy },
-  { label: "Players", href: "/jugadores", icon: IconRun },
+  { label: "Players", href: "/players", icon: IconRun },
   { label: "Teams", href: "/teams", icon: IconShieldFilled },
 ]
 

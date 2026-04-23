@@ -150,7 +150,6 @@ const SeasonHistoryRow = ({
       <Link
         href={`/teams/${membership.team.id}`}
         className="truncate text-sm font-medium text-slate-800 hover:text-slate-600"
-        onClick={(event) => event.stopPropagation()}
       >
         {membership.team.name}
       </Link>
