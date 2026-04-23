@@ -765,12 +765,23 @@ const MatchPage = async ({ params }: MatchPageProps) => {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
         <div className="overflow-hidden rounded-2xl shadow-lg">
-          <div
-            className="relative min-h-52 bg-slate-900"
-            style={fixture.venue?.imagePath ? { backgroundImage: `url(${fixture.venue.imagePath})`, backgroundSize: "cover", backgroundPosition: "center 40%" } : undefined}
-          >
-            {!fixture.venue?.imagePath && <HeroTexture />}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40 pointer-events-none" />
+          <div className="relative min-h-52 bg-slate-900">
+            {fixture.venue?.imagePath ? (
+              <div
+                className="absolute inset-0 scale-[1.08] bg-cover bg-[center_40%] blur-[3px]"
+                style={{ backgroundImage: `url(${fixture.venue.imagePath})` }}
+              />
+            ) : (
+              <HeroTexture />
+            )}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: fixture.venue?.imagePath
+                  ? "linear-gradient(145deg, rgba(2,6,23,0.82) 0%, rgba(15,23,42,0.52) 42%, rgba(2,6,23,0.78) 100%)"
+                  : "linear-gradient(to bottom, transparent, rgba(0,0,0,0.40))",
+              }}
+            />
 
             <div className="absolute left-5 top-5">
               <HeroBackLink label="Back" href="/matches" />
@@ -823,10 +834,10 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                     </span>
                   </div>
 
-                  {/* Informational stage/round chip — same style as "Fecha X" in home cards */}
-                  {(fixture.stage || fixture.round) && (
-                    <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold tracking-[0.20em] text-white/80 uppercase backdrop-blur-sm">
-                      {fixture.stage?.name ?? ""}{fixture.round ? ` · ${fixture.round.name}` : ""}
+                  {/* Round chip — "Fecha X" */}
+                  {fixture.round && (
+                    <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold tracking-[0.22em] text-white/80 uppercase backdrop-blur-sm">
+                      Fecha {fixture.round.name}
                     </span>
                   )}
                 </div>
