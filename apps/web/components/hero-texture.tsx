@@ -10,8 +10,8 @@ const HeroTexture = () => (
     <defs>
       <linearGradient id="heroBase" x1="0%" y1="0%" x2="0%" y2="100%">
         <stop offset="0%"   stopColor="#0f3572" />
-        <stop offset="55%"  stopColor="#0a2248" />
-        <stop offset="100%" stopColor="#091c3c" />
+        <stop offset="55%"  stopColor="#0d2a58" />
+        <stop offset="100%" stopColor="#0f3068" />
       </linearGradient>
       <radialGradient id="heroG1" cx="55%" cy="2%" r="72%">
         <stop offset="0%"   stopColor="#438fd7" stopOpacity="1" />

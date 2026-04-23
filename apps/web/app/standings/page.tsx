@@ -308,7 +308,7 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <div className="relative min-h-52 bg-slate-900">
             <HeroTexture />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/70" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40" />
 
             {/* Bottom — title left, selectors right */}
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">
