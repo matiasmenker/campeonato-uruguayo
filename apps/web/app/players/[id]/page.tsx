@@ -218,60 +218,62 @@ const RecentFormCard = ({
   const result = getMatchResult(fixture, teamId)
   const ratingFill = getRatingFill(rating)
 
-  // Left accent strip color based on result
-  const accentColor = result?.label === "W" ? "#22c55e" : result?.label === "L" ? "#ef4444" : "#94a3b8"
-
   return (
     <Link
       href={`/matches/${fixture.id}`}
-      className="group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 shadow-sm transition-all hover:border-slate-300 hover:shadow-md flex-1 min-w-0"
+      className="group flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-3 shadow-sm transition-all hover:border-slate-300 hover:shadow-md flex-1 min-w-0"
     >
-      {/* Colored left accent strip */}
-      <span
-        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
-        style={{ background: accentColor }}
-        aria-hidden
-      />
-
       {/* Opponent logo */}
       <img
         src={resolvePlayerImageUrl(opponent?.imagePath ?? null)}
         alt={opponent?.name ?? "—"}
-        className="h-8 w-8 object-contain shrink-0 ml-1"
+        className="h-10 w-10 object-contain shrink-0"
       />
 
-      {/* Score + date */}
+      {/* Score + round + date */}
       <div className="flex flex-col flex-1 min-w-0 gap-0.5">
         {fixture.homeScore !== null && fixture.awayScore !== null ? (
-          <span className="text-xs font-black tabular-nums text-slate-900 leading-tight">
+          <span className="text-sm font-black tabular-nums text-slate-900 leading-tight">
             {fixture.homeScore} – {fixture.awayScore}
           </span>
         ) : (
           <span className="text-xs font-medium text-slate-400">vs {opponent?.shortCode ?? "—"}</span>
         )}
-        <span className="text-[9px] text-slate-400 leading-none tabular-nums">{formatDate(fixture.kickoffAt)}</span>
+        {fixture.round && (
+          <span className="text-[10px] font-semibold text-slate-500 leading-none">
+            Round {fixture.round.name}
+          </span>
+        )}
+        {result && (
+          <span
+            className="mt-0.5 inline-block w-fit rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none"
+            style={{ color: result.color, background: result.bg }}
+          >
+            {result.label}
+          </span>
+        )}
       </div>
 
       {/* Rating circle */}
       <div
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
         style={{ background: ratingFill }}
       >
-        <span className="text-[11px] font-black tabular-nums text-white leading-none">{rating.toFixed(1)}</span>
+        <span className="text-xs font-black tabular-nums text-white leading-none">{rating.toFixed(1)}</span>
       </div>
     </Link>
   )
 }
 
 const RecentFormEmptySlot = () => (
-  <div className="relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-dashed border-slate-200 bg-white/40 px-3 py-2.5 flex-1 min-w-0">
-    <span className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl bg-slate-200" aria-hidden />
-    <div className="h-8 w-8 shrink-0 rounded bg-slate-100 ml-1" />
-    <div className="flex flex-col flex-1 gap-1">
-      <div className="h-3 w-10 rounded bg-slate-100" />
-      <div className="h-2 w-7 rounded bg-slate-100" />
+  <div className="flex items-center gap-3 rounded-xl border border-dashed border-slate-200 bg-white/40 px-3 py-3 flex-1 min-w-0">
+    <div className="h-10 w-10 shrink-0 rounded bg-slate-100" />
+    <div className="flex flex-col flex-1 gap-1.5">
+      <div className="h-3.5 w-10 rounded bg-slate-100" />
+      <div className="h-2.5 w-14 rounded bg-slate-100" />
+      <div className="h-2 w-6 rounded bg-slate-100" />
     </div>
-    <div className="h-8 w-8 shrink-0 rounded-full bg-slate-100" />
+    <div className="h-9 w-9 shrink-0 rounded-full bg-slate-100" />
   </div>
 )
 

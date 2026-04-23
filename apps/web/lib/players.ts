@@ -160,6 +160,7 @@ export interface PlayerFixture {
   kickoffAt: string | null
   homeScore: number | null
   awayScore: number | null
+  round: { id: number; name: string } | null
   homeTeam: { id: number; name: string; shortCode: string | null; imagePath: string | null } | null
   awayTeam: { id: number; name: string; shortCode: string | null; imagePath: string | null } | null
 }
