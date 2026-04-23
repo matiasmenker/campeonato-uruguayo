@@ -201,12 +201,6 @@ const getMatchResult = (
   return { label: "D", color: "#475569", bg: "#f1f5f9" }
 }
 
-const StarInline = ({ fill, size = 9 }: { fill: string; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-  </svg>
-)
-
 const RecentFormCard = ({
   stat,
   fixture,
@@ -224,63 +218,60 @@ const RecentFormCard = ({
   const result = getMatchResult(fixture, teamId)
   const ratingFill = getRatingFill(rating)
 
+  // Left accent strip color based on result
+  const accentColor = result?.label === "W" ? "#22c55e" : result?.label === "L" ? "#ef4444" : "#94a3b8"
+
   return (
     <Link
       href={`/matches/${fixture.id}`}
-      className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200/80 bg-white px-3 py-3 shadow-sm transition-all hover:border-slate-300 hover:shadow-md"
+      className="group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 shadow-sm transition-all hover:border-slate-300 hover:shadow-md flex-1 min-w-0"
     >
-      {/* Logo — plain image, no circular clip */}
+      {/* Colored left accent strip */}
+      <span
+        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
+        style={{ background: accentColor }}
+        aria-hidden
+      />
+
+      {/* Opponent logo */}
       <img
         src={resolvePlayerImageUrl(opponent?.imagePath ?? null)}
         alt={opponent?.name ?? "—"}
-        className="h-9 w-9 object-contain"
+        className="h-8 w-8 object-contain shrink-0 ml-1"
       />
-      <div className="flex w-full flex-col items-center gap-0.5">
-        <span className="w-full truncate text-center text-[11px] font-semibold text-slate-700 leading-tight">
-          {opponent?.shortCode ?? opponent?.name?.split(" ").at(-1) ?? "—"}
-        </span>
-        {fixture.homeScore !== null && fixture.awayScore !== null && (
-          <span className="text-[10px] font-bold tabular-nums text-slate-500">
-            {fixture.homeScore}–{fixture.awayScore}
+
+      {/* Score + date */}
+      <div className="flex flex-col flex-1 min-w-0 gap-0.5">
+        {fixture.homeScore !== null && fixture.awayScore !== null ? (
+          <span className="text-xs font-black tabular-nums text-slate-900 leading-tight">
+            {fixture.homeScore} – {fixture.awayScore}
           </span>
+        ) : (
+          <span className="text-xs font-medium text-slate-400">vs {opponent?.shortCode ?? "—"}</span>
         )}
-        {result && (
-          <span
-            className="rounded-full px-2 py-0.5 text-[9px] font-black"
-            style={{ color: result.color, background: result.bg }}
-          >
-            {result.label}
-          </span>
-        )}
+        <span className="text-[9px] text-slate-400 leading-none tabular-nums">{formatDate(fixture.kickoffAt)}</span>
       </div>
-      {/* Star outside circle, number inside */}
-      <div className="flex flex-col items-center gap-0.5">
-        <StarInline fill={ratingFill} size={9} />
-        <div
-          className="flex h-9 w-9 items-center justify-center rounded-full"
-          style={{ background: ratingFill }}
-        >
-          <span className="text-xs font-black tabular-nums text-white leading-none">{rating.toFixed(1)}</span>
-        </div>
+
+      {/* Rating circle */}
+      <div
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+        style={{ background: ratingFill }}
+      >
+        <span className="text-[11px] font-black tabular-nums text-white leading-none">{rating.toFixed(1)}</span>
       </div>
-      <span className="text-[9px] text-slate-400 leading-none">{formatDate(fixture.kickoffAt)}</span>
     </Link>
   )
 }
 
 const RecentFormEmptySlot = () => (
-  <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white/40 px-3 py-3">
-    <div className="h-9 w-9 rounded bg-slate-100" />
-    <div className="flex w-full flex-col items-center gap-0.5">
-      <span className="text-[11px] text-slate-300">—</span>
+  <div className="relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-dashed border-slate-200 bg-white/40 px-3 py-2.5 flex-1 min-w-0">
+    <span className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl bg-slate-200" aria-hidden />
+    <div className="h-8 w-8 shrink-0 rounded bg-slate-100 ml-1" />
+    <div className="flex flex-col flex-1 gap-1">
+      <div className="h-3 w-10 rounded bg-slate-100" />
+      <div className="h-2 w-7 rounded bg-slate-100" />
     </div>
-    <div className="flex flex-col items-center gap-0.5">
-      <StarInline fill="#e2e8f0" size={9} />
-      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
-        <span className="text-xs font-black tabular-nums text-slate-300 leading-none">—</span>
-      </div>
-    </div>
-    <span className="text-[9px] text-slate-300 leading-none">No data</span>
+    <div className="h-8 w-8 shrink-0 rounded-full bg-slate-100" />
   </div>
 )
 
@@ -309,8 +300,8 @@ const RecentForm = ({
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="px-1 text-sm font-bold text-slate-700">Recent form</h2>
-      <div className="grid grid-cols-5 gap-3">
+      <h2 className="px-1 text-sm font-bold text-slate-700">Last matches</h2>
+      <div className="flex gap-2">
         {slots.map((stat, index) => {
           if (!stat || !teamId) return <RecentFormEmptySlot key={index} />
           const fixtureData = fixtureMap.get(stat.fixtureId)
