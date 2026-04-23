@@ -32,6 +32,55 @@ const formatValue = (category: string, value: number): string => {
   return String(value)
 }
 
+const CategoryHighlight = ({
+  category,
+  entry,
+  seasonId,
+}: {
+  category: string
+  entry: LeaderEntry | undefined
+  seasonId: number
+}) => {
+  if (!entry) return null
+  const displayName = entry.player.displayName ?? entry.player.name
+  const positionCode = entry.player.positionId ? (POSITION_CODES[entry.player.positionId] ?? null) : null
+  return (
+    <Link
+      href={`/players/${entry.player.id}?seasonId=${seasonId}`}
+      className="group flex flex-col items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm text-center transition-all hover:border-slate-300 hover:shadow-md"
+    >
+      <div className="h-14 w-14 overflow-hidden rounded-full bg-slate-100 ring-2 ring-slate-200 group-hover:ring-slate-300 transition-all">
+        <img
+          src={resolvePlayerImageUrl(entry.player.imagePath)}
+          alt={displayName}
+          className="h-full w-full object-cover object-top"
+        />
+      </div>
+      <div className="flex flex-col items-center gap-0.5">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          {CATEGORY_LABELS[category]}
+        </span>
+        <span className="text-3xl font-black tabular-nums text-slate-950 leading-none">
+          {formatValue(category, entry.value)}
+        </span>
+        <span className="text-[11px] text-slate-400">{CATEGORY_VALUE_LABELS[category]}</span>
+      </div>
+      <div className="flex flex-col items-center gap-0.5">
+        <span className="text-sm font-bold text-slate-800 leading-tight">{displayName}</span>
+        <div className="flex items-center gap-1.5">
+          {entry.team?.imagePath ? (
+            <img src={entry.team.imagePath} alt={entry.team.name} className="h-3.5 w-3.5 object-contain shrink-0" />
+          ) : null}
+          <span className="text-[11px] text-slate-400 truncate max-w-[110px]">{entry.team?.name ?? "—"}</span>
+          {positionCode && (
+            <span className="text-[10px] font-medium text-slate-300">· {positionCode}</span>
+          )}
+        </div>
+      </div>
+    </Link>
+  )
+}
+
 const LeaderRow = ({
   rank,
   entry,
@@ -171,16 +220,29 @@ const PlayersContent = async ({ selectedSeasonId }: { selectedSeasonId: number }
   ]
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {categories.map(({ key, entries }) => (
-        <LeaderList
-          key={key}
-          category={key}
-          label={CATEGORY_LABELS[key] ?? key}
-          entries={entries}
-          seasonId={selectedSeasonId}
-        />
-      ))}
+    <div className="flex flex-col gap-6">
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        {categories.map(({ key, entries }) => (
+          <CategoryHighlight
+            key={key}
+            category={key}
+            entry={entries[0]}
+            seasonId={selectedSeasonId}
+          />
+        ))}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {categories.map(({ key, entries }) => (
+          <LeaderList
+            key={key}
+            category={key}
+            label={CATEGORY_LABELS[key] ?? key}
+            entries={entries}
+            seasonId={selectedSeasonId}
+          />
+        ))}
+      </div>
     </div>
   )
 }

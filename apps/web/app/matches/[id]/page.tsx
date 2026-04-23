@@ -446,7 +446,9 @@ const BenchPlayer = ({ player, events, rating, assists }: {
         )}
       </div>
 
-      <span className="flex-1 min-w-0 truncate text-sm font-medium text-slate-800" title={name}>{name}</span>
+      <Link href={`/players/${player.player.id}`} className="flex-1 min-w-0 truncate text-sm font-medium text-slate-800 hover:text-slate-600 transition-colors" title={name}>
+        {name}
+      </Link>
 
       <div className="flex items-center gap-1 shrink-0">
         {regularGoals.map((_, i) => (
@@ -581,17 +583,23 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
       <div className="flex items-start gap-2.5 rounded-xl bg-white border border-slate-100 px-3 py-2.5 shadow-sm w-full">
         <BallIcon size={15} variant={isOwnGoal ? "own" : "goal"} />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 min-w-0">
+          <Link
+            href={event.player ? `/players/${event.player.id}` : "#"}
+            className="flex items-center gap-1.5 min-w-0 hover:opacity-80 transition-opacity"
+          >
             <img src={playerImg} alt={name} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
             <p className="text-xs font-semibold text-slate-900 truncate leading-tight">{name}</p>
-          </div>
+          </Link>
           <div className="flex items-center gap-1.5 mt-0.5">
             {isPenalty && <span className="text-[10px] text-slate-400 font-semibold">Penalty</span>}
             {isOwnGoal && <span className="text-[10px] text-red-400 font-semibold">Own goal</span>}
             {event.result && <span className="text-[10px] text-emerald-600 font-black tabular-nums">{event.result}</span>}
           </div>
           {assister && (
-            <div className="mt-2 pt-2 border-t border-slate-100 flex items-center gap-2 min-w-0">
+            <Link
+              href={`/players/${assister.id}`}
+              className="mt-2 pt-2 border-t border-slate-100 flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
+            >
               <img
                 src={resolvePlayerImageUrl(assister.imagePath)}
                 alt={assister.displayName ?? assister.name}
@@ -604,7 +612,7 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
                   <span className="text-[9px] text-slate-400 font-medium">Assist</span>
                 </div>
               </div>
-            </div>
+            </Link>
           )}
         </div>
       </div>
@@ -620,7 +628,13 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
       <div className="flex items-center gap-2.5 rounded-xl bg-white border border-slate-100 px-3 py-2.5 shadow-sm w-full">
         {isDouble ? <DoubleCard /> : <CardRect color={event.typeId === EVENT_YELLOW ? "#facc15" : "#ff0000"} />}
         <img src={playerImg} alt={name} style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
-        <p className="text-xs font-semibold text-slate-900 truncate flex-1 min-w-0">{name}</p>
+        {event.player ? (
+          <Link href={`/players/${event.player.id}`} className="text-xs font-semibold text-slate-900 truncate flex-1 min-w-0 hover:text-slate-600 transition-colors">
+            {name}
+          </Link>
+        ) : (
+          <p className="text-xs font-semibold text-slate-900 truncate flex-1 min-w-0">{name}</p>
+        )}
       </div>
     )
   }
@@ -636,13 +650,25 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
         <div className="flex items-center gap-2 min-w-0">
           <SubOutIcon size={14} />
           <img src={imgOut} alt={nameOut} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
-          <span className="text-xs font-semibold text-slate-900 truncate">{nameOut}</span>
+          {subEvent.playerOut ? (
+            <Link href={`/players/${subEvent.playerOut.id}`} className="text-xs font-semibold text-slate-900 truncate hover:text-slate-600 transition-colors">
+              {nameOut}
+            </Link>
+          ) : (
+            <span className="text-xs font-semibold text-slate-900 truncate">{nameOut}</span>
+          )}
         </div>
       )}
       <div className="flex items-center gap-2 min-w-0">
         <SubInIcon size={14} />
         <img src={imgIn} alt={nameIn} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
-        <span className="text-xs font-semibold text-slate-900 truncate">{nameIn}</span>
+        {subEvent.playerIn ? (
+          <Link href={`/players/${subEvent.playerIn.id}`} className="text-xs font-semibold text-slate-900 truncate hover:text-slate-600 transition-colors">
+            {nameIn}
+          </Link>
+        ) : (
+          <span className="text-xs font-semibold text-slate-900 truncate">{nameIn}</span>
+        )}
       </div>
     </div>
   )

@@ -316,9 +316,12 @@ const TeamContent = async ({
                           className="h-full w-full object-cover object-top"
                         />
                       </div>
-                      <span className="min-w-0 truncate pr-3 text-sm font-medium text-slate-900">
+                      <Link
+                        href={`/players/${member.player.id}`}
+                        className="min-w-0 truncate pr-3 text-sm font-medium text-slate-900 hover:text-slate-600 transition-colors"
+                      >
                         {displayName}
-                      </span>
+                      </Link>
                       <div className="flex justify-center">
                         {member.player.nationality?.imageUrl ? (
                           <img
