@@ -197,7 +197,12 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
     Number(secondSeason.name) - Number(firstSeason.name)
   )
 
-  const currentSeason = sortedSeasons.find((season) => season.isCurrent) ?? sortedSeasons[0]
+  // Prefer the most recently completed season — it has the richest stats.
+  // Fall back to the current season only if no completed season exists.
+  const currentSeason =
+    sortedSeasons.find((season) => !season.isCurrent) ??
+    sortedSeasons.find((season) => season.isCurrent) ??
+    sortedSeasons[0]
   const selectedSeasonId = seasonIdParam
     ? Number(seasonIdParam)
     : (currentSeason?.id ?? null)

@@ -1,7 +1,16 @@
 import { Suspense } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { IconShieldFilled } from "@tabler/icons-react"
+import {
+  IconShieldFilled,
+  IconBallFootball,
+  IconStar,
+  IconClock,
+  IconTarget,
+  IconHandFinger,
+  IconSquare,
+  IconRectangle,
+} from "@tabler/icons-react"
 import HeroBackLink from "@/components/hero-back-link"
 import HeroTexture from "@/components/hero-texture"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
@@ -45,37 +54,69 @@ const formatDateOfBirth = (dateOfBirth: string | null): string | null => {
   }).format(new Date(dateOfBirth))
 }
 
-const StatCard = ({ label, value }: { label: string; value: string | number | null }) => (
-  <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm text-center">
-    <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
-    <span className="text-2xl font-black tabular-nums text-slate-900">{value ?? "—"}</span>
+const StatCard = ({
+  label,
+  value,
+  icon,
+  iconColor,
+  hasData,
+}: {
+  label: string
+  value: string | number | null
+  icon: React.ReactNode
+  iconColor: string
+  hasData: boolean
+}) => (
+  <div className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm text-center">
+    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${iconColor}`}>
+      {icon}
+    </div>
+    <div className="flex flex-col items-center gap-0.5">
+      <span className="text-2xl font-black tabular-nums text-slate-900 leading-none">
+        {hasData && value !== null ? value : "—"}
+      </span>
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
+    </div>
   </div>
 )
 
-const RatingStatCard = ({ avgRating }: { avgRating: number | null }) => {
-  if (avgRating === null) {
+const RatingStatCard = ({ avgRating, hasData }: { avgRating: number | null; hasData: boolean }) => {
+  if (!hasData || avgRating === null) {
     return (
-      <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm text-center">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Avg rating</span>
-        <span className="text-2xl font-black tabular-nums text-slate-900">—</span>
+      <div className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm text-center">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+          <IconStar size={16} className="text-slate-400" />
+        </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="text-2xl font-black tabular-nums text-slate-900 leading-none">—</span>
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Avg rating</span>
+        </div>
       </div>
     )
   }
   const colors = getRatingColors(avgRating)
   return (
     <div
-      className="flex flex-col items-center gap-1.5 rounded-2xl border p-4 shadow-sm text-center"
-      style={{
-        backgroundColor: colors.muted,
-        borderColor: `${colors.fill}33`,
-      }}
+      className="flex flex-col items-center gap-2 rounded-2xl border p-4 shadow-sm text-center"
+      style={{ backgroundColor: colors.muted, borderColor: `${colors.fill}40` }}
     >
-      <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: colors.text }}>
-        Avg rating
-      </span>
-      <span className="text-2xl font-black tabular-nums" style={{ color: colors.text }}>
-        {avgRating.toFixed(2)}
-      </span>
+      <div
+        className="flex h-8 w-8 items-center justify-center rounded-full"
+        style={{ backgroundColor: `${colors.fill}25` }}
+      >
+        <IconStar size={16} style={{ color: colors.fill }} />
+      </div>
+      <div className="flex flex-col items-center gap-0.5">
+        <span className="text-2xl font-black tabular-nums leading-none" style={{ color: colors.text }}>
+          {avgRating.toFixed(2)}
+        </span>
+        <span
+          className="text-[10px] font-semibold uppercase tracking-wide"
+          style={{ color: `${colors.text}99` }}
+        >
+          Avg rating
+        </span>
+      </div>
     </div>
   )
 }
@@ -88,35 +129,37 @@ const ContentSkeleton = () => (
           key={index}
           className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm"
         >
-          <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
-          <div className="h-7 w-12 animate-pulse rounded bg-slate-200" />
+          <div className="h-8 w-8 animate-pulse rounded-full bg-slate-100" />
+          <div className="h-7 w-10 animate-pulse rounded bg-slate-200" />
+          <div className="h-2.5 w-14 animate-pulse rounded bg-slate-100" />
         </div>
       ))}
     </div>
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
         <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-          {Array.from({ length: 5 }).map((_, index) => (
+          {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className={`flex items-center gap-4 px-4 py-3 ${index < 4 ? "border-b border-slate-100" : ""}`}
+              className={`flex items-center gap-4 px-4 py-3 ${index < 3 ? "border-b border-slate-100" : ""}`}
             >
-              <div className="h-3 w-8 animate-pulse rounded bg-slate-100" />
-              <div className="h-3 w-28 animate-pulse rounded bg-slate-100 flex-1" />
-              <div className="h-3 w-12 animate-pulse rounded bg-slate-100" />
+              <div className="h-3 w-10 animate-pulse rounded bg-slate-100" />
+              <div className="h-5 w-5 animate-pulse rounded-full bg-slate-100 shrink-0" />
+              <div className="h-3.5 w-32 animate-pulse rounded bg-slate-100 flex-1" />
+              <div className="h-3 w-10 animate-pulse rounded bg-slate-100" />
             </div>
           ))}
         </div>
       </div>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <div className="h-4 w-20 animate-pulse rounded bg-slate-200" />
-        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3">
+        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4">
             {Array.from({ length: 4 }).map((_, index) => (
               <div key={index} className="flex justify-between">
                 <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
-                <div className="h-3 w-20 animate-pulse rounded bg-slate-100" />
+                <div className="h-3 w-24 animate-pulse rounded bg-slate-100" />
               </div>
             ))}
           </div>
@@ -133,10 +176,8 @@ const SeasonHistoryRow = ({
   membership: PlayerMembership
   isSelected: boolean
 }) => (
-  <div
-    className={`flex items-center gap-3 px-4 py-3 ${isSelected ? "bg-slate-50" : ""}`}
-  >
-    <span className="w-12 shrink-0 text-xs font-semibold text-slate-500">{membership.season.name}</span>
+  <div className={`flex items-center gap-3 px-4 py-3 ${isSelected ? "bg-slate-50" : ""}`}>
+    <span className="w-12 shrink-0 text-xs font-bold text-slate-400">{membership.season.name}</span>
     <div className="flex items-center gap-2 min-w-0 flex-1">
       {membership.team.imagePath ? (
         <img
@@ -149,21 +190,21 @@ const SeasonHistoryRow = ({
       )}
       <Link
         href={`/teams/${membership.team.id}`}
-        className="truncate text-sm font-medium text-slate-800 hover:text-slate-600"
+        className="truncate text-sm font-semibold text-slate-800 hover:text-slate-600 transition-colors"
       >
         {membership.team.name}
       </Link>
       {membership.isLoan && (
-        <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+        <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
           Loan
         </span>
       )}
     </div>
     {membership.shirtNumber !== null && (
-      <span className="shrink-0 text-xs text-slate-400">#{membership.shirtNumber}</span>
+      <span className="shrink-0 text-xs font-medium text-slate-400">#{membership.shirtNumber}</span>
     )}
     {isSelected && (
-      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-900" />
+      <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-900" />
     )}
   </div>
 )
@@ -191,13 +232,15 @@ const PlayerSeasonContent = async ({
     events,
   )
 
-  const sortedMemberships = [...memberships].sort((firstMembership, secondMembership) =>
-    Number(secondMembership.season.name) - Number(firstMembership.season.name)
+  const hasAppearances = aggregates.appearances > 0
+
+  const sortedMemberships = [...memberships].sort(
+    (firstMembership, secondMembership) =>
+      Number(secondMembership.season.name) - Number(firstMembership.season.name),
   )
 
-  const selectedMembership = sortedMemberships.find(
-    (membership) => membership.season.id === selectedSeasonId,
-  ) ?? null
+  const selectedMembership =
+    sortedMemberships.find((membership) => membership.season.id === selectedSeasonId) ?? null
 
   const dobFormatted = formatDateOfBirth(player.dateOfBirth)
   const age = formatAge(player.dateOfBirth)
@@ -206,17 +249,56 @@ const PlayerSeasonContent = async ({
     <div className="flex flex-col gap-6">
 
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
-        <StatCard label="Matches" value={aggregates.appearances > 0 ? aggregates.appearances : null} />
-        <RatingStatCard avgRating={aggregates.avgRating} />
+        <StatCard
+          label="Matches"
+          value={aggregates.appearances}
+          icon={<IconBallFootball size={16} className="text-slate-600" />}
+          iconColor="bg-slate-100"
+          hasData={hasAppearances}
+        />
+        <RatingStatCard avgRating={aggregates.avgRating} hasData={hasAppearances} />
         <StatCard
           label="Minutes"
-          value={aggregates.totalMinutes !== null ? aggregates.totalMinutes : null}
+          value={aggregates.totalMinutes}
+          icon={<IconClock size={16} className="text-blue-500" />}
+          iconColor="bg-blue-50"
+          hasData={hasAppearances}
         />
-        <StatCard label="Goals" value={aggregates.goals > 0 ? aggregates.goals : null} />
-        <StatCard label="Assists" value={aggregates.assists > 0 ? aggregates.assists : null} />
-        <StatCard label="Yellows" value={aggregates.yellowCards > 0 ? aggregates.yellowCards : null} />
-        <StatCard label="Reds" value={aggregates.redCards > 0 ? aggregates.redCards : null} />
+        <StatCard
+          label="Goals"
+          value={aggregates.goals}
+          icon={<IconTarget size={16} className="text-emerald-600" />}
+          iconColor="bg-emerald-50"
+          hasData={hasAppearances}
+        />
+        <StatCard
+          label="Assists"
+          value={aggregates.assists}
+          icon={<IconHandFinger size={16} className="text-sky-500" />}
+          iconColor="bg-sky-50"
+          hasData={hasAppearances}
+        />
+        <StatCard
+          label="Yellows"
+          value={aggregates.yellowCards}
+          icon={<IconSquare size={16} className="text-amber-500" />}
+          iconColor="bg-amber-50"
+          hasData={hasAppearances}
+        />
+        <StatCard
+          label="Reds"
+          value={aggregates.redCards}
+          icon={<IconRectangle size={16} className="text-red-500" />}
+          iconColor="bg-red-50"
+          hasData={hasAppearances}
+        />
       </div>
+
+      {!hasAppearances && (
+        <div className="flex h-12 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
+          No match data available for this season
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
 
@@ -243,7 +325,8 @@ const PlayerSeasonContent = async ({
                 <div className="flex items-center justify-between px-4 py-3">
                   <span className="text-xs font-semibold text-slate-500">Date of birth</span>
                   <span className="text-sm text-slate-800">
-                    {dobFormatted}{age && <span className="ml-1 text-slate-400">({age} yrs)</span>}
+                    {dobFormatted}
+                    {age && <span className="ml-1.5 text-slate-400">({age} yrs)</span>}
                   </span>
                 </div>
               )}
@@ -271,7 +354,15 @@ const PlayerSeasonContent = async ({
               {selectedMembership?.shirtNumber != null && (
                 <div className="flex items-center justify-between px-4 py-3">
                   <span className="text-xs font-semibold text-slate-500">Shirt number</span>
-                  <span className="text-sm text-slate-800">#{selectedMembership.shirtNumber}</span>
+                  <span className="text-sm font-bold text-slate-900">
+                    #{selectedMembership.shirtNumber}
+                  </span>
+                </div>
+              )}
+              {player.weight && (
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-xs font-semibold text-slate-500">Weight</span>
+                  <span className="text-sm text-slate-800">{player.weight} kg</span>
                 </div>
               )}
               {!dobFormatted && !player.height && !player.country && !selectedMembership?.shirtNumber && (
@@ -311,8 +402,9 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
   const memberships = membershipsResult.status === "fulfilled" ? membershipsResult.value : []
   const allSeasons = seasonsResult.status === "fulfilled" ? seasonsResult.value : []
 
-  const sortedMemberships = [...memberships].sort((firstMembership, secondMembership) =>
-    Number(secondMembership.season.name) - Number(firstMembership.season.name)
+  const sortedMemberships = [...memberships].sort(
+    (firstMembership, secondMembership) =>
+      Number(secondMembership.season.name) - Number(firstMembership.season.name),
   )
 
   const membershipSeasonIds = new Set(sortedMemberships.map((membership) => membership.season.id))
@@ -320,16 +412,29 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
     .filter((season) => membershipSeasonIds.has(season.id))
     .sort((firstSeason, secondSeason) => Number(secondSeason.name) - Number(firstSeason.name))
 
-  const currentMembership =
-    sortedMemberships.find((membership) => membership.season.isCurrent) ?? sortedMemberships[0]
+  // Prefer the most recently completed (non-current) season for richer data.
+  // Fall back to the current season only if no completed season exists.
+  const defaultMembership =
+    sortedMemberships.find((membership) => !membership.season.isCurrent) ??
+    sortedMemberships.find((membership) => membership.season.isCurrent) ??
+    sortedMemberships[0]
 
-  const selectedSeasonId = seasonIdParam
-    ? Number(seasonIdParam)
-    : (currentMembership?.season.id ?? null)
+  const requestedSeasonId = seasonIdParam ? Number(seasonIdParam) : null
+
+  // If the requested seasonId doesn't match any of the player's memberships,
+  // fall back to the default rather than showing empty data.
+  const hasRequestedMembership =
+    requestedSeasonId !== null &&
+    sortedMemberships.some((membership) => membership.season.id === requestedSeasonId)
+
+  const selectedSeasonId = hasRequestedMembership
+    ? requestedSeasonId
+    : (defaultMembership?.season.id ?? null)
 
   const selectedMembership =
     sortedMemberships.find((membership) => membership.season.id === selectedSeasonId) ??
-    currentMembership ?? null
+    defaultMembership ??
+    null
 
   const displayName = player.displayName ?? player.commonName ?? player.name
   const positionId = selectedMembership?.positionId ?? player.positionId ?? null
@@ -357,23 +462,23 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40 pointer-events-none" />
 
             <div className="absolute left-5 top-5 z-10">
-              <HeroBackLink label="Back" href="/players" />
+              <HeroBackLink label="Players" href="/players" />
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-5 p-6">
               <div className="flex items-end gap-5 min-w-0">
-                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full bg-slate-700 ring-2 ring-white/20">
+                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full bg-slate-700 ring-2 ring-white/20 shadow-xl">
                   <img
                     src={resolvePlayerImageUrl(player.imagePath)}
                     alt={displayName}
                     className="h-full w-full object-cover object-top"
                   />
                 </div>
-                <div className="min-w-0 flex flex-col gap-1 pb-1">
+                <div className="min-w-0 flex flex-col gap-1.5 pb-1">
                   <h1 className="text-3xl font-black text-white leading-none drop-shadow">
                     {displayName}
                   </h1>
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex flex-wrap items-center gap-2">
                     {positionCode && positionStyle && (
                       <span
                         className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${positionStyle.badge}`}
@@ -383,16 +488,18 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
                     )}
                     {selectedMembership?.team && (
                       <div className="flex items-center gap-1.5">
-                        {selectedMembership.team.imagePath && (
+                        {selectedMembership.team.imagePath ? (
                           <img
                             src={selectedMembership.team.imagePath}
                             alt={selectedMembership.team.name}
                             className="h-4 w-4 object-contain"
                           />
+                        ) : (
+                          <IconShieldFilled size={14} className="text-white/40" />
                         )}
                         <Link
                           href={`/teams/${selectedMembership.team.id}`}
-                          className="text-sm font-medium text-white/80 hover:text-white"
+                          className="text-sm font-semibold text-white/80 hover:text-white transition-colors"
                         >
                           {selectedMembership.team.name}
                         </Link>
