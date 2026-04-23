@@ -9,6 +9,7 @@ import {
   getFixturePlayerRatings,
   getFixturePlayerAssists,
   getFixturePlayerMinutesPlayed,
+  getFixturePlayerSaves,
   type LineupPlayer,
   type FixtureEvent,
   type PlayerSummary,
@@ -249,14 +250,21 @@ const DoubleCard = () => (
   </span>
 )
 
+const GloveSaveIcon = ({ size = 12 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 7.5C8 6.67 8.67 6 9.5 6S11 6.67 11 7.5V11h1V8.5C12 7.67 12.67 7 13.5 7S15 7.67 15 8.5V11h.5c.83 0 1.5.67 1.5 1.5v2A4.5 4.5 0 0 1 12.5 19h-1A4.5 4.5 0 0 1 7 14.5V11H7.5C7.78 11 8 10.78 8 10.5V7.5Z" fill="currentColor"/>
+  </svg>
+)
+
 interface EventBadgesProps {
   events: FixtureEvent[]
   assists: number
+  saves?: number
   offsetBottom?: number
   isStarter?: boolean
 }
 
-const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: EventBadgesProps) => {
+const EventBadges = ({ events, assists, saves = 0, offsetBottom = 0, isStarter = true }: EventBadgesProps) => {
   const regularGoals = events.filter(e => e.typeId === EVENT_GOAL || e.typeId === EVENT_GOAL_PENALTY)
   const ownGoals     = events.filter(e => e.typeId === EVENT_GOAL_OWN)
   const yellows      = events.filter(e => e.typeId === EVENT_YELLOW).length
@@ -264,7 +272,7 @@ const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: Ev
   const reds         = events.filter(e => e.typeId === EVENT_RED).length
   const subEvents    = isStarter ? [] : events.filter(e => e.typeId === EVENT_SUBSTITUTION)
 
-  if (!regularGoals.length && !ownGoals.length && !assists && !yellows && !yellowReds && !reds && !subEvents.length) return null
+  if (!regularGoals.length && !ownGoals.length && !assists && !yellows && !yellowReds && !reds && !subEvents.length && !saves) return null
 
   return (
     <div
@@ -297,6 +305,12 @@ const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: Ev
           <SubInIcon size={13} />
         </span>
       ))}
+      {saves > 0 && (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "rgba(99,102,241,0.9)", borderRadius: 3, padding: "1px 3px", flexShrink: 0 }}>
+          <GloveSaveIcon size={9} />
+          <span style={{ fontSize: 8, fontWeight: 900, color: "white", lineHeight: 1 }}>{saves}</span>
+        </span>
+      )}
     </div>
   )
 }
@@ -306,15 +320,18 @@ interface PlayerTokenProps {
   events: FixtureEvent[]
   rating: number | null
   assists: number
+  saves: number
   x: number
   y: number
   substitutedOut: boolean
 }
 
-const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: PlayerTokenProps) => {
+const PlayerToken = ({ player, events, rating, assists, saves, x, y, substitutedOut }: PlayerTokenProps) => {
   const fullName = player.player.displayName ?? player.player.name
   const parts = fullName.trim().split(/\s+/)
   const shortName = parts.length > 2 ? parts[parts.length - 1] : parts.slice(-2).join(" ")
+  const positionId = player.player.positionId
+  const positionConfig = positionId ? (MATCH_POSITION_CONFIG[positionId] ?? null) : null
 
   return (
     <Link
@@ -323,7 +340,7 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: 
       style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: TOKEN_WIDTH, gap: 3 }}
     >
       <div className="relative" style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}>
-        <EventBadges events={events} assists={assists} offsetBottom={1} isStarter={true} />
+        <EventBadges events={events} assists={assists} saves={saves} offsetBottom={1} isStarter={true} />
         <div
           className="overflow-hidden rounded-full"
           style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, background: "#fff", border: "2px solid rgba(255,255,255,0.95)", boxShadow: "0 3px 10px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.35)" }}
@@ -338,11 +355,17 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: 
             {player.jerseyNumber}
           </span>
         )}
-        {player.player.positionId && MATCH_POSITION_CONFIG[player.player.positionId] && (
-          <span style={{ position: "absolute", top: -2, right: -2 }}>
-            <PositionBadge positionId={player.player.positionId} size={18} />
-          </span>
-        )}
+        {/* Rating circle replaces position badge on avatar top-right */}
+        <span
+          className="absolute flex items-center justify-center rounded-full font-black text-white leading-none"
+          style={{
+            width: 20, height: 20, fontSize: 7, top: -2, right: -2,
+            background: rating !== null ? getRatingFill(rating) : "rgba(15,23,42,0.7)",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.6)",
+          }}
+        >
+          {rating !== null ? formatRating(rating) : "—"}
+        </span>
         {substitutedOut && (
           <span
             style={{ position: "absolute", bottom: -2, right: -2, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", cursor: "default" }}
@@ -352,22 +375,29 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: 
         )}
       </div>
 
+      {/* Name bar — position badge on left, then name */}
       <div
-        className="flex items-center gap-1.5 rounded-lg px-2 py-0.5"
+        className="flex items-center gap-1 rounded-lg px-1.5 py-0.5"
         style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)", maxWidth: TOKEN_WIDTH }}
       >
+        {positionConfig && (
+          <span
+            style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 15, height: 15, borderRadius: "50%", background: positionConfig.bg, flexShrink: 0,
+            }}
+          >
+            <span style={{ fontSize: 6, fontWeight: 900, color: "white", lineHeight: 1, WebkitFontSmoothing: "antialiased" } as React.CSSProperties}>
+              {positionConfig.label}
+            </span>
+          </span>
+        )}
         <span
           className="text-white font-semibold leading-none"
           style={{ fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}
           title={fullName}
         >
           {shortName}
-        </span>
-        <span
-          className="flex items-center justify-center rounded font-black text-white leading-none shrink-0"
-          style={{ fontSize: 9, background: rating !== null ? getRatingFill(rating) : "rgba(255,255,255,0.18)", minWidth: 22, height: 14, paddingLeft: 2, paddingRight: 2 }}
-        >
-          {rating !== null ? formatRating(rating) : "—"}
         </span>
       </div>
     </Link>
@@ -382,10 +412,11 @@ interface PitchProps {
   eventsByPlayer: Map<number, FixtureEvent[]>
   ratingByPlayer: Map<number, number>
   assistsByPlayer: Map<number, number>
+  savesByPlayer: Map<number, number>
   substitutedOutIds: Set<number>
 }
 
-const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByPlayer, ratingByPlayer, assistsByPlayer, substitutedOutIds }: PitchProps) => {
+const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByPlayer, ratingByPlayer, assistsByPlayer, savesByPlayer, substitutedOutIds }: PitchProps) => {
 
   const renderTeam = (lineup: LineupPlayer[], isHome: boolean, formation: string | null) => {
     const allStarters = lineup.filter(p => p.typeId === 11)
@@ -424,6 +455,7 @@ const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByP
             events={eventsByPlayer.get(player.player.id) ?? []}
             rating={ratingByPlayer.get(player.player.id) ?? null}
             assists={assistsByPlayer.get(player.player.id) ?? 0}
+            saves={savesByPlayer.get(player.player.id) ?? 0}
             x={xPositions[rowIndex] ?? 50}
             y={yPos[playerIndex] ?? 50}
             substitutedOut={substitutedOutIds.has(player.player.id)}
@@ -444,6 +476,7 @@ const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByP
           events={eventsByPlayer.get(player.player.id) ?? []}
           rating={ratingByPlayer.get(player.player.id) ?? null}
           assists={assistsByPlayer.get(player.player.id) ?? 0}
+          saves={savesByPlayer.get(player.player.id) ?? 0}
           x={xPositions[rowIndex] ?? 50}
           y={yPos[playerIndex] ?? 50}
           substitutedOut={substitutedOutIds.has(player.player.id)}
@@ -465,11 +498,12 @@ const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByP
   )
 }
 
-const BenchPlayer = ({ player, events, rating, assists }: {
+const BenchPlayer = ({ player, events, rating, assists, saves }: {
   player: LineupPlayer
   events: FixtureEvent[]
   rating: number | null
   assists: number
+  saves: number
 }) => {
   const name = player.player.displayName ?? player.player.name
   const regularGoals = events.filter(e => e.typeId === EVENT_GOAL || e.typeId === EVENT_GOAL_PENALTY)
@@ -495,8 +529,15 @@ const BenchPlayer = ({ player, events, rating, assists }: {
         )}
       </div>
 
+      {/* Rating on the left (in place of position badge) */}
+      <span
+        className="flex items-center justify-center rounded-md font-black text-white leading-none shrink-0"
+        style={{ fontSize: 10, background: rating !== null ? getRatingFill(rating) : "#cbd5e1", minWidth: 28, height: 18, paddingLeft: 5, paddingRight: 5 }}
+      >
+        {rating !== null ? formatRating(rating) : "—"}
+      </span>
+
       <Link href={`/players/${player.player.id}`} className="flex items-center gap-1.5 flex-1 min-w-0 hover:opacity-80 transition-opacity">
-        <PositionBadge positionId={player.player.positionId} size={16} />
         <span className="truncate text-sm font-medium text-slate-800" title={name}>{name}</span>
       </Link>
 
@@ -527,14 +568,16 @@ const BenchPlayer = ({ player, events, rating, assists }: {
             <SubInIcon size={13} />
           </span>
         ))}
+        {saves > 0 && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "rgba(99,102,241,0.15)", borderRadius: 3, padding: "2px 4px", color: "#6366f1" }}>
+            <GloveSaveIcon size={10} />
+            <span style={{ fontSize: 9, fontWeight: 900, lineHeight: 1 }}>{saves}</span>
+          </span>
+        )}
       </div>
 
-      <span
-        className="flex items-center justify-center rounded-md font-black text-white leading-none shrink-0"
-        style={{ fontSize: 10, background: rating !== null ? getRatingFill(rating) : "#cbd5e1", minWidth: 28, height: 18, paddingLeft: 5, paddingRight: 5 }}
-      >
-        {rating !== null ? formatRating(rating) : "—"}
-      </span>
+      {/* Position badge on the right */}
+      <PositionBadge positionId={player.player.positionId} size={15} />
     </div>
   )
 }
@@ -546,9 +589,10 @@ interface TeamBenchProps {
   eventsByPlayer: Map<number, FixtureEvent[]>
   ratingByPlayer: Map<number, number>
   assistsByPlayer: Map<number, number>
+  savesByPlayer: Map<number, number>
 }
 
-const TeamBench = ({ bench, teamName, teamImage, eventsByPlayer, ratingByPlayer, assistsByPlayer }: TeamBenchProps) => (
+const TeamBench = ({ bench, teamName, teamImage, eventsByPlayer, ratingByPlayer, assistsByPlayer, savesByPlayer }: TeamBenchProps) => (
   <div className="flex flex-1 flex-col min-w-0">
     <div className="flex items-center gap-2 pb-2 mb-1 border-b border-slate-100">
       {teamImage ? (
@@ -565,6 +609,7 @@ const TeamBench = ({ bench, teamName, teamImage, eventsByPlayer, ratingByPlayer,
         events={eventsByPlayer.get(player.player.id) ?? []}
         rating={ratingByPlayer.get(player.player.id) ?? null}
         assists={assistsByPlayer.get(player.player.id) ?? 0}
+        saves={savesByPlayer.get(player.player.id) ?? 0}
       />
     ))}
   </div>
@@ -580,13 +625,14 @@ interface BenchSectionProps {
   eventsByPlayer: Map<number, FixtureEvent[]>
   ratingByPlayer: Map<number, number>
   assistsByPlayer: Map<number, number>
+  savesByPlayer: Map<number, number>
 }
 
 const BenchSection = ({
   homeLineup, awayLineup,
   homeTeamName, awayTeamName,
   homeTeamImage, awayTeamImage,
-  eventsByPlayer, ratingByPlayer, assistsByPlayer,
+  eventsByPlayer, ratingByPlayer, assistsByPlayer, savesByPlayer,
 }: BenchSectionProps) => {
   const homeBench = homeLineup.filter(p => p.typeId === 12 || (p.typeId == null && p.formationPosition === null))
   const awayBench = awayLineup.filter(p => p.typeId === 12 || (p.typeId == null && p.formationPosition === null))
@@ -598,10 +644,10 @@ const BenchSection = ({
       <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
         <div className="grid grid-cols-2 divide-x divide-slate-100">
           <div className="p-4">
-            <TeamBench bench={homeBench} teamName={homeTeamName} teamImage={homeTeamImage} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} />
+            <TeamBench bench={homeBench} teamName={homeTeamName} teamImage={homeTeamImage} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} savesByPlayer={savesByPlayer} />
           </div>
           <div className="p-4">
-            <TeamBench bench={awayBench} teamName={awayTeamName} teamImage={awayTeamImage} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} />
+            <TeamBench bench={awayBench} teamName={awayTeamName} teamImage={awayTeamImage} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} savesByPlayer={savesByPlayer} />
           </div>
         </div>
       </div>
@@ -733,13 +779,14 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const fixtureId = Number(id)
   if (isNaN(fixtureId)) notFound()
 
-  const [fixtureResult, eventsResult, lineupsResult, ratingsResult, assistsResult, minutesResult] = await Promise.allSettled([
+  const [fixtureResult, eventsResult, lineupsResult, ratingsResult, assistsResult, minutesResult, savesResult] = await Promise.allSettled([
     getFixture(fixtureId),
     getFixtureEvents(fixtureId),
     getFixtureLineups(fixtureId),
     getFixturePlayerRatings(fixtureId),
     getFixturePlayerAssists(fixtureId),
     getFixturePlayerMinutesPlayed(fixtureId),
+    getFixturePlayerSaves(fixtureId),
   ])
 
   if (fixtureResult.status === "rejected") notFound()
@@ -750,6 +797,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const ratings  = ratingsResult.status  === "fulfilled" ? ratingsResult.value  : []
   const assists  = assistsResult.status  === "fulfilled" ? assistsResult.value  : []
   const minutes  = minutesResult.status  === "fulfilled" ? minutesResult.value  : []
+  const saves    = savesResult.status    === "fulfilled" ? savesResult.value    : []
 
   const homeTeam    = fixture.homeTeam
   const awayTeam    = fixture.awayTeam
@@ -783,6 +831,12 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   for (const stat of minutes) {
     const value = stat.value.normalizedValue
     if (typeof value === "number") minutesByPlayer.set(stat.player.id, value)
+  }
+
+  const savesByPlayer = new Map<number, number>()
+  for (const stat of saves) {
+    const value = stat.value.normalizedValue
+    if (typeof value === "number" && value > 0) savesByPlayer.set(stat.player.id, value)
   }
 
   const redCardedIds = new Set(
@@ -933,7 +987,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
         )}
 
         {hasLineups ? (
-          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} homeFormation={fixture.homeFormation ?? null} awayFormation={fixture.awayFormation ?? null} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} substitutedOutIds={substitutedOutIds} />
+          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} homeFormation={fixture.homeFormation ?? null} awayFormation={fixture.awayFormation ?? null} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} savesByPlayer={savesByPlayer} substitutedOutIds={substitutedOutIds} />
         ) : (
           <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
             Lineup not available
@@ -944,7 +998,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
           homeLineup={homeLineup} awayLineup={awayLineup}
           homeTeamName={homeTeam?.name ?? "Home"} awayTeamName={awayTeam?.name ?? "Away"}
           homeTeamImage={homeTeam?.imagePath ?? null} awayTeamImage={awayTeam?.imagePath ?? null}
-          eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer}
+          eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} savesByPlayer={savesByPlayer}
         />
 
         {hasTimeline && (

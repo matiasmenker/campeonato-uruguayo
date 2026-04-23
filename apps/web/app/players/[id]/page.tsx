@@ -457,7 +457,13 @@ const PlayerSeasonContent = async ({
     memberships.find((membership) => membership.season.id === selectedSeasonId) ?? null
 
   const teamId = selectedMembership?.team.id ?? null
-  const isGoalkeeper = (selectedMembership?.positionId ?? player.positionId) === 24
+  // Fall back through all available position sources — positionId can be null in some DB records
+  const resolvedPositionId =
+    selectedMembership?.positionId ??
+    player.positionId ??
+    memberships.find((m) => m.positionId != null)?.positionId ??
+    null
+  const isGoalkeeper = resolvedPositionId === 24
 
   const [ratingStats, minuteStats, assistStats, events, fixtures, saveStats] = await Promise.all([
     getPlayerStatsByType(player.id, STAT_TYPE_RATING, selectedSeasonId, selectedStageId ?? undefined).catch(() => []),
@@ -467,9 +473,8 @@ const PlayerSeasonContent = async ({
     teamId
       ? getPlayerTeamFixtures(teamId, selectedSeasonId, selectedStageId ?? undefined).catch(() => [])
       : Promise.resolve([]),
-    isGoalkeeper
-      ? getPlayerStatsByType(player.id, STAT_TYPE_SAVES, selectedSeasonId, selectedStageId ?? undefined).catch(() => [])
-      : Promise.resolve([]),
+    // Always fetch saves — returns empty for non-GKs, data-quality fallback when positionId is missing
+    getPlayerStatsByType(player.id, STAT_TYPE_SAVES, selectedSeasonId, selectedStageId ?? undefined).catch(() => []),
   ])
 
   const aggregates: PlayerSeasonAggregates = computePlayerSeasonAggregates(
@@ -477,6 +482,8 @@ const PlayerSeasonContent = async ({
   )
 
   const hasAppearances = aggregates.appearances > 0
+  // Show saves card when player is a GK or has actual saves data (catches missing positionId edge cases)
+  const showSavesCard = isGoalkeeper || aggregates.saves > 0
 
   // Fetch season-level (all stages) avg ratings for each membership to show in history
   const membershipRatingResults = await Promise.allSettled(
@@ -545,7 +552,7 @@ const PlayerSeasonContent = async ({
           icon={<YellowCard size={14} />}
           hasData={hasAppearances}
         />
-        {isGoalkeeper ? (
+        {showSavesCard ? (
           <StatCard
             label="Saves"
             value={aggregates.saves}

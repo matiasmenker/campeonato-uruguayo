@@ -142,6 +142,7 @@ export const STAT_TYPE_RATING = 118
 export const STAT_TYPE_ASSIST = 79
 export const STAT_TYPE_GOALS = 52
 export const STAT_TYPE_MINUTES_PLAYED = 119
+export const STAT_TYPE_SAVES = 57
 
 export const getFixturePlayerStatsByType = async (id: number, typeId: number): Promise<FixturePlayerStat[]> => {
   const response = await apiFetch<ListResponse<FixturePlayerStat>>(
@@ -153,6 +154,7 @@ export const getFixturePlayerStatsByType = async (id: number, typeId: number): P
 export const getFixturePlayerRatings = (id: number) => getFixturePlayerStatsByType(id, STAT_TYPE_RATING)
 export const getFixturePlayerAssists = (id: number) => getFixturePlayerStatsByType(id, STAT_TYPE_ASSIST)
 export const getFixturePlayerMinutesPlayed = (id: number) => getFixturePlayerStatsByType(id, STAT_TYPE_MINUTES_PLAYED)
+export const getFixturePlayerSaves = (id: number) => getFixturePlayerStatsByType(id, STAT_TYPE_SAVES)
 
 export interface Round {
   id: number
