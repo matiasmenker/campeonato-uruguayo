@@ -3,18 +3,18 @@ const TeamDetailLoading = () => (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
       <div className="overflow-hidden rounded-2xl shadow-lg">
-        <div className="relative min-h-52 animate-pulse bg-slate-800">
-          <div className="absolute left-5 top-5 h-8 w-20 rounded-xl bg-white/15" />
+        <div className="relative min-h-52 animate-pulse bg-slate-200">
+          <div className="absolute left-5 top-5 h-8 w-20 rounded-xl bg-slate-300" />
           <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-5 p-6">
             <div className="flex items-end gap-5">
-              <div className="h-20 w-20 shrink-0 rounded-xl bg-white/10" />
+              <div className="h-20 w-20 shrink-0 rounded-xl bg-slate-300/60" />
               <div className="flex flex-col gap-2 pb-1">
-                <div className="h-8 w-40 rounded bg-white/15" />
-                <div className="h-4 w-32 rounded bg-white/10" />
-                <div className="h-4 w-24 rounded bg-white/10" />
+                <div className="h-8 w-40 rounded bg-slate-300" />
+                <div className="h-4 w-32 rounded bg-slate-300/60" />
+                <div className="h-4 w-24 rounded bg-slate-300/60" />
               </div>
             </div>
-            <div className="h-8 w-24 shrink-0 rounded-xl bg-white/15" />
+            <div className="h-8 w-24 shrink-0 rounded-xl bg-slate-300" />
           </div>
         </div>
       </div>
