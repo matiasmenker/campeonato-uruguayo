@@ -240,13 +240,29 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40 pointer-events-none" />
 
-            {/* Back link — top left, same level as season selector */}
-            <div className="absolute left-5 top-5">
+            {/* Top row — back left, champion badge + season selector right */}
+            <div className="absolute left-5 right-5 top-5 flex items-center justify-between gap-3">
               <HeroBackLink label="Back" />
+              <div className="flex items-center gap-2">
+                {isChampion && (
+                  <div className="flex items-center gap-2.5 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-500/25 via-amber-400/15 to-amber-500/25 px-4 py-1.5 shadow-lg shadow-amber-900/20 backdrop-blur-sm">
+                    <IconTrophy size={14} className="shrink-0 text-amber-300 drop-shadow" />
+                    <div className="flex flex-col leading-none">
+                      <span className="text-[11px] font-black uppercase tracking-wide text-amber-200">Campeón</span>
+                      <span className="text-[10px] text-amber-300/70">{selectedSeason.name}</span>
+                    </div>
+                  </div>
+                )}
+                {seasons.length > 1 && (
+                  <Suspense>
+                    <TeamSeasonSelector seasons={seasons} selectedSeasonId={selectedSeason.id} />
+                  </Suspense>
+                )}
+              </div>
             </div>
 
-            {/* Bottom — team info left, selector + trophy right */}
-            <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-5 p-6">
+            {/* Bottom — team info */}
+            <div className="absolute bottom-0 left-0 right-0 p-6">
               <div className="flex items-end gap-5 min-w-0">
                 {team.imagePath && (
                   <img
@@ -266,24 +282,6 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                     </p>
                   )}
                 </div>
-              </div>
-
-              <div className="flex shrink-0 flex-col items-end gap-3">
-                {seasons.length > 1 && (
-                  <Suspense>
-                    <TeamSeasonSelector seasons={seasons} selectedSeasonId={selectedSeason.id} />
-                  </Suspense>
-                )}
-                {isChampion && (
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-400/20 ring-2 ring-amber-400/60 backdrop-blur-sm">
-                      <IconTrophy size={28} className="text-amber-300 drop-shadow" />
-                    </div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">
-                      {selectedSeason.name} Champion
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
           </div>
