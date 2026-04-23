@@ -777,7 +777,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
               }}
             />
 
-            <div className="absolute left-5 top-5">
+            <div className="absolute left-5 top-5 z-10">
               <HeroBackLink label="Back" href="/matches" />
             </div>
 
@@ -824,11 +824,12 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                     </span>
                   </div>
 
-                  {(fixture.stage || fixture.round) && (
-                    <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold tracking-[0.22em] text-white/80 uppercase backdrop-blur-sm">
-                      {[fixture.stage?.name, fixture.round && `Round ${fixture.round.name}`].filter(Boolean).join(" · ")}
-                    </span>
-                  )}
+                  <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold tracking-[0.22em] text-white/80 uppercase backdrop-blur-sm">
+                    {[
+                      fixture.stage ? `${fixture.stage.name} ${fixture.season.name}` : fixture.season.name,
+                      fixture.round && `Round ${fixture.round.name}`,
+                    ].filter(Boolean).join(" · ")}
+                  </span>
                 </div>
 
             </div>

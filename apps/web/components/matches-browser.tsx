@@ -380,22 +380,24 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
       {isFetching ? (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, index) => (
-            <div key={index} className="relative h-[188px] overflow-hidden rounded-[28px] bg-slate-800">
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-700/60 to-transparent" />
+            <div key={index} className="relative h-[188px] overflow-hidden rounded-[28px] border border-slate-200/80 bg-slate-100">
               <div className="relative flex h-full flex-col justify-between p-4 sm:p-5">
-                <div className="h-5 w-20 animate-pulse rounded-full bg-slate-700" />
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-slate-700" />
-                    <div className="h-2.5 w-14 animate-pulse rounded bg-slate-700" />
+                <div className="flex items-start justify-between gap-3">
+                  <div className="h-5 w-20 animate-pulse rounded-full bg-slate-200" />
+                  <div className="h-3 w-16 animate-pulse rounded bg-slate-200" />
+                </div>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-slate-200" />
+                    <div className="h-2.5 w-14 animate-pulse rounded bg-slate-200" />
                   </div>
-                  <div className="flex h-12 min-w-[96px] animate-pulse items-center justify-center rounded-[22px] bg-slate-700/80" />
-                  <div className="flex items-center justify-end gap-2">
-                    <div className="h-2.5 w-14 animate-pulse rounded bg-slate-700" />
-                    <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-slate-700" />
+                  <div className="flex min-w-[96px] animate-pulse items-center justify-center rounded-[22px] border border-slate-200 bg-white/80 py-5" />
+                  <div className="flex items-center justify-end gap-3">
+                    <div className="h-2.5 w-14 animate-pulse rounded bg-slate-200" />
+                    <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-slate-200" />
                   </div>
                 </div>
-                <div className="h-7 w-24 animate-pulse rounded-full bg-slate-700" />
+                <div className="h-7 w-24 animate-pulse rounded-full bg-slate-200" />
               </div>
             </div>
           ))}
