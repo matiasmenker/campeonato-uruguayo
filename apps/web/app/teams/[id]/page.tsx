@@ -238,14 +238,11 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
             {!homeVenue?.imagePath && <HeroTexture />}
 
             {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40 pointer-events-none" />
 
             {/* Back link — top left, same level as season selector */}
             <div className="absolute left-5 top-5">
-              <HeroBackLink
-                href={`/teams${selectedSeasonId ? `?seasonId=${selectedSeasonId}` : ""}`}
-                label="Back"
-              />
+              <HeroBackLink label="Back" />
             </div>
 
             {/* Bottom — team info left, selector + trophy right */}
