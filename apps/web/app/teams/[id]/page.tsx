@@ -8,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamSeasonSelector from "@/components/team-season-selector"
 import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, type SquadMember, type TeamFixture } from "@/lib/teams"
 import { resolvePlayerImageUrl } from "@/lib/player"
-import { getSeasons, getStages, getSeasonChampion } from "@/lib/seasons"
+import { getSeasons, getStages, getSeasonChampion, type Season } from "@/lib/seasons"
 
 export const dynamic = "force-dynamic"
 
@@ -56,7 +56,7 @@ const getMatchResult = (
   return { label: "D", bg: "bg-slate-100", text: "text-slate-600" }
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── FixtureCard ──────────────────────────────────────────────────────────────
 
 const FixtureCard = ({ fixture, teamId }: { fixture: TeamFixture; teamId: number }) => {
   const isFinished = fixture.homeScore !== null && fixture.awayScore !== null
@@ -69,7 +69,6 @@ const FixtureCard = ({ fixture, teamId }: { fixture: TeamFixture; teamId: number
       href={`/matches/${fixture.id}`}
       className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all duration-150 hover:border-slate-300 hover:shadow-md"
     >
-      {/* Home team */}
       <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
         {homeTeam?.imagePath ? (
           <img src={homeTeam.imagePath} alt={homeTeam.name} className="h-10 w-10 object-contain" />
@@ -83,7 +82,6 @@ const FixtureCard = ({ fixture, teamId }: { fixture: TeamFixture; teamId: number
         </p>
       </div>
 
-      {/* Score / date */}
       <div className="shrink-0 flex flex-col items-center gap-1">
         {isFinished ? (
           <>
@@ -106,7 +104,6 @@ const FixtureCard = ({ fixture, teamId }: { fixture: TeamFixture; teamId: number
         <p className="text-[10px] text-slate-400">{fixture.stage?.name ?? "—"}</p>
       </div>
 
-      {/* Away team */}
       <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
         {awayTeam?.imagePath ? (
           <img src={awayTeam.imagePath} alt={awayTeam.name} className="h-10 w-10 object-contain" />
@@ -123,6 +120,276 @@ const FixtureCard = ({ fixture, teamId }: { fixture: TeamFixture; teamId: number
   )
 }
 
+// ─── ChampionBadge — async, renders in hero via its own Suspense ──────────────
+
+const ChampionBadge = async ({
+  teamId,
+  seasonId,
+  isCurrent,
+  seasonName,
+}: {
+  teamId: number
+  seasonId: number
+  isCurrent: boolean
+  seasonName: string
+}) => {
+  if (isCurrent) return null
+
+  const stages = await getStages(seasonId).catch(() => [])
+  const championshipFinalsStage = stages.find((stage) =>
+    stage.name.toLowerCase() === CHAMPIONSHIP_FINALS_NAME
+  ) ?? null
+  const intermediateRoundFinalStage = stages.find((stage) =>
+    stage.name.toLowerCase() === INTERMEDIATE_ROUND_FINAL_NAME
+  ) ?? null
+
+  let champion = null
+  if (championshipFinalsStage) {
+    champion = await getSeasonChampion(championshipFinalsStage.id).catch(() => null)
+  }
+  if (!champion && intermediateRoundFinalStage) {
+    champion = await getSeasonChampion(intermediateRoundFinalStage.id).catch(() => null)
+  }
+
+  if (champion?.team?.id !== teamId) return null
+
+  return (
+    <div className="absolute right-5 top-5 flex items-center gap-2.5 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-500/25 via-amber-400/15 to-amber-500/25 px-4 py-1.5 shadow-lg shadow-amber-900/20 backdrop-blur-sm">
+      <IconTrophy size={14} className="shrink-0 text-amber-300 drop-shadow" />
+      <div className="flex flex-col leading-none">
+        <span className="text-[11px] font-black uppercase tracking-wide text-amber-200">Campeón</span>
+        <span className="text-[10px] text-amber-300/70">{seasonName}</span>
+      </div>
+    </div>
+  )
+}
+
+// ─── ContentSkeleton — shown while TeamContent loads ─────────────────────────
+
+const ContentSkeleton = () => (
+  <div className="grid gap-x-6 gap-y-3 lg:grid-cols-[1fr_340px]">
+    <div className="flex items-center gap-2 px-1">
+      <div className="h-4 w-12 animate-pulse rounded bg-slate-200" />
+      <div className="h-4 w-16 animate-pulse rounded bg-slate-100" />
+    </div>
+    <div className="px-1">
+      <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+    </div>
+
+    {/* Squad skeleton */}
+    <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+      <div className="grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center border-b border-slate-100 px-4 py-2.5">
+        {[4, 4, 12, 8, 14, 10].map((width, index) => (
+          <div key={index} className={`h-3 w-${width} animate-pulse rounded bg-slate-100 ${index === 5 ? "ml-auto" : ""}`} />
+        ))}
+      </div>
+      {[4, 5, 5, 4].map((rowCount, groupIndex) => (
+        <div key={groupIndex}>
+          <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-1.5">
+            <div className="h-2.5 w-20 animate-pulse rounded bg-slate-200" />
+          </div>
+          {Array.from({ length: rowCount }).map((_, rowIndex) => (
+            <div
+              key={rowIndex}
+              className={`grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center px-4 py-2 ${rowIndex < rowCount - 1 ? "border-b border-slate-100" : ""}`}
+            >
+              <div className="h-3 w-4 animate-pulse rounded bg-slate-100" />
+              <div className="h-7 w-7 animate-pulse rounded-full bg-slate-100" />
+              <div className="h-4 w-32 animate-pulse rounded bg-slate-100" />
+              <div className="mx-auto h-[14px] w-[22px] animate-pulse rounded-[2px] bg-slate-100" />
+              <div className="mx-auto h-3 w-14 animate-pulse rounded bg-slate-100" />
+              <div className="ml-auto h-3 w-10 animate-pulse rounded bg-slate-100" />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+
+    {/* Fixtures skeleton */}
+    <div className="flex flex-col gap-2">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div
+          key={index}
+          className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm"
+        >
+          <div className="flex flex-1 flex-col items-center gap-1.5">
+            <div className="h-10 w-10 animate-pulse rounded-full bg-slate-100" />
+            <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
+          </div>
+          <div className="flex shrink-0 flex-col items-center gap-1">
+            <div className="h-6 w-14 animate-pulse rounded bg-slate-100" />
+            <div className="h-3 w-20 animate-pulse rounded bg-slate-50" />
+          </div>
+          <div className="flex flex-1 flex-col items-center gap-1.5">
+            <div className="h-10 w-10 animate-pulse rounded-full bg-slate-100" />
+            <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)
+
+// ─── TeamContent — async, all slow fetches, wrapped in Suspense ───────────────
+
+const TeamContent = async ({
+  teamId,
+  selectedSeason,
+}: {
+  teamId: number
+  selectedSeason: Season
+}) => {
+  const [squadResult, fixturesResult, coachResult] = await Promise.allSettled([
+    getTeamSquad(teamId, selectedSeason.id),
+    getTeamFixtures(teamId, selectedSeason.id, 15),
+    getTeamCoach(teamId, selectedSeason.id),
+  ])
+
+  const squad = squadResult.status === "fulfilled" ? squadResult.value : []
+  const allFixtures = fixturesResult.status === "fulfilled" ? fixturesResult.value : []
+  const coach = coachResult.status === "fulfilled" ? coachResult.value : null
+
+  const recentFixtures = allFixtures
+    .filter((fixture) => fixture.homeScore !== null && fixture.awayScore !== null)
+    .slice(0, 5)
+
+  const nextFixture = allFixtures
+    .filter((fixture) => fixture.homeScore === null || fixture.awayScore === null)
+    .at(-1) ?? null
+
+  const squadByPosition = POSITION_ORDER.reduce<Record<number, SquadMember[]>>((groups, positionId) => {
+    groups[positionId] = squad.filter((member) => member.positionId === positionId)
+    return groups
+  }, {})
+
+  return (
+    <div className="grid gap-x-6 gap-y-3 lg:grid-cols-[1fr_340px]">
+
+      {/* Heading: Squad */}
+      <div className="flex items-center gap-2 px-1">
+        <h2 className="text-sm font-bold text-slate-700">Squad</h2>
+        <span className="text-sm font-normal text-slate-400">· {selectedSeason.name}</span>
+        {coach && (
+          <span className="text-sm text-slate-400">
+            · <span className="font-medium text-slate-600">{coach.name}</span>
+          </span>
+        )}
+      </div>
+
+      {/* Heading: Matches */}
+      <h2 className="px-1 text-sm font-bold text-slate-700">
+        {nextFixture ? "Next match" : recentFixtures.length > 0 ? "Last 5 results" : "Matches"}
+      </h2>
+
+      {/* Squad table */}
+      <div className="flex flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+        {squad.length > 0 && (
+          <div className="grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center border-b border-slate-100 px-4 py-2.5">
+            <span className="text-xs text-slate-400">#</span>
+            <span />
+            <span className="text-xs font-semibold text-slate-500">Player</span>
+            <span className="text-center text-xs font-semibold text-slate-500">Nat.</span>
+            <span className="text-center text-xs font-semibold text-slate-500">Height</span>
+            <span className="text-right text-xs font-semibold text-slate-500">Age</span>
+          </div>
+        )}
+        {squad.length === 0 ? (
+          <div className="flex h-36 items-center justify-center text-sm text-slate-400">
+            No squad data available for {selectedSeason.name}
+          </div>
+        ) : (
+          POSITION_ORDER.map((positionId) => {
+            const members = squadByPosition[positionId]
+            if (!members || members.length === 0) return null
+            return (
+              <div key={positionId}>
+                <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    {POSITION_LABELS[positionId]}
+                  </p>
+                </div>
+                {members.map((member, index) => {
+                  const displayName = member.player.displayName ?? member.player.name
+                  const isLast = index === members.length - 1
+                  const dob = member.player.dateOfBirth ? new Date(member.player.dateOfBirth) : null
+                  const age = dob
+                    ? Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+                    : null
+                  return (
+                    <div
+                      key={member.id}
+                      className={`grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center px-4 py-2 ${!isLast ? "border-b border-slate-100" : ""}`}
+                    >
+                      <span className="text-xs font-medium text-slate-300">
+                        {member.shirtNumber ?? "—"}
+                      </span>
+                      <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
+                        <img
+                          src={resolvePlayerImageUrl(member.player.imagePath)}
+                          alt={displayName}
+                          className="h-full w-full object-cover object-top"
+                        />
+                      </div>
+                      <span className="min-w-0 truncate pr-3 text-sm font-medium text-slate-900">
+                        {displayName}
+                      </span>
+                      <div className="flex justify-center">
+                        {member.player.nationality?.imageUrl ? (
+                          <img
+                            src={member.player.nationality.imageUrl}
+                            alt={member.player.nationality.name}
+                            className="h-[14px] w-[22px] rounded-[2px] object-cover ring-1 ring-black/10"
+                            title={member.player.nationality.name}
+                          />
+                        ) : (
+                          <span className="text-xs text-slate-300">—</span>
+                        )}
+                      </div>
+                      <span className="text-center text-xs text-slate-500">
+                        {member.player.height ? `${member.player.height} cm` : "—"}
+                      </span>
+                      <span className="text-right text-xs text-slate-500">
+                        {age != null ? `${age} yrs` : "—"}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })
+        )}
+      </div>
+
+      {/* Right column: fixtures */}
+      <div className="flex flex-col gap-2">
+        {recentFixtures.length === 0 && !nextFixture ? (
+          <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
+            No fixtures available for {selectedSeason.name}
+          </div>
+        ) : (
+          <>
+            {nextFixture && (
+              <div className="flex flex-col gap-2">
+                <FixtureCard fixture={nextFixture} teamId={teamId} />
+                {recentFixtures.length > 0 && (
+                  <h2 className="px-1 pt-2 text-sm font-bold text-slate-700">Last 5 results</h2>
+                )}
+              </div>
+            )}
+            {recentFixtures.length > 0 && (
+              <div className="flex flex-col gap-2">
+                {recentFixtures.map((fixture) => (
+                  <FixtureCard key={fixture.id} fixture={fixture} teamId={teamId} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 interface TeamPageProps {
@@ -136,6 +403,7 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 
   if (isNaN(teamId)) notFound()
 
+  // Only fast fetches here — hero renders immediately from these
   const [teamResult, seasonsResult] = await Promise.allSettled([
     getTeam(teamId),
     getSeasons(),
@@ -162,82 +430,14 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     )
   }
 
-  // Fetch stages only for champion detection — ratings now use the squad-ratings endpoint
-  const stages = await getStages(selectedSeason.id).catch(() => [] as Awaited<ReturnType<typeof getStages>>)
-
-  // For champion detection: use Championship Finals → fallback to Intermediate Round Final
-  const championshipFinalsStage = stages.find((stage) =>
-    stage.name.toLowerCase() === CHAMPIONSHIP_FINALS_NAME
-  ) ?? null
-  const intermediateRoundFinalStage = stages.find((stage) =>
-    stage.name.toLowerCase() === INTERMEDIATE_ROUND_FINAL_NAME
-  ) ?? null
-
-  const [squadResult, fixturesResult, coachResult] = await Promise.allSettled([
-    getTeamSquad(teamId, selectedSeason.id),
-    getTeamFixtures(teamId, selectedSeason.id, 15),
-    getTeamCoach(teamId, selectedSeason.id),
-  ])
-
-  const squad = squadResult.status === "fulfilled" ? squadResult.value : []
-  const allFixtures = fixturesResult.status === "fulfilled" ? fixturesResult.value : []
-  const coach = coachResult.status === "fulfilled" ? coachResult.value : null
-
-  // Resolve champion sequentially: Championship Finals → Intermediate Round Final fallback
-  let isChampion = false
-  if (!selectedSeason.isCurrent) {
-    let champion = null
-    if (championshipFinalsStage) {
-      champion = await getSeasonChampion(championshipFinalsStage.id).catch(() => null)
-    }
-    if (!champion && intermediateRoundFinalStage) {
-      champion = await getSeasonChampion(intermediateRoundFinalStage.id).catch(() => null)
-    }
-    if (champion?.team?.id === teamId) isChampion = true
-  }
-
-  // Home venue from first home fixture that has a non-empty image
-  const homeVenue = allFixtures
-    .filter((fixture) => fixture.homeTeam?.id === teamId && fixture.venue?.imagePath)
-    .map((fixture) => fixture.venue)
-    .find(Boolean) ?? null
-
-  const squadByPosition = POSITION_ORDER.reduce<Record<number, SquadMember[]>>((groups, positionId) => {
-    groups[positionId] = squad.filter((member) => member.positionId === positionId)
-    return groups
-  }, {})
-
-
-  // Fixtures sorted desc (most recent first) from API
-  const recentFixtures = allFixtures
-    .filter((fixture) => fixture.homeScore !== null && fixture.awayScore !== null)
-    .slice(0, 5)
-
-  const nextFixture = allFixtures
-    .filter((fixture) => fixture.homeScore === null || fixture.awayScore === null)
-    .at(-1) ?? null // API is desc, so last element = earliest upcoming
-
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
-        {/* Hero */}
+        {/* Hero — stable, only uses fast-fetched data */}
         <div className="overflow-hidden rounded-2xl shadow-lg">
-          <div
-            className="relative min-h-52 bg-slate-900"
-            style={
-              homeVenue?.imagePath
-                ? {
-                    backgroundImage: `url(${homeVenue.imagePath})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center 40%",
-                  }
-                : undefined
-            }
-          >
-            {!homeVenue?.imagePath && <HeroTexture />}
-
-            {/* Gradient overlay */}
+          <div className="relative min-h-52 bg-slate-900">
+            <HeroTexture />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40 pointer-events-none" />
 
             {/* Back — top left */}
@@ -245,16 +445,15 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
               <HeroBackLink label="Back" href="/teams" />
             </div>
 
-            {/* Champion badge — top right */}
-            {isChampion && (
-              <div className="absolute right-5 top-5 flex items-center gap-2.5 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-500/25 via-amber-400/15 to-amber-500/25 px-4 py-1.5 shadow-lg shadow-amber-900/20 backdrop-blur-sm">
-                <IconTrophy size={14} className="shrink-0 text-amber-300 drop-shadow" />
-                <div className="flex flex-col leading-none">
-                  <span className="text-[11px] font-black uppercase tracking-wide text-amber-200">Campeón</span>
-                  <span className="text-[10px] text-amber-300/70">{selectedSeason.name}</span>
-                </div>
-              </div>
-            )}
+            {/* Champion badge — async check, appears when ready, no skeleton */}
+            <Suspense fallback={null}>
+              <ChampionBadge
+                teamId={teamId}
+                seasonId={selectedSeason.id}
+                isCurrent={selectedSeason.isCurrent}
+                seasonName={selectedSeason.name}
+              />
+            </Suspense>
 
             {/* Bottom — team info left, season selector right */}
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-5 p-6">
@@ -268,14 +467,6 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                 )}
                 <div className="min-w-0 flex flex-col gap-1 pb-1">
                   <h1 className="text-3xl font-black text-white leading-none drop-shadow">{team.name}</h1>
-                  {homeVenue?.name && (
-                    <p className="text-sm text-white/70">{homeVenue.name}</p>
-                  )}
-                  {coach && (
-                    <p className="text-sm text-white/70">
-                      Coach: <span className="font-semibold text-white/90">{coach.name}</span>
-                    </p>
-                  )}
                 </div>
               </div>
               {seasons.length > 1 && (
@@ -287,141 +478,10 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
           </div>
         </div>
 
-        {/* Single grid — headings row + content row share the same column widths */}
-        <div className="grid gap-x-6 gap-y-3 lg:grid-cols-[1fr_340px]">
-
-          {/* Heading: Squad */}
-          <div className="flex items-center gap-2 px-1">
-            <h2 className="text-sm font-bold text-slate-700">Squad</h2>
-            <span className="text-sm font-normal text-slate-400">· {selectedSeason.name}</span>
-          </div>
-
-          {/* Heading: Matches */}
-          <h2 className="px-1 text-sm font-bold text-slate-700">
-            {nextFixture ? "Next match" : recentFixtures.length > 0 ? "Last 5 results" : "Matches"}
-          </h2>
-
-          {/* Squad table */}
-          <div className="flex flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-            {/* Table header */}
-            {squad.length > 0 && (
-              <div className="grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center border-b border-slate-100 px-4 py-2.5">
-                <span className="text-xs text-slate-400">#</span>
-                <span />
-                <span className="text-xs font-semibold text-slate-500">Player</span>
-                <span className="text-center text-xs font-semibold text-slate-500">Nat.</span>
-                <span className="text-center text-xs font-semibold text-slate-500">Height</span>
-                <span className="text-right text-xs font-semibold text-slate-500">Age</span>
-              </div>
-            )}
-            {squad.length === 0 ? (
-              <div className="flex h-36 items-center justify-center text-sm text-slate-400">
-                No squad data available for {selectedSeason.name}
-              </div>
-            ) : (
-              POSITION_ORDER.map((positionId) => {
-                const members = squadByPosition[positionId]
-                if (!members || members.length === 0) return null
-                return (
-                  <div key={positionId}>
-                    {/* Position group header */}
-                    <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-1.5">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                        {POSITION_LABELS[positionId]}
-                      </p>
-                    </div>
-                    {/* Player rows */}
-                    {members.map((member, index) => {
-                      const displayName = member.player.displayName ?? member.player.name
-                      const isLast = index === members.length - 1
-                      const dob = member.player.dateOfBirth ? new Date(member.player.dateOfBirth) : null
-                      const age = dob
-                        ? Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-                        : null
-                      return (
-                        <div
-                          key={member.id}
-                          className={`grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center px-4 py-2 ${!isLast ? "border-b border-slate-100" : ""}`}
-                        >
-                          {/* Shirt number */}
-                          <span className="text-xs font-medium text-slate-300">
-                            {member.shirtNumber ?? "—"}
-                          </span>
-
-                          {/* Photo */}
-                          <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
-                            <img
-                              src={resolvePlayerImageUrl(member.player.imagePath)}
-                              alt={displayName}
-                              className="h-full w-full object-cover object-top"
-                            />
-                          </div>
-
-                          {/* Name */}
-                          <span className="min-w-0 truncate pr-3 text-sm font-medium text-slate-900">
-                            {displayName}
-                          </span>
-
-                          {/* Nationality flag */}
-                          <div className="flex justify-center">
-                            {member.player.nationality?.imageUrl ? (
-                              <img
-                                src={member.player.nationality.imageUrl}
-                                alt={member.player.nationality.name}
-                                className="h-[14px] w-[22px] rounded-[2px] object-cover ring-1 ring-black/10"
-                                title={member.player.nationality.name}
-                              />
-                            ) : (
-                              <span className="text-xs text-slate-300">—</span>
-                            )}
-                          </div>
-
-                          {/* Height */}
-                          <span className="text-center text-xs text-slate-500">
-                            {member.player.height ? `${member.player.height} cm` : "—"}
-                          </span>
-
-                          {/* Age */}
-                          <span className="text-right text-xs text-slate-500">
-                            {age != null ? `${age} yrs` : "—"}
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )
-              })
-            )}
-          </div>
-
-          {/* Right column: fixtures */}
-          <div className="flex flex-col gap-2">
-            {recentFixtures.length === 0 && !nextFixture ? (
-              <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
-                No fixtures available for {selectedSeason.name}
-              </div>
-            ) : (
-              <>
-                {nextFixture && (
-                  <div className="flex flex-col gap-2">
-                    <FixtureCard fixture={nextFixture} teamId={teamId} />
-                    {recentFixtures.length > 0 && (
-                      <h2 className="px-1 pt-2 text-sm font-bold text-slate-700">Last 5 results</h2>
-                    )}
-                  </div>
-                )}
-                {recentFixtures.length > 0 && (
-                  <div className="flex flex-col gap-2">
-                    {!nextFixture && null}
-                    {recentFixtures.map((fixture) => (
-                      <FixtureCard key={fixture.id} fixture={fixture} teamId={teamId} />
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
+        {/* Content — skeleton while squad/fixtures/coach load */}
+        <Suspense fallback={<ContentSkeleton />}>
+          <TeamContent teamId={teamId} selectedSeason={selectedSeason} />
+        </Suspense>
 
       </div>
     </main>
