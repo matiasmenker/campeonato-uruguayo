@@ -493,9 +493,7 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
     ? selectedRoundId
     : defaultRoundId
 
-  const activeGroup  = roundGroups.find(g => g.round.id === effectiveRoundId) ?? null
-  const roundStatus  = activeGroup ? getRoundStatus(activeGroup.fixtures) : null
-  const firstKickoff = activeGroup?.fixtures.find(f => f.kickoffAt)?.kickoffAt ?? null
+  const activeGroup = roundGroups.find(g => g.round.id === effectiveRoundId) ?? null
 
   const handleStageChange = (stageId: number) => {
     setSelectedStageId(stageId)
@@ -581,41 +579,18 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
         />
       )}
 
-      {/* Round header + cards — own card, no overflow-hidden for outside arrows */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-        {activeGroup === null ? (
-          <div className="flex h-36 items-center justify-center text-sm text-slate-400">
-            No hay partidos disponibles
-          </div>
-        ) : (
-          <>
-            {/* Round header — centred title + date + status */}
-            <div className="px-5 py-10 text-center">
-              <h2 className="text-2xl font-black leading-tight text-slate-900">
-                Fecha {activeGroup.round.name}
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                {formatRoundDate(firstKickoff)}
-              </p>
-              {roundStatus && (
-                <div className="mt-2 flex items-center justify-center gap-1.5">
-                  <span className={cn("h-1.5 w-1.5 rounded-full", roundStatus.dotClass)} />
-                  <span className={cn("text-xs font-semibold", roundStatus.textClass)}>
-                    {roundStatus.label}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Cards grid */}
-            <div className="grid grid-cols-1 gap-3 px-5 pb-5 sm:grid-cols-2">
-              {activeGroup.fixtures.map(fixture => (
-                <MatchCard key={fixture.id} fixture={fixture} />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+      {/* Cards grid — no wrapper */}
+      {activeGroup === null ? (
+        <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
+          No hay partidos disponibles
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {activeGroup.fixtures.map(fixture => (
+            <MatchCard key={fixture.id} fixture={fixture} />
+          ))}
+        </div>
+      )}
 
       </div>
     </div>
