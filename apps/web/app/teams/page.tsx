@@ -39,7 +39,7 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <div className="relative min-h-52 bg-slate-900">
             <HeroTexture />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/55 to-black/85" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/70" />
 
             {/* Bottom — title left, season selector right */}
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">

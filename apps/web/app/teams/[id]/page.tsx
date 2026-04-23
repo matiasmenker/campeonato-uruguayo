@@ -238,7 +238,7 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
             {!homeVenue?.imagePath && <HeroTexture />}
 
             {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/55 to-black/85" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/70" />
 
             {/* Back link — top left, same level as season selector */}
             <div className="absolute left-5 top-5">

@@ -27,6 +27,51 @@ const EVENT_RED          = 20
 const EVENT_YELLOW_RED   = 21
 const GOAL_TYPES = new Set([EVENT_GOAL, EVENT_GOAL_PENALTY, EVENT_GOAL_OWN])
 
+const LIVE_MATCH_STATES = new Set([
+  "INPLAY_1ST_HALF", "INPLAY_2ND_HALF", "HT",
+  "INPLAY_ET", "INPLAY_ET_SECOND_HALF", "INPLAY_PENALTIES",
+  "EXTRA_TIME_BREAK", "BREAK",
+])
+
+const getFixtureStatusBadge = (
+  stateCode: string | null,
+  homeScore: number | null,
+  awayScore: number | null,
+) => {
+  const isLive = LIVE_MATCH_STATES.has(stateCode ?? "")
+  const isFinished = !isLive && homeScore !== null && awayScore !== null
+
+  if (isLive) {
+    const label = stateCode === "HT" ? "Entretiempo"
+      : stateCode === "INPLAY_ET" || stateCode === "INPLAY_ET_SECOND_HALF" ? "Prórroga"
+      : stateCode === "INPLAY_PENALTIES" ? "Penales"
+      : "En vivo"
+    return {
+      isLive: true,
+      label,
+      dotClassName: "bg-red-500",
+      textClassName: "text-red-200",
+      wrapperClassName: "border-red-400/20 bg-red-500/16 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+    }
+  }
+  if (isFinished) {
+    return {
+      isLive: false,
+      label: "Finalizado",
+      dotClassName: "bg-emerald-400",
+      textClassName: "text-emerald-100",
+      wrapperClassName: "border-emerald-400/20 bg-emerald-500/14 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
+    }
+  }
+  return {
+    isLive: false,
+    label: "Por jugar",
+    dotClassName: "bg-white/45",
+    textClassName: "text-white/80",
+    wrapperClassName: "border-white/12 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
+  }
+}
+
 const parseFormationField = (formationField: string): { row: number; col: number } => {
   const [rowStr, colStr] = formationField.split(":")
   return { row: parseInt(rowStr ?? "0", 10), col: parseInt(colStr ?? "0", 10) }
@@ -634,9 +679,10 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const assists  = assistsResult.status  === "fulfilled" ? assistsResult.value  : []
   const minutes  = minutesResult.status  === "fulfilled" ? minutesResult.value  : []
 
-  const homeTeam   = fixture.homeTeam
-  const awayTeam   = fixture.awayTeam
-  const isFinished = fixture.homeScore !== null && fixture.awayScore !== null
+  const homeTeam    = fixture.homeTeam
+  const awayTeam    = fixture.awayTeam
+  const isFinished  = fixture.homeScore !== null && fixture.awayScore !== null
+  const statusBadge = getFixtureStatusBadge(fixture.state?.developerName ?? null, fixture.homeScore, fixture.awayScore)
 
   const homeLineup = lineups.filter(p => p.team?.id === homeTeam?.id)
   const awayLineup = lineups.filter(p => p.team?.id === awayTeam?.id)
@@ -724,48 +770,67 @@ const MatchPage = async ({ params }: MatchPageProps) => {
             style={fixture.venue?.imagePath ? { backgroundImage: `url(${fixture.venue.imagePath})`, backgroundSize: "cover", backgroundPosition: "center 40%" } : undefined}
           >
             {!fixture.venue?.imagePath && <HeroTexture />}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/55 to-black/85" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/70" />
 
             <div className="absolute left-5 top-5">
               <HeroBackLink href="/matches" label="Back" />
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 p-6">
-              <div className="relative">
-              <div className="flex items-end justify-center gap-6">
-                <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
-                  {homeTeam?.imagePath
-                    ? <img src={homeTeam.imagePath} alt={homeTeam.name} className="h-16 w-16 object-contain drop-shadow-xl" />
-                    : <div className="h-16 w-16 rounded-full bg-white/20" />}
-                  <Link href={`/teams/${homeTeam?.id}`} className="hover:opacity-80">
-                    <h2 className="text-right text-xl font-black text-white leading-tight drop-shadow">{homeTeam?.name ?? "Home"}</h2>
-                  </Link>
+              <div className="flex flex-col gap-4">
+
+                {/* Teams + score */}
+                <div className="flex items-end justify-center gap-6">
+                  <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
+                    {homeTeam?.imagePath
+                      ? <img src={homeTeam.imagePath} alt={homeTeam.name} className="h-16 w-16 object-contain drop-shadow-xl" />
+                      : <div className="h-16 w-16 rounded-full bg-white/20" />}
+                    <Link href={`/teams/${homeTeam?.id}`} className="hover:opacity-80">
+                      <h2 className="text-right text-xl font-black text-white leading-tight drop-shadow">{homeTeam?.name ?? "Home"}</h2>
+                    </Link>
+                  </div>
+
+                  <div className="flex shrink-0 flex-col items-center gap-1 pb-1">
+                    {isFinished
+                      ? <p className="text-5xl font-black tabular-nums text-white drop-shadow-lg leading-none">{fixture.homeScore} – {fixture.awayScore}</p>
+                      : <p className="text-3xl font-black tabular-nums text-white drop-shadow-lg leading-none">{formatKickoffTime(fixture.kickoffAt)}</p>}
+                    <p className="text-xs font-medium text-white/60">{formatKickoff(fixture.kickoffAt)}</p>
+                    {fixture.venue?.name && <p className="text-xs text-white/50">{fixture.venue.name}</p>}
+                  </div>
+
+                  <div className="flex min-w-0 flex-1 flex-col items-start gap-2">
+                    {awayTeam?.imagePath
+                      ? <img src={awayTeam.imagePath} alt={awayTeam.name} className="h-16 w-16 object-contain drop-shadow-xl" />
+                      : <div className="h-16 w-16 rounded-full bg-white/20" />}
+                    <Link href={`/teams/${awayTeam?.id}`} className="hover:opacity-80">
+                      <h2 className="text-left text-xl font-black text-white leading-tight drop-shadow">{awayTeam?.name ?? "Away"}</h2>
+                    </Link>
+                  </div>
                 </div>
 
-                <div className="flex shrink-0 flex-col items-center gap-1 pb-1">
-                  {isFinished
-                    ? <p className="text-5xl font-black tabular-nums text-white drop-shadow-lg leading-none">{fixture.homeScore} – {fixture.awayScore}</p>
-                    : <p className="text-3xl font-black tabular-nums text-white drop-shadow-lg leading-none">{formatKickoffTime(fixture.kickoffAt)}</p>}
-                  <p className="text-xs font-medium text-white/60">{formatKickoff(fixture.kickoffAt)}</p>
-                  {fixture.venue?.name && <p className="text-xs text-white/50">{fixture.venue.name}</p>}
+                {/* Status badge (left) + stage/round info chip (right) */}
+                <div className="flex items-center justify-between gap-3">
+                  {/* Status badge — same style as home carousel cards */}
+                  <div className={`flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-sm ${statusBadge.wrapperClassName}`}>
+                    <span className="relative flex h-2 w-2">
+                      {statusBadge.isLive && (
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                      )}
+                      <span className={`relative inline-flex h-2 w-2 rounded-full ${statusBadge.dotClassName}`} />
+                    </span>
+                    <span className={`text-[11px] font-semibold ${statusBadge.textClassName}`}>
+                      {statusBadge.label}
+                    </span>
+                  </div>
+
+                  {/* Informational stage/round chip — same style as "Fecha X" in home cards */}
+                  {(fixture.stage || fixture.round) && (
+                    <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold tracking-[0.20em] text-white/80 uppercase backdrop-blur-sm">
+                      {fixture.stage?.name ?? ""}{fixture.round ? ` · ${fixture.round.name}` : ""}
+                    </span>
+                  )}
                 </div>
 
-                <div className="flex min-w-0 flex-1 flex-col items-start gap-2">
-                  {awayTeam?.imagePath
-                    ? <img src={awayTeam.imagePath} alt={awayTeam.name} className="h-16 w-16 object-contain drop-shadow-xl" />
-                    : <div className="h-16 w-16 rounded-full bg-white/20" />}
-                  <Link href={`/teams/${awayTeam?.id}`} className="hover:opacity-80">
-                    <h2 className="text-left text-xl font-black text-white leading-tight drop-shadow">{awayTeam?.name ?? "Away"}</h2>
-                  </Link>
-                </div>
-              </div>
-              {(fixture.stage || fixture.round) && (
-                <div className="absolute right-0 bottom-0">
-                  <span className="inline-flex h-8 items-center rounded-xl border border-white/20 bg-white/15 px-3 text-sm font-semibold text-white backdrop-blur-sm">
-                    {fixture.stage?.name ?? ""}{fixture.round ? ` · Round ${fixture.round.name}` : ""}
-                  </span>
-                </div>
-              )}
               </div>
             </div>
           </div>
