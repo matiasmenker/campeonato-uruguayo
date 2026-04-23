@@ -1,34 +1,71 @@
 "use client"
 
-import { useSearchParams } from "next/navigation"
+import { useState, useEffect } from "react"
 import type { ReactNode } from "react"
 
+// ─── URL-change subscription ───────────────────────────────────────────────────
+// Next.js App Router wraps router.push() in startTransition internally. That
+// defers React state updates, so useSearchParams() still returns the OLD value
+// while the transition is pending — the Suspense fallback never fires.
+//
+// The fix: patch history.pushState directly. The browser URL changes
+// synchronously when pushState is called (before React touches anything), so
+// reading window.location.search at that point gives us the new params and lets
+// us show the skeleton immediately, outside of the transition machinery.
+
+type Listener = () => void
+let listeners: Listener[] = []
+const notifyAll = () => listeners.forEach(fn => fn())
+
+if (typeof window !== "undefined" && !(window as unknown as Record<string, unknown>).__splbPatched) {
+  ;(window as unknown as Record<string, unknown>).__splbPatched = true
+  const orig = history.pushState.bind(history)
+  history.pushState = (...args: Parameters<typeof history.pushState>) => {
+    orig(...args)
+    notifyAll()
+  }
+  window.addEventListener("popstate", notifyAll)
+}
+
+// Returns window.location.search and updates whenever the URL changes.
+// Starts as "" to avoid SSR/hydration mismatch.
+const useWindowSearch = (): string => {
+  const [search, setSearch] = useState("")
+
+  useEffect(() => {
+    const sync = () => setSearch(window.location.search)
+    sync()
+    listeners.push(sync)
+    return () => {
+      listeners = listeners.filter(fn => fn !== sync)
+    }
+  }, [])
+
+  return search
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 interface SearchParamsLoadingBoundaryProps {
-  // The resolved param values the server actually rendered with.
-  // Keys are param names; values are the effective string values (or null if unused).
+  // The param values the server actually rendered with (resolved, not raw URL).
   committedParams: Record<string, string | null>
   skeleton: ReactNode
   children: ReactNode
 }
 
-// Renders `skeleton` as soon as any URL param diverges from what the server
-// committed, then switches back to `children` once the new server render
-// arrives with matching committedParams.
-//
-// This works because useSearchParams() reflects the URL instantly when
-// router.push() fires — before Next.js sends the new RSC payload — so the
-// boundary detects the mismatch and shows the skeleton immediately, bypassing
-// the startTransition that Next.js applies internally to soft navigations
-// (which would otherwise keep the old UI frozen with no loading indicator).
+// Shows `skeleton` as soon as any URL param diverges from committedParams,
+// then switches to `children` once the new server render arrives with matching
+// committedParams. The switch happens outside React's transition so it is
+// always immediate — no frozen UI.
 const SearchParamsLoadingBoundary = ({
   committedParams,
   skeleton,
   children,
 }: SearchParamsLoadingBoundaryProps) => {
-  const searchParams = useSearchParams()
+  const urlParams = new URLSearchParams(useWindowSearch())
 
   const isNavigating = Object.entries(committedParams).some(([key, committedValue]) => {
-    const urlValue = searchParams.get(key)
+    const urlValue = urlParams.get(key)
     // Param absent from URL → user hasn't touched it, default was rendered correctly
     if (urlValue === null) return false
     return urlValue !== committedValue
