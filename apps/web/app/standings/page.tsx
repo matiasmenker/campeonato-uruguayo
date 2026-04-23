@@ -19,7 +19,7 @@ import { getLeaders, type LeadersContract } from "@/lib/metrics"
 import { getStandings, type StandingEntry } from "@/lib/standings"
 import { getSeasons, getStages, getSeasonChampion, type Season, type Stage, type SeasonChampion } from "@/lib/seasons"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 300
 
 const RELEGATION_ZONE_SIZE = 3
 const MAIN_STAGE_NAMES = ["apertura", "clausura", "intermediate round"]
@@ -430,17 +430,18 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
   let seasons: Season[] = []
   let stages: Stage[] = []
 
-  if (seasonIdParam) {
-    const [seasonsResult, stagesResult] = await Promise.allSettled([
-      getSeasons(),
-      getStages(Number(seasonIdParam)),
-    ])
-    if (seasonsResult.status === "fulfilled") seasons = seasonsResult.value
-    if (stagesResult.status === "fulfilled") stages = stagesResult.value
-  } else {
-    seasons = await getSeasons()
-    const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]
-    if (currentSeason) stages = await getStages(currentSeason.id)
+  const [seasonsResult, stagesResult] = await Promise.allSettled([
+    getSeasons(),
+    getStages(seasonIdParam ? Number(seasonIdParam) : undefined),
+  ])
+
+  if (seasonsResult.status === "fulfilled") seasons = seasonsResult.value
+  if (stagesResult.status === "fulfilled") {
+    const resolvedSeasons = seasonsResult.status === "fulfilled" ? seasonsResult.value : []
+    const targetSeasonId = seasonIdParam
+      ? Number(seasonIdParam)
+      : (resolvedSeasons.find((season) => season.isCurrent) ?? resolvedSeasons[0])?.id
+    stages = stagesResult.value.filter((stage) => stage.season.id === targetSeasonId)
   }
 
   const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]

@@ -87,8 +87,8 @@ export interface DashboardOverview {
 
 export const getDashboardOverview = async (): Promise<DashboardOverview> => {
   const response = await apiFetch<DetailResponse<DashboardOverview>>(
-    "/api/v1/dashboard/overview"
+    "/api/v1/dashboard/overview",
+    { next: { revalidate: 60 } },
   )
-
   return response.data
 }

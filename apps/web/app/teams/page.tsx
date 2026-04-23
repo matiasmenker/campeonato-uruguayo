@@ -8,7 +8,7 @@ import TeamsSeasonSelector from "@/components/teams-season-selector"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import HeroTexture from "@/components/hero-texture"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 const TeamsContentSkeleton = () => (
   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">

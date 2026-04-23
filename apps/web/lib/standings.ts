@@ -53,6 +53,8 @@ export const getStandings = async (params?: { seasonId?: number; stageId?: numbe
   if (params?.seasonId) searchParams.set("seasonId", String(params.seasonId))
   if (params?.stageId) searchParams.set("stageId", String(params.stageId))
   const query = searchParams.toString()
-  const response = await apiFetch<StandingsResponse>(`/api/v1/standings${query ? `?${query}` : ""}`)
+  const response = await apiFetch<StandingsResponse>(`/api/v1/standings${query ? `?${query}` : ""}`, {
+    next: { revalidate: 300 },
+  })
   return response.data
 }

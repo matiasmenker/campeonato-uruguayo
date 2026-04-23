@@ -11,7 +11,7 @@ import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, type SquadMember,
 import { resolvePlayerImageUrl } from "@/lib/player"
 import { getSeasons, getStages, getSeasonChampion, type Season } from "@/lib/seasons"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 300
 
 const POSITION_ORDER = [24, 25, 26, 27]
 const POSITION_LABELS: Record<number, string> = {

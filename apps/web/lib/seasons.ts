@@ -52,27 +52,28 @@ export interface SeasonChampion {
 }
 
 export const getSeasons = async (): Promise<Season[]> => {
-  const response = await apiFetch<ListResponse<Season>>("/api/v1/seasons")
+  const response = await apiFetch<ListResponse<Season>>("/api/v1/seasons", {
+    next: { revalidate: 86400 },
+  })
   return response.data
 }
 
 export const getStages = async (seasonId?: number): Promise<Stage[]> => {
   const query = seasonId ? `?seasonId=${seasonId}` : ""
-  const response = await apiFetch<ListResponse<Stage>>(`/api/v1/stages${query}`)
+  const response = await apiFetch<ListResponse<Stage>>(`/api/v1/stages${query}`, {
+    next: { revalidate: 86400 },
+  })
   return response.data
 }
 
-// Resolves the season champion from Championship Finals fixtures.
-// Parses resultInfo ("{TeamName} won after ...") to find the decisive match winner.
-// Falls back to aggregate score if resultInfo is unavailable.
 export const getSeasonChampion = async (championshipFinalsStageId: number): Promise<SeasonChampion | null> => {
   const response = await apiFetch<ListResponse<ChampionshipFixture>>(
-    `/api/v1/fixtures?stageId=${championshipFinalsStageId}&limit=20`
+    `/api/v1/fixtures?stageId=${championshipFinalsStageId}&limit=20`,
+    { next: { revalidate: 86400 } },
   )
   const fixtures = response.data
   if (fixtures.length === 0) return null
 
-  // Try to find the winner from resultInfo: "{TeamName} won after ..."
   for (const fixture of fixtures) {
     if (!fixture.resultInfo) continue
     const match = fixture.resultInfo.match(/^(.+?) won after/i)
@@ -82,7 +83,6 @@ export const getSeasonChampion = async (championshipFinalsStageId: number): Prom
     if (fixture.awayTeam.name === winnerName) return { team: fixture.awayTeam }
   }
 
-  // Fallback: aggregate score across all legs
   const aggregates: Record<number, { team: FixtureTeam; goals: number }> = {}
   for (const fixture of fixtures) {
     const homeGoals = fixture.homeScore ?? 0

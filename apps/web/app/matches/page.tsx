@@ -2,7 +2,7 @@ import { getFixtures, type FixtureListItem } from "@/lib/matches"
 import { getSeasons, type Season } from "@/lib/seasons"
 import MatchesBrowser from "@/components/matches-browser"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 120
 
 interface MatchesPageProps {
   searchParams: Promise<{ seasonId?: string }>

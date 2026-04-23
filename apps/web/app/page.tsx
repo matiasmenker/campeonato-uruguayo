@@ -33,7 +33,7 @@ import {
 import { fetchLatestAufVideos } from "@/lib/youtube"
 import { resolvePlayerImageUrl } from "@/lib/player"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 60
 
 const getPlayerName = (leader: LeaderEntry) =>
   leader.player.displayName ?? leader.player.name

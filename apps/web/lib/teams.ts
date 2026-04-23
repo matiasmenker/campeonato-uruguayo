@@ -95,34 +95,41 @@ export interface TeamCoach {
 }
 
 export const getTeam = async (id: number): Promise<Team> => {
-  const response = await apiFetch<DetailResponse<Team>>(`/api/v1/teams/${id}`)
+  const response = await apiFetch<DetailResponse<Team>>(`/api/v1/teams/${id}`, {
+    next: { revalidate: 86400 },
+  })
   return response.data
 }
 
 export const getTeams = async (seasonId?: number): Promise<Team[]> => {
   const params = new URLSearchParams({ pageSize: "100" })
   if (seasonId) params.set("seasonId", String(seasonId))
-  const response = await apiFetch<ListResponse<Team>>(`/api/v1/teams?${params}`)
+  const response = await apiFetch<ListResponse<Team>>(`/api/v1/teams?${params}`, {
+    next: { revalidate: 86400 },
+  })
   return response.data
 }
 
 export const getTeamFixtures = async (teamId: number, seasonId: number, limit = 15): Promise<TeamFixture[]> => {
   const response = await apiFetch<ListResponse<TeamFixture>>(
-    `/api/v1/fixtures?teamId=${teamId}&seasonId=${seasonId}&limit=${limit}&sort=kickoffAt&order=desc`
+    `/api/v1/fixtures?teamId=${teamId}&seasonId=${seasonId}&limit=${limit}&sort=kickoffAt&order=desc`,
+    { next: { revalidate: 300 } },
   )
   return response.data
 }
 
 export const getTeamSquad = async (teamId: number, seasonId: number): Promise<SquadMember[]> => {
   const response = await apiFetch<ListResponse<SquadMember>>(
-    `/api/v1/squad-memberships?teamId=${teamId}&seasonId=${seasonId}&pageSize=100`
+    `/api/v1/squad-memberships?teamId=${teamId}&seasonId=${seasonId}&pageSize=100`,
+    { next: { revalidate: 300 } },
   )
   return response.data
 }
 
 export const getTeamCoach = async (teamId: number, seasonId: number): Promise<TeamCoach | null> => {
   const response = await apiFetch<ListResponse<TeamCoach>>(
-    `/api/v1/coaches?teamId=${teamId}&seasonId=${seasonId}&limit=1`
+    `/api/v1/coaches?teamId=${teamId}&seasonId=${seasonId}&limit=1`,
+    { next: { revalidate: 300 } },
   )
   return response.data[0] ?? null
 }

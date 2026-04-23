@@ -66,7 +66,8 @@ export const getLeaders = async (
   searchParams.set("limit", String(options.limit ?? 10))
 
   const response = await apiFetch<DetailResponse<LeadersContract>>(
-    `/api/v1/metrics/leaders?${searchParams.toString()}`
+    `/api/v1/metrics/leaders?${searchParams.toString()}`,
+    { next: { revalidate: 300 } },
   )
 
   return response.data
@@ -78,11 +79,10 @@ interface SquadPlayerRating {
   appearances: number
 }
 
-// Returns a map of playerId → average rating for all squad members who have played.
-// Uses the squad-ratings endpoint which covers every player, not just the top-N.
 export const getSquadRatingMap = async (teamId: number, seasonId: number): Promise<Map<number, number>> => {
   const response = await apiFetch<{ data: SquadPlayerRating[] }>(
-    `/api/v1/metrics/squad-ratings?teamId=${teamId}&seasonId=${seasonId}`
+    `/api/v1/metrics/squad-ratings?teamId=${teamId}&seasonId=${seasonId}`,
+    { next: { revalidate: 300 } },
   )
   const ratingMap = new Map<number, number>()
   for (const entry of response.data) {

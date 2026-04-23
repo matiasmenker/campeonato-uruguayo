@@ -24,7 +24,6 @@ export const apiFetch = async <T>(
 
   const response = await fetch(url, {
     ...init,
-    cache: "no-store",
     headers: {
       Accept: "application/json",
       ...(apiKey ? { "x-api-key": apiKey } : {}),
