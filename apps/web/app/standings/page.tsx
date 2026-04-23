@@ -3,6 +3,7 @@ import { getRatingFill } from "@/lib/rating"
 import Link from "next/link"
 import { IconBallFootball, IconStar, IconTrophy, IconUsers } from "@tabler/icons-react"
 import HeroTexture from "@/components/hero-texture"
+import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Table,
@@ -452,15 +453,23 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
           </div>
         </div>
 
-        {/* Content — shows skeleton while slow data loads */}
+        {/* Content — skeleton on initial stream AND on every client-side param change */}
         <Suspense fallback={<StandingsContentSkeleton />}>
-          <StandingsContent
-            selectedSeasonId={selectedSeasonId}
-            selectedStageId={selectedStageId}
-            selectedSeason={selectedSeason}
-            selectedStage={selectedStage}
-            stages={stages}
-          />
+          <SearchParamsLoadingBoundary
+            committedParams={{
+              seasonId: String(selectedSeasonId),
+              stageId: selectedStageId !== null ? String(selectedStageId) : null,
+            }}
+            skeleton={<StandingsContentSkeleton />}
+          >
+            <StandingsContent
+              selectedSeasonId={selectedSeasonId}
+              selectedStageId={selectedStageId}
+              selectedSeason={selectedSeason}
+              selectedStage={selectedStage}
+              stages={stages}
+            />
+          </SearchParamsLoadingBoundary>
         </Suspense>
 
       </div>

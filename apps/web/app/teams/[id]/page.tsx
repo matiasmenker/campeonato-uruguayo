@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { IconShieldFilled, IconTrophy } from "@tabler/icons-react"
 import HeroBackLink from "@/components/hero-back-link"
 import HeroTexture from "@/components/hero-texture"
+import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamSeasonSelector from "@/components/team-season-selector"
 import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, type SquadMember, type TeamFixture } from "@/lib/teams"
@@ -478,9 +479,14 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
           </div>
         </div>
 
-        {/* Content — skeleton while squad/fixtures/coach load */}
+        {/* Content — skeleton on initial stream AND on every client-side param change */}
         <Suspense fallback={<ContentSkeleton />}>
-          <TeamContent teamId={teamId} selectedSeason={selectedSeason} />
+          <SearchParamsLoadingBoundary
+            committedParams={{ seasonId: String(selectedSeason.id) }}
+            skeleton={<ContentSkeleton />}
+          >
+            <TeamContent teamId={teamId} selectedSeason={selectedSeason} />
+          </SearchParamsLoadingBoundary>
         </Suspense>
 
       </div>

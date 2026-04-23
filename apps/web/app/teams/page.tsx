@@ -5,6 +5,7 @@ import { getTeams, type Team } from "@/lib/teams"
 import { getSeasons, type Season } from "@/lib/seasons"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamsSeasonSelector from "@/components/teams-season-selector"
+import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import HeroTexture from "@/components/hero-texture"
 
 export const dynamic = "force-dynamic"
@@ -124,9 +125,14 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
           </div>
         </div>
 
-        {/* Content — shows skeleton while teams load */}
+        {/* Content — skeleton on initial stream AND on every client-side param change */}
         <Suspense fallback={<TeamsContentSkeleton />}>
-          <TeamsContent selectedSeasonId={selectedSeasonId} />
+          <SearchParamsLoadingBoundary
+            committedParams={{ seasonId: String(selectedSeasonId) }}
+            skeleton={<TeamsContentSkeleton />}
+          >
+            <TeamsContent selectedSeasonId={selectedSeasonId} />
+          </SearchParamsLoadingBoundary>
         </Suspense>
 
       </div>

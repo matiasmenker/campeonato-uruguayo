@@ -402,13 +402,15 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
       <div className="flex flex-col gap-3">
 
       {/* Round carousel */}
-      {roundGroups.length > 0 && (
+      {isFetching ? (
+        <div className="h-[64px] animate-pulse rounded-2xl bg-slate-200" />
+      ) : roundGroups.length > 0 ? (
         <RoundSelector
           roundGroups={roundGroups}
           effectiveRoundId={effectiveRoundId}
           onSelectRound={handleRoundSelect}
         />
-      )}
+      ) : null}
 
       {/* Cards grid */}
       {isFetching ? (
