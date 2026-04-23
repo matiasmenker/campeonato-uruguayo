@@ -2,11 +2,12 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react"
 import useEmblaCarousel from "embla-carousel-react"
-import Link from "next/link"
-import { IconBallFootball, IconChevronLeft, IconChevronRight, IconShield } from "@tabler/icons-react"
+import { IconBallFootball, IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 import HeroSelect from "@/components/hero-select"
 import HeroTexture from "@/components/hero-texture"
+import MatchCard from "@/components/match-card"
+import { getMatchStatus } from "@/components/match-card"
 import type { FixtureListItem } from "@/lib/matches"
 import type { Season } from "@/lib/seasons"
 
@@ -57,54 +58,9 @@ const storageDel = (key: string) => {
 // Status helpers
 // ---------------------------------------------------------------------------
 
-const LIVE_STATES = new Set([
-  "INPLAY_1ST_HALF", "INPLAY_2ND_HALF", "HT", "INPLAY_ET",
-  "INPLAY_ET_SECOND_HALF", "INPLAY_PENALTIES", "EXTRA_TIME_BREAK", "BREAK",
-])
-const FINISHED_STATES = new Set(["FT", "AET", "FT_PEN", "AWARDED"])
-
-const getMatchStatus = (fixture: FixtureListItem) => {
-  const code = fixture.state?.developerName ?? ""
-  if (LIVE_STATES.has(code)) return "live" as const
-  if (FINISHED_STATES.has(code)) return "finished" as const
-  if (fixture.homeScore !== null && fixture.awayScore !== null) return "finished" as const
-  return "upcoming" as const
-}
-
-const formatKickoffTime = (value: string | null) => {
-  if (!value) return "--:--"
-  return new Intl.DateTimeFormat("es-UY", {
-    hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Montevideo",
-  }).format(new Date(value))
-}
-
-// "Domingo 24 de marzo" — same style as the home carousel
-const formatRoundDate = (value: string | null) => {
-  if (!value) return ""
-  const formatted = new Intl.DateTimeFormat("es-UY", {
-    weekday: "long", day: "numeric", month: "long", timeZone: "America/Montevideo",
-  }).format(new Date(value))
-  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
-}
-
-const formatMatchDay = (value: string | null) => {
-  if (!value) return "Sin fecha"
-  const formatted = new Intl.DateTimeFormat("es-UY", {
-    weekday: "long", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Montevideo",
-  }).format(new Date(value))
-  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
-}
-
-const getLiveLabel = (code: string | null) => {
-  if (code === "HT") return "Entretiempo"
-  if (code === "INPLAY_ET" || code === "INPLAY_ET_SECOND_HALF") return "Prórroga"
-  if (code === "INPLAY_PENALTIES") return "Penales"
-  return "En vivo"
-}
-
 const getRoundStatus = (fixtures: FixtureListItem[]) => {
-  const liveCount     = fixtures.filter(f => getMatchStatus(f) === "live").length
-  const finishedCount = fixtures.filter(f => getMatchStatus(f) === "finished").length
+  const liveCount     = fixtures.filter(f => getMatchStatus(f.state?.developerName ?? null, f.homeScore, f.awayScore) === "live").length
+  const finishedCount = fixtures.filter(f => getMatchStatus(f.state?.developerName ?? null, f.homeScore, f.awayScore) === "finished").length
   if (liveCount > 0) {
     return { label: "En vivo",    dotClass: "bg-red-500 animate-pulse", textClass: "text-red-500" }
   }
@@ -115,129 +71,6 @@ const getRoundStatus = (fixtures: FixtureListItem[]) => {
     return { label: "En curso",   dotClass: "bg-amber-400",             textClass: "text-amber-600" }
   }
   return              { label: "Por jugar", dotClass: "bg-slate-300",        textClass: "text-slate-400" }
-}
-
-// ---------------------------------------------------------------------------
-// Match card — dark venue card, same aesthetic as the home carousel
-// ---------------------------------------------------------------------------
-
-const MatchCard = ({ fixture }: { fixture: FixtureListItem }) => {
-  const status    = getMatchStatus(fixture)
-  const showScore = status === "finished" || status === "live"
-  const code      = fixture.state?.developerName ?? null
-  const backgroundImage = fixture.venue?.imagePath ? `url("${fixture.venue.imagePath}")` : undefined
-
-  const badge = (() => {
-    if (status === "live") {
-      return {
-        isLive: true,
-        dotClass: "bg-red-500",
-        label: getLiveLabel(code),
-        textClass: "text-red-200",
-        wrapperClass: "border-red-400/20 bg-red-500/16 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
-      }
-    }
-    if (status === "finished") {
-      return {
-        isLive: false,
-        dotClass: "bg-emerald-400",
-        label: "Finalizado",
-        textClass: "text-emerald-100",
-        wrapperClass: "border-emerald-400/20 bg-emerald-500/14 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
-      }
-    }
-    // Time shown in score panel — badge says "Por jugar" to avoid repetition
-    return {
-      isLive: false,
-      dotClass: "bg-white/40",
-      label: "Por jugar",
-      textClass: "text-white/75",
-      wrapperClass: "border-white/12 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
-    }
-  })()
-
-  return (
-    <Link href={`/matches/${fixture.id}`} className="block">
-      <article className="group relative h-[132px] overflow-hidden rounded-[18px] bg-slate-900 cursor-pointer">
-        <div
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-          style={{ backgroundImage, backgroundColor: "#0f172a" }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background: backgroundImage
-              ? "linear-gradient(145deg, rgba(2,6,23,0.84) 0%, rgba(15,23,42,0.54) 42%, rgba(6,95,70,0.42) 100%)"
-              : "linear-gradient(145deg, #0f172a 0%, #123528 50%, #0b1b16 100%)",
-          }}
-        />
-        <div className="relative flex h-full flex-col justify-between p-3.5">
-          <div className="flex justify-end">
-            <span className="text-[10px] font-medium text-white/60">
-              {formatMatchDay(fixture.kickoffAt)}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center">
-                {fixture.homeTeam?.imagePath
-                  ? <img src={fixture.homeTeam.imagePath} alt={fixture.homeTeam.name} className="h-7 w-7 object-contain drop-shadow-sm" />
-                  : <IconShield className="h-7 w-7 text-white/80" />
-                }
-              </div>
-              <p className="min-w-0 truncate text-[12px] font-semibold text-white">
-                {fixture.homeTeam?.name ?? "Equipo"}
-              </p>
-            </div>
-
-            <div className="flex min-w-[76px] flex-col items-center rounded-[14px] border border-white/10 bg-black/20 px-3 py-1.5 text-center backdrop-blur-sm">
-              {showScore ? (
-                <div className="flex items-center gap-2 text-white">
-                  <span className="text-xl leading-none font-black tabular-nums">{fixture.homeScore ?? 0}</span>
-                  <span className="text-xs leading-none font-medium text-white/35">—</span>
-                  <span className="text-xl leading-none font-black tabular-nums">{fixture.awayScore ?? 0}</span>
-                </div>
-              ) : (
-                <div className="text-xl leading-none font-black tracking-tight text-white">
-                  {formatKickoffTime(fixture.kickoffAt)}
-                </div>
-              )}
-            </div>
-
-            <div className="flex min-w-0 flex-row-reverse items-center gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center">
-                {fixture.awayTeam?.imagePath
-                  ? <img src={fixture.awayTeam.imagePath} alt={fixture.awayTeam.name} className="h-7 w-7 object-contain drop-shadow-sm" />
-                  : <IconShield className="h-7 w-7 text-white/80" />
-                }
-              </div>
-              <p className="min-w-0 truncate text-right text-[12px] font-semibold text-white">
-                {fixture.awayTeam?.name ?? "Equipo"}
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <div className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 backdrop-blur-sm",
-              badge.wrapperClass
-            )}>
-              <span className="relative flex h-1.5 w-1.5">
-                {badge.isLive && (
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-                )}
-                <span className={cn("relative inline-flex h-1.5 w-1.5 rounded-full", badge.dotClass)} />
-              </span>
-              <span className={cn("text-[10px] font-semibold", badge.textClass)}>
-                {badge.label}
-              </span>
-            </div>
-          </div>
-        </div>
-      </article>
-    </Link>
-  )
 }
 
 // ---------------------------------------------------------------------------
@@ -281,9 +114,7 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
   }, [emblaApi, effectiveRoundId, roundGroups])
 
   return (
-    // Outer card: position:relative so arrows can be absolute inside it.
-    // No overflow-hidden here — only the embla viewport clips the pills.
-    <div className="relative rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
 
       {/* Left arrow — frosted glass so pills scrolling behind are partially visible */}
       <button
@@ -593,7 +424,18 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
       ) : (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {activeGroup.fixtures.map(fixture => (
-            <MatchCard key={fixture.id} fixture={fixture} />
+            <MatchCard
+              key={fixture.id}
+              id={fixture.id}
+              kickoffAt={fixture.kickoffAt}
+              homeScore={fixture.homeScore}
+              awayScore={fixture.awayScore}
+              stateCode={fixture.state?.developerName ?? null}
+              venueImagePath={fixture.venue?.imagePath ?? null}
+              homeTeam={fixture.homeTeam}
+              awayTeam={fixture.awayTeam}
+              roundName={activeGroup.round.name}
+            />
           ))}
         </div>
       )}
