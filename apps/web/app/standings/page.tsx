@@ -25,7 +25,6 @@ const MAIN_STAGE_NAMES = ["apertura", "clausura", "intermediate round"]
 const CHAMPIONSHIP_FINALS_NAME = "championship - finals"
 const INTERMEDIATE_ROUND_FINAL_NAME = "intermediate round - final"
 
-
 const isMainStage = (stageName: string) =>
   MAIN_STAGE_NAMES.some((name) => stageName.toLowerCase() === name)
 
@@ -221,47 +220,43 @@ const PlayerStatCard = ({
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Content skeleton ─────────────────────────────────────────────────────────
 
-interface StandingsPageProps {
-  searchParams: Promise<{ seasonId?: string; stageId?: string }>
+const StandingsContentSkeleton = () => (
+  <div className="grid animate-pulse gap-6 lg:grid-cols-[1fr_300px]">
+    <div className="flex flex-col gap-3">
+      <div className="h-[480px] rounded-2xl bg-slate-200" />
+    </div>
+    <div className="flex flex-col gap-3">
+      {[0, 1, 2, 3].map((index) => (
+        <div key={index} className="h-24 rounded-2xl bg-slate-200" />
+      ))}
+    </div>
+  </div>
+)
+
+// ─── Content (slow fetches) ───────────────────────────────────────────────────
+
+interface StandingsContentProps {
+  selectedSeasonId: number
+  selectedStageId: number | null
+  selectedSeason: Season | undefined
+  selectedStage: Stage | undefined
+  stages: Stage[]
 }
 
-const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
-  const { seasonId: seasonIdParam, stageId: stageIdParam } = await searchParams
-
-  let seasons: Season[] = []
-  let stages: Stage[] = []
+const StandingsContent = async ({
+  selectedSeasonId,
+  selectedStageId,
+  selectedSeason,
+  selectedStage,
+  stages,
+}: StandingsContentProps) => {
   let standings: StandingEntry[] = []
   let leaders: LeadersContract | null = null
   let champion: SeasonChampion | null = null
   let errorMessage: string | null = null
 
-  if (seasonIdParam) {
-    const [seasonsResult, stagesResult] = await Promise.allSettled([
-      getSeasons(),
-      getStages(Number(seasonIdParam)),
-    ])
-    if (seasonsResult.status === "fulfilled") seasons = seasonsResult.value
-    if (stagesResult.status === "fulfilled") stages = stagesResult.value
-  } else {
-    seasons = await getSeasons()
-    const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]
-    if (currentSeason) stages = await getStages(currentSeason.id)
-  }
-
-  const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]
-  const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? 1)
-  const selectedSeason = seasons.find((season) => season.id === selectedSeasonId)
-
-  const visibleStages = stages.filter((stage) => isMainStage(stage.name))
-  const currentStage = visibleStages.find((stage) => stage.isCurrent) ?? visibleStages[0]
-  const selectedStageId = stageIdParam ? Number(stageIdParam) : (currentStage?.id ?? null)
-  const selectedStage = stages.find((stage) => stage.id === selectedStageId)
-
-  // Find the decisive stage for champion resolution.
-  // Priority: Championship Finals → Intermediate Round Final (fallback for seasons where
-  // the championship was decided before the finals stage, e.g. 2024).
   const championshipFinalsStage = stages.find((stage) =>
     stage.name.toLowerCase() === CHAMPIONSHIP_FINALS_NAME
   )
@@ -269,9 +264,6 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
     stage.name.toLowerCase() === INTERMEDIATE_ROUND_FINAL_NAME
   )
 
-  // Fetch standings and leaders in parallel, then resolve the champion sequentially
-  // so we can fall back to the intermediate round final if the championship finals
-  // stage has no fixture data.
   const [standingsResult, leadersResult] = await Promise.allSettled([
     getStandings({ seasonId: selectedSeasonId, stageId: selectedStageId ?? undefined }),
     getLeaders({ seasonId: selectedSeasonId, stageId: selectedStageId ?? undefined, limit: 1 }),
@@ -295,22 +287,139 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
   const topAssist = leaders?.topAssists.leaders[0] ?? null
   const topRated = leaders?.topRated.leaders[0] ?? null
 
-  // Stage is considered over (winner, not just leader) when the season is done
-  // or when the stage is no longer the current one
   const isStageOver = !selectedSeason?.isCurrent || !selectedStage?.isCurrent
 
   const getPlayerName = (displayName: string | null, name: string) => displayName ?? name
+
+  if (errorMessage) {
+    return (
+      <Alert className="border-amber-300 bg-amber-50 text-amber-950">
+        <AlertTitle>Could not load standings</AlertTitle>
+        <AlertDescription>{errorMessage}</AlertDescription>
+      </Alert>
+    )
+  }
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+      <div className="flex flex-col gap-3">
+        {standings.length === 0 ? (
+          <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
+            No standings available for this stage
+          </div>
+        ) : (
+          <>
+            <StandingsTable standings={standings} seasonId={selectedSeasonId} />
+            <div className="flex items-center gap-1.5 px-1 text-xs text-slate-400">
+              <div className="h-3 w-1 rounded-full bg-red-400" />
+              <span>Relegation zone</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3">
+        {champion && (
+          <ChampionCard champion={champion} seasonName={selectedSeason?.name ?? "—"} seasonId={selectedSeasonId} />
+        )}
+        {leaderStanding && (
+          <LeaderCard
+            standing={leaderStanding}
+            stageName={selectedStage?.name ?? "Stage"}
+            isWinner={isStageOver}
+            seasonId={selectedSeasonId}
+          />
+        )}
+        {topScorer && (
+          <PlayerStatCard
+            icon={IconBallFootball}
+            accentColor="text-emerald-500"
+            label="Top scorer"
+            playerName={getPlayerName(topScorer.player.displayName, topScorer.player.name)}
+            playerImage={topScorer.player.imagePath}
+            teamImage={topScorer.team?.imagePath ?? null}
+            teamName={topScorer.team?.name ?? null}
+            value={topScorer.value}
+            unit="goals"
+          />
+        )}
+        {topAssist && (
+          <PlayerStatCard
+            icon={IconUsers}
+            accentColor="text-sky-500"
+            label="Top assists"
+            playerName={getPlayerName(topAssist.player.displayName, topAssist.player.name)}
+            playerImage={topAssist.player.imagePath}
+            teamImage={topAssist.team?.imagePath ?? null}
+            teamName={topAssist.team?.name ?? null}
+            value={topAssist.value}
+            unit="assists"
+          />
+        )}
+        {topRated && (
+          <PlayerStatCard
+            icon={IconStar}
+            accentColor="text-amber-500"
+            label="Best rated"
+            playerName={getPlayerName(topRated.player.displayName, topRated.player.name)}
+            playerImage={topRated.player.imagePath}
+            teamImage={topRated.team?.imagePath ?? null}
+            teamName={topRated.team?.name ?? null}
+            value={topRated.value}
+            unit="rating"
+            isRating
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+interface StandingsPageProps {
+  searchParams: Promise<{ seasonId?: string; stageId?: string }>
+}
+
+const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
+  const { seasonId: seasonIdParam, stageId: stageIdParam } = await searchParams
+
+  // Fast fetches — needed for the hero to render
+  let seasons: Season[] = []
+  let stages: Stage[] = []
+
+  if (seasonIdParam) {
+    const [seasonsResult, stagesResult] = await Promise.allSettled([
+      getSeasons(),
+      getStages(Number(seasonIdParam)),
+    ])
+    if (seasonsResult.status === "fulfilled") seasons = seasonsResult.value
+    if (stagesResult.status === "fulfilled") stages = stagesResult.value
+  } else {
+    seasons = await getSeasons()
+    const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]
+    if (currentSeason) stages = await getStages(currentSeason.id)
+  }
+
+  const currentSeason = seasons.find((season) => season.isCurrent) ?? seasons[0]
+  const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? 1)
+  const selectedSeason = seasons.find((season) => season.id === selectedSeasonId)
+
+  const visibleStages = stages.filter((stage) => isMainStage(stage.name))
+  const currentStage = visibleStages.find((stage) => stage.isCurrent) ?? visibleStages[0]
+  const selectedStageId = stageIdParam ? Number(stageIdParam) : (currentStage?.id ?? null)
+  const selectedStage = stages.find((stage) => stage.id === selectedStageId)
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
+        {/* Hero — renders immediately */}
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <div className="relative min-h-52 bg-slate-900">
             <HeroTexture />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40 pointer-events-none" />
 
-            {/* Bottom — title left, selectors right */}
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
@@ -343,84 +452,16 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
           </div>
         </div>
 
-        {errorMessage ? (
-          <Alert className="border-amber-300 bg-amber-50 text-amber-950">
-            <AlertTitle>Could not load standings</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        ) : (
-          <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-            <div className="flex flex-col gap-3">
-              {standings.length === 0 ? (
-                <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
-                  No standings available for this stage
-                </div>
-              ) : (
-                <>
-                  <StandingsTable standings={standings} seasonId={selectedSeasonId} />
-                  <div className="flex items-center gap-1.5 px-1 text-xs text-slate-400">
-                    <div className="h-3 w-1 rounded-full bg-red-400" />
-                    <span>Relegation zone</span>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-3">
-              {champion && (
-                <ChampionCard champion={champion} seasonName={selectedSeason?.name ?? "—"} seasonId={selectedSeasonId} />
-              )}
-              {leaderStanding && (
-                <LeaderCard
-                  standing={leaderStanding}
-                  stageName={selectedStage?.name ?? "Stage"}
-                  isWinner={isStageOver}
-                  seasonId={selectedSeasonId}
-                />
-              )}
-              {topScorer && (
-                <PlayerStatCard
-                  icon={IconBallFootball}
-                  accentColor="text-emerald-500"
-                  label="Top scorer"
-                  playerName={getPlayerName(topScorer.player.displayName, topScorer.player.name)}
-                  playerImage={topScorer.player.imagePath}
-                  teamImage={topScorer.team?.imagePath ?? null}
-                  teamName={topScorer.team?.name ?? null}
-                  value={topScorer.value}
-                  unit="goals"
-                />
-              )}
-              {topAssist && (
-                <PlayerStatCard
-                  icon={IconUsers}
-                  accentColor="text-sky-500"
-                  label="Top assists"
-                  playerName={getPlayerName(topAssist.player.displayName, topAssist.player.name)}
-                  playerImage={topAssist.player.imagePath}
-                  teamImage={topAssist.team?.imagePath ?? null}
-                  teamName={topAssist.team?.name ?? null}
-                  value={topAssist.value}
-                  unit="assists"
-                />
-              )}
-              {topRated && (
-                <PlayerStatCard
-                  icon={IconStar}
-                  accentColor="text-amber-500"
-                  label="Best rated"
-                  playerName={getPlayerName(topRated.player.displayName, topRated.player.name)}
-                  playerImage={topRated.player.imagePath}
-                  teamImage={topRated.team?.imagePath ?? null}
-                  teamName={topRated.team?.name ?? null}
-                  value={topRated.value}
-                  unit="rating"
-                  isRating
-                />
-              )}
-            </div>
-          </div>
-        )}
+        {/* Content — shows skeleton while slow data loads */}
+        <Suspense fallback={<StandingsContentSkeleton />}>
+          <StandingsContent
+            selectedSeasonId={selectedSeasonId}
+            selectedStageId={selectedStageId}
+            selectedSeason={selectedSeason}
+            selectedStage={selectedStage}
+            stages={stages}
+          />
+        </Suspense>
 
       </div>
     </main>
