@@ -38,6 +38,7 @@ export const eventsQuerySchema = paginationQuerySchema.extend({
   playerId: z.coerce.number().int().positive().optional(),
   typeId: z.coerce.number().int().positive().optional(),
   seasonId: z.coerce.number().int().positive().optional(),
+  stageId: z.coerce.number().int().positive().optional(),
 });
 
 export type EventsQuery = z.infer<typeof eventsQuerySchema>;
@@ -88,6 +89,7 @@ export const fixturePlayerStatsQuerySchema = paginationQuerySchema.extend({
   playerId: z.coerce.number().int().positive().optional(),
   typeId: z.coerce.number().int().positive().optional(),
   seasonId: z.coerce.number().int().positive().optional(),
+  stageId: z.coerce.number().int().positive().optional(),
 });
 
 export type FixturePlayerStatsQuery = z.infer<typeof fixturePlayerStatsQuerySchema>;

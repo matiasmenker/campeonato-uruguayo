@@ -164,6 +164,32 @@ const buildSubEvents = (events: FixtureEvent[]): SubstitutionEvent[] =>
       playerOut: e.relatedPlayer,
     }))
 
+const MATCH_POSITION_CONFIG: Record<number, { label: string; bg: string }> = {
+  24: { label: "AR", bg: "#f59e0b" },
+  25: { label: "DF", bg: "#3b82f6" },
+  26: { label: "MC", bg: "#10b981" },
+  27: { label: "DL", bg: "#ef4444" },
+}
+
+const PositionBadge = ({ positionId, size = 17 }: { positionId: number | null; size?: number }) => {
+  if (!positionId) return null
+  const config = MATCH_POSITION_CONFIG[positionId]
+  if (!config) return null
+  return (
+    <span
+      style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        width: size, height: size, borderRadius: "50%",
+        background: config.bg, border: "1.5px solid rgba(255,255,255,0.9)", flexShrink: 0,
+      }}
+    >
+      <span style={{ fontSize: Math.round(size * 0.42), fontWeight: 900, color: "white", lineHeight: 1, letterSpacing: "-0.01em" }}>
+        {config.label}
+      </span>
+    </span>
+  )
+}
+
 const PlayerAvatar = ({ player, size }: { player: LineupPlayer["player"]; size: number }) => (
   <img
     src={resolvePlayerImageUrl(player.imagePath)}
@@ -282,7 +308,8 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: 
   const shortName = parts.length > 2 ? parts[parts.length - 1] : parts.slice(-2).join(" ")
 
   return (
-    <div
+    <Link
+      href={`/players/${player.player.id}`}
       className="absolute flex flex-col items-center"
       style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: TOKEN_WIDTH, gap: 3 }}
     >
@@ -300,6 +327,11 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: 
             style={{ width: 17, height: 17, fontSize: 8, bottom: -2, left: -2, background: "#0f172a", boxShadow: "0 1px 3px rgba(0,0,0,0.7)" }}
           >
             {player.jerseyNumber}
+          </span>
+        )}
+        {player.player.positionId && MATCH_POSITION_CONFIG[player.player.positionId] && (
+          <span style={{ position: "absolute", top: -2, right: -2 }}>
+            <PositionBadge positionId={player.player.positionId} size={18} />
           </span>
         )}
         {substitutedOut && (
@@ -329,7 +361,7 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: 
           {rating !== null ? formatRating(rating) : "—"}
         </span>
       </div>
-    </div>
+    </Link>
   )
 }
 
@@ -347,7 +379,8 @@ interface PitchProps {
 const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByPlayer, ratingByPlayer, assistsByPlayer, substitutedOutIds }: PitchProps) => {
 
   const renderTeam = (lineup: LineupPlayer[], isHome: boolean, formation: string | null) => {
-    const newStyleStarters = lineup.filter(p => p.typeId === 11 && p.formationField != null)
+    const allStarters = lineup.filter(p => p.typeId === 11)
+    const newStyleStarters = allStarters.filter(p => p.formationField != null)
     if (newStyleStarters.length > 0) {
       const rowMap = new Map<number, LineupPlayer[]>()
       for (const player of newStyleStarters) {
@@ -356,12 +389,19 @@ const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByP
         existing.push(player)
         rowMap.set(row, existing)
       }
+      // Starters without formationField (often the GK when SportMonks omits it) → place before all other rows
+      const fallbackStarters = allStarters.filter(p => p.formationField == null)
+      if (fallbackStarters.length > 0) {
+        const minRow = rowMap.size > 0 ? Math.min(...rowMap.keys()) : 1
+        rowMap.set(minRow - 1, fallbackStarters)
+      }
       const sortedRows = Array.from(rowMap.entries())
         .sort(([rowA], [rowB]) => rowA - rowB)
         .map(([, players]) =>
           players.sort((playerA, playerB) => {
-            const { col: colA } = parseFormationField(playerA.formationField!)
-            const { col: colB } = parseFormationField(playerB.formationField!)
+            if (!playerA.formationField || !playerB.formationField) return 0
+            const { col: colA } = parseFormationField(playerA.formationField)
+            const { col: colB } = parseFormationField(playerB.formationField)
             return colA - colB
           })
         )
@@ -446,8 +486,9 @@ const BenchPlayer = ({ player, events, rating, assists }: {
         )}
       </div>
 
-      <Link href={`/players/${player.player.id}`} className="flex-1 min-w-0 truncate text-sm font-medium text-slate-800 hover:text-slate-600 transition-colors" title={name}>
-        {name}
+      <Link href={`/players/${player.player.id}`} className="flex items-center gap-1.5 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+        <PositionBadge positionId={player.player.positionId} size={16} />
+        <span className="truncate text-sm font-medium text-slate-800" title={name}>{name}</span>
       </Link>
 
       <div className="flex items-center gap-1 shrink-0">

@@ -39,13 +39,15 @@ const getPlayerName = (leader: LeaderEntry) =>
   leader.player.displayName ?? leader.player.name
 
 const PlayerLeaderCard = ({ leader }: { leader: LeaderEntry }) => (
-  <PlayerCard
-    name={leader.player.displayName ?? leader.player.name}
-    imagePath={leader.player.imagePath}
-    positionId={leader.player.positionId}
-    teamImagePath={leader.team?.imagePath}
-    rating={leader.value}
-  />
+  <Link href={`/players/${leader.player.id}`} className="block hover:opacity-90 transition-opacity">
+    <PlayerCard
+      name={leader.player.displayName ?? leader.player.name}
+      imagePath={leader.player.imagePath}
+      positionId={leader.player.positionId}
+      teamImagePath={leader.team?.imagePath}
+      rating={leader.value}
+    />
+  </Link>
 )
 
 const SectionTitle = ({
@@ -311,12 +313,15 @@ const HomePage = async () => {
                       className="grid flex-1 grid-cols-[36px_1fr_1fr_48px] items-center border-b border-slate-100 px-3 py-1.5 last:border-0"
                     >
                       <span className="text-center text-xs font-medium text-slate-400">{index + 1}</span>
-                      <div className="flex items-center gap-2">
+                      <Link
+                        href={`/players/${leader.player.id}${overview?.season?.id ? `?seasonId=${overview.season.id}` : ""}`}
+                        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                      >
                         <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
                           <img src={resolvePlayerImageUrl(leader.player.imagePath)} alt={getPlayerName(leader)} className="h-full w-full object-cover object-top" />
                         </div>
                         <span className="text-xs font-medium text-slate-950">{getPlayerName(leader)}</span>
-                      </div>
+                      </Link>
                       {leader.team?.id ? (
                         <Link
                           href={`/teams/${leader.team.id}${overview?.season?.id ? `?seasonId=${overview.season.id}` : ""}`}

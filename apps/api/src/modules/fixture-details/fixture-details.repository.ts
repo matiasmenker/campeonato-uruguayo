@@ -71,7 +71,12 @@ export const findEvents = async (
   if (query.fixtureId) where.fixtureId = query.fixtureId;
   if (query.playerId) where.playerId = query.playerId;
   if (query.typeId) where.typeId = query.typeId;
-  if (query.seasonId) where.fixture = { seasonId: query.seasonId };
+  if (query.seasonId || query.stageId) {
+    const fixtureWhere: Record<string, unknown> = {};
+    if (query.seasonId) fixtureWhere.seasonId = query.seasonId;
+    if (query.stageId) fixtureWhere.stageId = query.stageId;
+    where.fixture = fixtureWhere;
+  }
   const [events, totalItems] = await Promise.all([
     prisma.event.findMany({
       where,
@@ -215,7 +220,12 @@ export const findFixturePlayerStats = async (
   if (query.fixtureId) where.fixtureId = query.fixtureId;
   if (query.playerId) where.playerId = query.playerId;
   if (query.typeId) where.typeId = query.typeId;
-  if (query.seasonId) where.fixture = { seasonId: query.seasonId };
+  if (query.seasonId || query.stageId) {
+    const fixtureWhere: Record<string, unknown> = {};
+    if (query.seasonId) fixtureWhere.seasonId = query.seasonId;
+    if (query.stageId) fixtureWhere.stageId = query.stageId;
+    where.fixture = fixtureWhere;
+  }
   const [stats, totalItems] = await Promise.all([
     prisma.fixturePlayerStatistic.findMany({
       where,

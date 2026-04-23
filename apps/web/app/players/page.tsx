@@ -17,6 +17,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   topAssists: "Most assists",
   topYellowCards: "Yellow cards",
   topRedCards: "Red cards",
+  topMinutes: "Most minutes",
 }
 
 const CATEGORY_VALUE_LABELS: Record<string, string> = {
@@ -25,6 +26,7 @@ const CATEGORY_VALUE_LABELS: Record<string, string> = {
   topAssists: "assists",
   topYellowCards: "cards",
   topRedCards: "cards",
+  topMinutes: "min",
 }
 
 const formatValue = (category: string, value: number): string => {
@@ -173,7 +175,7 @@ const LeaderList = ({
 
 const ContentSkeleton = () => (
   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    {Array.from({ length: 5 }).map((_, index) => (
+    {Array.from({ length: 6 }).map((_, index) => (
       <div
         key={index}
         className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm"
@@ -215,6 +217,7 @@ const PlayersContent = async ({ selectedSeasonId }: { selectedSeasonId: number }
     { key: "topRated", entries: leaders.topRated.leaders },
     { key: "topScorers", entries: leaders.topScorers.leaders },
     { key: "topAssists", entries: leaders.topAssists.leaders },
+    { key: "topMinutes", entries: leaders.topMinutes.leaders },
     { key: "topYellowCards", entries: leaders.topYellowCards.leaders },
     { key: "topRedCards", entries: leaders.topRedCards.leaders },
   ]

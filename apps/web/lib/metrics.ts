@@ -37,6 +37,7 @@ export interface LeadersContract {
   topAssists: LeaderCategory
   topYellowCards: LeaderCategory
   topRedCards: LeaderCategory
+  topMinutes: LeaderCategory
 }
 
 interface GetLeadersOptions {

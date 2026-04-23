@@ -120,6 +120,7 @@ export const getPlayerStatsByType = async (
   playerId: number,
   typeId: number,
   seasonId: number,
+  stageId?: number,
 ): Promise<PlayerStatEntry[]> => {
   const params = new URLSearchParams({
     playerId: String(playerId),
@@ -127,6 +128,7 @@ export const getPlayerStatsByType = async (
     seasonId: String(seasonId),
     pageSize: "100",
   })
+  if (stageId) params.set("stageId", String(stageId))
   const response = await apiFetch<ListResponse<PlayerStatEntry>>(
     `/api/v1/fixture-player-statistics?${params.toString()}`,
     { next: { revalidate: 300 } },
@@ -137,17 +139,50 @@ export const getPlayerStatsByType = async (
 export const getPlayerSeasonEvents = async (
   playerId: number,
   seasonId: number,
+  stageId?: number,
 ): Promise<PlayerEventEntry[]> => {
   const params = new URLSearchParams({
     playerId: String(playerId),
     seasonId: String(seasonId),
     pageSize: "100",
   })
+  if (stageId) params.set("stageId", String(stageId))
   const response = await apiFetch<ListResponse<PlayerEventEntry>>(
     `/api/v1/events?${params.toString()}`,
     { next: { revalidate: 300 } },
   )
   return response.data
+}
+
+export interface PlayerFixture {
+  id: number
+  kickoffAt: string | null
+  homeScore: number | null
+  awayScore: number | null
+  homeTeam: { id: number; name: string; shortCode: string | null; imagePath: string | null } | null
+  awayTeam: { id: number; name: string; shortCode: string | null; imagePath: string | null } | null
+}
+
+export const getPlayerTeamFixtures = async (
+  teamId: number,
+  seasonId: number,
+  stageId?: number,
+): Promise<PlayerFixture[]> => {
+  const params = new URLSearchParams({
+    teamId: String(teamId),
+    seasonId: String(seasonId),
+    pageSize: "100",
+    sort: "kickoffAt",
+    order: "asc",
+  })
+  if (stageId) params.set("stageId", String(stageId))
+  const response = await apiFetch<ListResponse<PlayerFixture>>(
+    `/api/v1/fixtures?${params.toString()}`,
+    { next: { revalidate: 300 } },
+  )
+  return response.data.filter(
+    (fixture) => fixture.homeScore !== null && fixture.awayScore !== null,
+  )
 }
 
 export interface PlayerSeasonAggregates {
