@@ -403,7 +403,16 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
 
       {/* Round carousel */}
       {isFetching ? (
-        <div className="h-[64px] animate-pulse rounded-2xl bg-slate-200" />
+        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center gap-2 px-14 py-3">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="flex shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-slate-100 px-4 py-2.5">
+                <div className="h-3 w-12 animate-pulse rounded bg-slate-200" />
+                <div className="h-2.5 w-10 animate-pulse rounded bg-slate-100" />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : roundGroups.length > 0 ? (
         <RoundSelector
           roundGroups={roundGroups}
@@ -416,7 +425,27 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
       {isFetching ? (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, index) => (
-            <div key={index} className="h-[132px] animate-pulse rounded-[18px] bg-slate-200" />
+            <div key={index} className="relative h-[188px] overflow-hidden rounded-[28px] bg-slate-800">
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-700/60 to-transparent" />
+              <div className="relative flex h-full flex-col justify-between p-4 sm:p-5">
+                {/* Round badge */}
+                <div className="h-5 w-20 animate-pulse rounded-full bg-slate-700" />
+                {/* Teams + score */}
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-slate-700" />
+                    <div className="h-2.5 w-14 animate-pulse rounded bg-slate-700" />
+                  </div>
+                  <div className="flex h-12 min-w-[96px] animate-pulse items-center justify-center rounded-[22px] bg-slate-700/80" />
+                  <div className="flex items-center justify-end gap-2">
+                    <div className="h-2.5 w-14 animate-pulse rounded bg-slate-700" />
+                    <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-slate-700" />
+                  </div>
+                </div>
+                {/* Status badge */}
+                <div className="h-7 w-24 animate-pulse rounded-full bg-slate-700" />
+              </div>
+            </div>
           ))}
         </div>
       ) : activeGroup === null ? (

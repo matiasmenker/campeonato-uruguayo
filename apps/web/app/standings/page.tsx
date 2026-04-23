@@ -224,13 +224,74 @@ const PlayerStatCard = ({
 // ─── Content skeleton ─────────────────────────────────────────────────────────
 
 const StandingsContentSkeleton = () => (
-  <div className="grid animate-pulse gap-6 lg:grid-cols-[1fr_300px]">
-    <div className="flex flex-col gap-3">
-      <div className="h-[480px] rounded-2xl bg-slate-200" />
+  <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+    {/* Table skeleton */}
+    <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+      {/* Header row */}
+      <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3">
+        <div className="h-3 w-6 animate-pulse rounded bg-slate-200" />
+        <div className="h-3 flex-1 animate-pulse rounded bg-slate-200" />
+        {[...Array(7)].map((_, i) => (
+          <div key={i} className="h-3 w-6 animate-pulse rounded bg-slate-200" />
+        ))}
+        <div className="h-3 w-8 animate-pulse rounded bg-slate-200" />
+      </div>
+      {/* Data rows */}
+      {[...Array(16)].map((_, rowIndex) => (
+        <div
+          key={rowIndex}
+          className="flex items-center gap-3 border-b border-slate-100 px-4 py-2.5 last:border-0"
+        >
+          {/* Position indicator */}
+          <div className="flex items-center gap-2">
+            <div className="h-3.5 w-1 animate-pulse rounded-full bg-slate-100" />
+            <div className="h-3 w-4 animate-pulse rounded bg-slate-100" />
+          </div>
+          {/* Team logo + name */}
+          <div className="flex flex-1 items-center gap-3">
+            <div className="h-5 w-5 animate-pulse rounded-full bg-slate-100 shrink-0" />
+            <div className="h-3.5 w-28 animate-pulse rounded bg-slate-100" />
+          </div>
+          {/* Stat columns */}
+          {[...Array(8)].map((_, colIndex) => (
+            <div key={colIndex} className="h-3 w-6 animate-pulse rounded bg-slate-100" />
+          ))}
+        </div>
+      ))}
     </div>
+
+    {/* Sidebar skeleton */}
     <div className="flex flex-col gap-3">
-      {[0, 1, 2, 3].map((index) => (
-        <div key={index} className="h-24 rounded-2xl bg-slate-200" />
+      {/* Champion-style dark card */}
+      <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-800 p-5">
+        <div className="flex items-center gap-4">
+          <div className="h-16 w-16 animate-pulse rounded-2xl bg-slate-700 shrink-0" />
+          <div className="flex flex-1 flex-col gap-2">
+            <div className="h-2.5 w-12 animate-pulse rounded bg-slate-700" />
+            <div className="h-5 w-28 animate-pulse rounded bg-slate-600" />
+            <div className="h-3 w-16 animate-pulse rounded bg-slate-700" />
+          </div>
+        </div>
+      </div>
+      {/* Stat cards */}
+      {[0, 1, 2].map((index) => (
+        <div key={index} className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+          <div className="flex items-center gap-4 p-4">
+            <div className="h-14 w-14 animate-pulse rounded-full bg-slate-200 shrink-0 ring-2 ring-slate-100" />
+            <div className="flex flex-1 flex-col gap-1.5">
+              <div className="h-2.5 w-14 animate-pulse rounded bg-slate-200" />
+              <div className="h-4 w-24 animate-pulse rounded bg-slate-100" />
+              <div className="flex items-center gap-1 mt-0.5">
+                <div className="h-3.5 w-3.5 animate-pulse rounded bg-slate-100" />
+                <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
+              </div>
+            </div>
+            <div className="shrink-0 flex flex-col items-end gap-1">
+              <div className="h-7 w-8 animate-pulse rounded bg-slate-200" />
+              <div className="h-2.5 w-8 animate-pulse rounded bg-slate-100" />
+            </div>
+          </div>
+        </div>
       ))}
     </div>
   </div>

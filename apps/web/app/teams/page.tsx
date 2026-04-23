@@ -13,9 +13,15 @@ export const dynamic = "force-dynamic"
 // ─── Content skeleton ─────────────────────────────────────────────────────────
 
 const TeamsContentSkeleton = () => (
-  <div className="grid animate-pulse grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
     {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((index) => (
-      <div key={index} className="h-32 rounded-2xl bg-slate-200" />
+      <div
+        key={index}
+        className="flex flex-col items-center gap-3 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
+      >
+        <div className="h-14 w-14 animate-pulse rounded-lg bg-slate-200" />
+        <div className="h-3.5 w-20 animate-pulse rounded bg-slate-200" />
+      </div>
     ))}
   </div>
 )
