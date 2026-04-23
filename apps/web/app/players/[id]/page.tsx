@@ -5,7 +5,7 @@ import { IconArrowLeft, IconShieldFilled } from "@tabler/icons-react"
 import HeroTexture from "@/components/hero-texture"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import PlayerSeasonStageSelector from "@/components/player-season-stage-selector"
-import { getSeasons, getStages, type Season, type Stage } from "@/lib/seasons"
+import { getSeasons, getStages, filterMainStages, type Season, type Stage } from "@/lib/seasons"
 import { resolvePlayerImageUrl } from "@/lib/player"
 import { getRatingColors, getRatingFill } from "@/lib/rating"
 import {
@@ -158,11 +158,7 @@ const RatingStatCard = ({ avgRating, hasData }: { avgRating: number | null; hasD
   return (
     <div
       className="flex flex-col items-center gap-2 rounded-2xl border p-4 shadow-sm text-center"
-      style={
-        colors
-          ? { backgroundColor: colors.muted, borderColor: `${colors.fill}40` }
-          : { borderColor: "rgba(226,232,240,0.8)" }
-      }
+      style={{ backgroundColor: "#eff6ff", borderColor: "#93c5fd" }}
     >
       <div className="flex h-9 w-9 items-center justify-center">
         <StarIcon size={20} fill={colors?.fill ?? "#94a3b8"} />
@@ -170,14 +166,11 @@ const RatingStatCard = ({ avgRating, hasData }: { avgRating: number | null; hasD
       <div className="flex flex-col items-center gap-0.5">
         <span
           className="text-2xl font-black tabular-nums leading-none"
-          style={{ color: colors?.text ?? "#0f172a" }}
+          style={{ color: colors?.text ?? "#1e40af" }}
         >
           {hasData && avgRating !== null ? avgRating.toFixed(2) : "—"}
         </span>
-        <span
-          className="text-[10px] font-semibold uppercase tracking-wide"
-          style={{ color: colors ? `${colors.text}99` : "#94a3b8" }}
-        >
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-400">
           Avg rating
         </span>
       </div>
@@ -200,6 +193,12 @@ const getMatchResult = (
   return { label: "D", color: "#475569", bg: "#f1f5f9" }
 }
 
+const StarInline = ({ fill, size = 9 }: { fill: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+  </svg>
+)
+
 const RecentFormCard = ({
   stat,
   fixture,
@@ -220,16 +219,16 @@ const RecentFormCard = ({
   return (
     <Link
       href={`/matches/${fixture.id}`}
-      className="flex flex-col items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3 py-3 shadow-sm transition-all hover:border-slate-300 hover:shadow-md"
+      className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200/80 bg-white px-3 py-3 shadow-sm transition-all hover:border-slate-300 hover:shadow-md"
     >
-      <div className="h-8 w-8 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
+      <div className="h-9 w-9 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
         <img
           src={resolvePlayerImageUrl(opponent?.imagePath ?? null)}
           alt={opponent?.name ?? "—"}
           className="h-full w-full object-contain"
         />
       </div>
-      <div className="flex w-full flex-col items-center gap-1">
+      <div className="flex w-full flex-col items-center gap-0.5">
         <span className="w-full truncate text-center text-[11px] font-semibold text-slate-700 leading-tight">
           {opponent?.shortCode ?? opponent?.name?.split(" ").at(-1) ?? "—"}
         </span>
@@ -240,31 +239,36 @@ const RecentFormCard = ({
         )}
         {result && (
           <span
-            className="rounded px-1.5 py-0.5 text-[9px] font-black"
+            className="rounded-full px-2 py-0.5 text-[9px] font-black"
             style={{ color: result.color, background: result.bg }}
           >
             {result.label}
           </span>
         )}
       </div>
-      <span
-        className="flex w-full items-center justify-center rounded-lg py-1 text-sm font-black tabular-nums text-white leading-none"
+      {/* Circular rating badge with star */}
+      <div
+        className="flex h-11 w-11 flex-col items-center justify-center rounded-full gap-0.5"
         style={{ background: ratingFill }}
       >
-        {rating.toFixed(1)}
-      </span>
+        <StarInline fill="rgba(255,255,255,0.75)" size={8} />
+        <span className="text-xs font-black tabular-nums text-white leading-none">{rating.toFixed(1)}</span>
+      </div>
       <span className="text-[9px] text-slate-400 leading-none">{formatDate(fixture.kickoffAt)}</span>
     </Link>
   )
 }
 
 const RecentFormEmptySlot = () => (
-  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-white/50 px-3 py-3 opacity-60">
-    <div className="h-8 w-8 rounded-full bg-slate-100 ring-1 ring-slate-200" />
-    <div className="flex w-full flex-col items-center gap-1">
+  <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white/40 px-3 py-3">
+    <div className="h-9 w-9 rounded-full bg-slate-100 ring-1 ring-slate-200" />
+    <div className="flex w-full flex-col items-center gap-0.5">
       <span className="text-[11px] text-slate-300">—</span>
     </div>
-    <span className="flex w-full items-center justify-center rounded-lg py-1 text-sm font-black text-slate-300 leading-none">—</span>
+    <div className="flex h-11 w-11 flex-col items-center justify-center rounded-full bg-slate-100 gap-0.5">
+      <StarInline fill="#e2e8f0" size={8} />
+      <span className="text-xs font-black tabular-nums text-slate-300 leading-none">—</span>
+    </div>
     <span className="text-[9px] text-slate-300 leading-none">No data</span>
   </div>
 )
@@ -295,23 +299,19 @@ const RecentForm = ({
   return (
     <div className="flex flex-col gap-3">
       <h2 className="px-1 text-sm font-bold text-slate-700">Recent form</h2>
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50/60 shadow-sm">
-        <div className="grid grid-cols-5 gap-3 px-4 py-4">
-          {slots.map((stat, index) => {
-            if (!stat || !teamId) return <RecentFormEmptySlot key={index} />
-            const fixtureData = fixtureMap.get(stat.fixtureId)
-            if (!fixtureData) return <RecentFormEmptySlot key={index} />
-            return (
-              <RecentFormCard key={stat.id} stat={stat} fixture={fixtureData} teamId={teamId} />
-            )
-          })}
-        </div>
-        <p className="border-t border-slate-100 px-4 py-2 text-center text-[10px] text-slate-400">
-          {hasAnyData
-            ? `Last ${last5.length} match${last5.length !== 1 ? "es" : ""} · newest left · click to view match`
-            : "No match data available for this season"}
-        </p>
+      <div className="grid grid-cols-5 gap-3">
+        {slots.map((stat, index) => {
+          if (!stat || !teamId) return <RecentFormEmptySlot key={index} />
+          const fixtureData = fixtureMap.get(stat.fixtureId)
+          if (!fixtureData) return <RecentFormEmptySlot key={index} />
+          return (
+            <RecentFormCard key={stat.id} stat={stat} fixture={fixtureData} teamId={teamId} />
+          )
+        })}
       </div>
+      {!hasAnyData && (
+        <p className="text-center text-[10px] text-slate-400">No match data available for this season</p>
+      )}
     </div>
   )
 }
@@ -360,7 +360,6 @@ const SeasonHistoryRow = ({
       {membership?.shirtNumber != null && (
         <span className="text-xs font-medium text-slate-400">#{membership.shirtNumber}</span>
       )}
-      {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-slate-900" />}
     </div>
   </div>
 )
@@ -644,13 +643,14 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
     defaultMembership ??
     null
 
-  // Fetch stages for the selected season
-  const stages: Stage[] = selectedSeasonId
+  // Fetch and filter stages to Apertura/Clausura only
+  const allStages: Stage[] = selectedSeasonId
     ? await getStages(selectedSeasonId).catch(() => [])
     : []
+  const stages = filterMainStages(allStages)
 
   // Default to the current/active stage; never leave it unset when stages exist.
-  const defaultStage = stages.find((stage) => stage.isCurrent) ?? stages[0] ?? null
+  const defaultStage = stages.find((stage) => stage.isCurrent) ?? stages[stages.length - 1] ?? null
   const requestedStageId = stageIdParam ? Number(stageIdParam) : null
   const hasRequestedStage =
     requestedStageId !== null && stages.some((stage) => stage.id === requestedStageId)
@@ -690,7 +690,7 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
 
             <div className="absolute left-5 top-5 z-10">
               <Link
-                href="/players"
+                href={`/players?seasonId=${selectedSeasonId}${selectedStageId ? `&stageId=${selectedStageId}` : ""}`}
                 className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-xl border border-white/20 bg-white/15 pl-3 pr-4 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/25"
               >
                 <IconArrowLeft size={15} />

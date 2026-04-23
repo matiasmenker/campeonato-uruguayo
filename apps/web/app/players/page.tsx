@@ -4,7 +4,7 @@ import { IconShieldFilled } from "@tabler/icons-react"
 import HeroTexture from "@/components/hero-texture"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import PlayerSeasonStageSelector from "@/components/player-season-stage-selector"
-import { getSeasons, getStages } from "@/lib/seasons"
+import { getSeasons, getStages, filterMainStages } from "@/lib/seasons"
 import { getLeaders, type LeaderEntry } from "@/lib/metrics"
 import { getRatingColors, getRatingFill } from "@/lib/rating"
 import { resolvePlayerImageUrl } from "@/lib/player"
@@ -39,17 +39,22 @@ const CategoryHighlight = ({
   category,
   entry,
   seasonId,
+  stageId,
 }: {
   category: string
   entry: LeaderEntry | undefined
   seasonId: number
+  stageId: number | null
 }) => {
   if (!entry) return null
   const displayName = entry.player.displayName ?? entry.player.name
   const positionCode = entry.player.positionId ? (POSITION_CODES[entry.player.positionId] ?? null) : null
+  const playerHref = stageId
+    ? `/players/${entry.player.id}?seasonId=${seasonId}&stageId=${stageId}`
+    : `/players/${entry.player.id}?seasonId=${seasonId}`
   return (
     <Link
-      href={`/players/${entry.player.id}?seasonId=${seasonId}`}
+      href={playerHref}
       className="group flex flex-col items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm text-center transition-all hover:border-slate-300 hover:shadow-md"
     >
       <div className="h-14 w-14 overflow-hidden rounded-full bg-slate-100 ring-2 ring-slate-200 group-hover:ring-slate-300 transition-all">
@@ -98,18 +103,23 @@ const LeaderRow = ({
   entry,
   category,
   seasonId,
+  stageId,
 }: {
   rank: number
   entry: LeaderEntry
   category: string
   seasonId: number
+  stageId: number | null
 }) => {
   const displayName = entry.player.displayName ?? entry.player.name
   const positionCode = entry.player.positionId ? (POSITION_CODES[entry.player.positionId] ?? null) : null
+  const playerHref = stageId
+    ? `/players/${entry.player.id}?seasonId=${seasonId}&stageId=${stageId}`
+    : `/players/${entry.player.id}?seasonId=${seasonId}`
 
   return (
     <Link
-      href={`/players/${entry.player.id}?seasonId=${seasonId}`}
+      href={playerHref}
       className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-slate-50"
     >
       <span className="w-4 shrink-0 text-center text-xs font-semibold text-slate-400">{rank}</span>
@@ -164,11 +174,13 @@ const LeaderList = ({
   label,
   entries,
   seasonId,
+  stageId,
 }: {
   category: string
   label: string
   entries: LeaderEntry[]
   seasonId: number
+  stageId: number | null
 }) => (
   <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
     <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-2.5">
@@ -187,6 +199,7 @@ const LeaderList = ({
             entry={entry}
             category={category}
             seasonId={seasonId}
+            stageId={stageId}
           />
         ))}
       </div>
@@ -262,6 +275,7 @@ const PlayersContent = async ({
             category={key}
             entry={entries[0]}
             seasonId={selectedSeasonId}
+            stageId={selectedStageId}
           />
         ))}
       </div>
@@ -274,6 +288,7 @@ const PlayersContent = async ({
             label={CATEGORY_LABELS[key] ?? key}
             entries={entries}
             seasonId={selectedSeasonId}
+            stageId={selectedStageId}
           />
         ))}
       </div>
@@ -293,10 +308,8 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
     Number(secondSeason.name) - Number(firstSeason.name)
   )
 
-  // Prefer the most recently completed season — it has the richest stats.
-  // Fall back to the current season only if no completed season exists.
+  // Default to the current active season, fall back to first available.
   const defaultSeason =
-    sortedSeasons.find((season) => !season.isCurrent) ??
     sortedSeasons.find((season) => season.isCurrent) ??
     sortedSeasons[0]
   const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (defaultSeason?.id ?? null)
@@ -312,8 +325,9 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
     )
   }
 
-  const stages = await getStages(selectedSeason.id).catch(() => [])
-  // Default to current stage, fallback to last stage in the season (most recently completed).
+  const allStages = await getStages(selectedSeason.id).catch(() => [])
+  const stages = filterMainStages(allStages)
+  // Default to current stage, fallback to last main stage in the season.
   const defaultStage = stages.find((stage) => stage.isCurrent) ?? stages[stages.length - 1] ?? null
   const requestedStageId = stageIdParam ? Number(stageIdParam) : null
   const hasRequestedStage = requestedStageId !== null && stages.some((stage) => stage.id === requestedStageId)
