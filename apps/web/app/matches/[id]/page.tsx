@@ -772,7 +772,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
               className="absolute inset-0 pointer-events-none"
               style={{
                 background: fixture.venue?.imagePath
-                  ? "linear-gradient(145deg, rgba(2,6,23,0.82) 0%, rgba(15,23,42,0.52) 42%, rgba(2,6,23,0.78) 100%)"
+                  ? "linear-gradient(145deg, rgba(2,6,23,0.58) 0%, rgba(15,23,42,0.28) 42%, rgba(2,6,23,0.52) 100%)"
                   : "linear-gradient(to bottom, transparent, rgba(0,0,0,0.40))",
               }}
             />
@@ -781,8 +781,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
               <HeroBackLink label="Back" href="/matches" />
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6">
-              <div className="flex flex-col gap-4">
+            <div className="absolute inset-0 flex flex-col justify-center gap-4 px-6 pt-14 pb-6">
 
                 <div className="flex items-end justify-center gap-6">
                   <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
@@ -832,7 +831,6 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                   )}
                 </div>
 
-              </div>
             </div>
           </div>
         </div>
