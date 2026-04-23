@@ -579,8 +579,14 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
         />
       )}
 
-      {/* Cards grid — no wrapper */}
-      {activeGroup === null ? (
+      {/* Cards grid */}
+      {isFetching ? (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="h-[132px] animate-pulse rounded-[18px] bg-slate-200" />
+          ))}
+        </div>
+      ) : activeGroup === null ? (
         <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
           No hay partidos disponibles
         </div>

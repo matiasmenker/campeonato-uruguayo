@@ -773,7 +773,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40 pointer-events-none" />
 
             <div className="absolute left-5 top-5">
-              <HeroBackLink label="Back" />
+              <HeroBackLink label="Back" href="/matches" />
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 p-6">
