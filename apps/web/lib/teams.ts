@@ -133,3 +133,18 @@ export const getTeamCoach = async (teamId: number, seasonId: number): Promise<Te
   )
   return response.data[0] ?? null
 }
+
+export const getTeamVenue = async (teamId: number, seasonId: number): Promise<TeamVenue | null> => {
+  const params = new URLSearchParams({
+    teamId: String(teamId),
+    seasonId: String(seasonId),
+    limit: "5",
+    sort: "kickoffAt",
+    order: "desc",
+  })
+  const response = await apiFetch<ListResponse<TeamFixture>>(
+    `/api/v1/fixtures?${params}`,
+    { next: { revalidate: 86400 } },
+  )
+  return response.data.find((fixture) => fixture.venue !== null)?.venue ?? null
+}

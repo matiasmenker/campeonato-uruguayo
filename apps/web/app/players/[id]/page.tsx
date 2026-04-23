@@ -19,7 +19,6 @@ import {
   STAT_TYPE_MINUTES,
   STAT_TYPE_ASSISTS,
   POSITION_LABELS,
-  POSITION_CODES,
   POSITION_COLORS,
   type PlayerDetail,
   type PlayerMembership,
@@ -124,8 +123,8 @@ const formatDateOfBirth = (dateOfBirth: string | null): string | null => {
 
 const formatDate = (kickoffAt: string | null): string => {
   if (!kickoffAt) return ""
-  return new Intl.DateTimeFormat("es-UY", {
-    day: "2-digit", month: "short", timeZone: "America/Montevideo",
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Montevideo",
   }).format(new Date(kickoffAt))
 }
 
@@ -221,13 +220,12 @@ const RecentFormCard = ({
       href={`/matches/${fixture.id}`}
       className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200/80 bg-white px-3 py-3 shadow-sm transition-all hover:border-slate-300 hover:shadow-md"
     >
-      <div className="h-9 w-9 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
-        <img
-          src={resolvePlayerImageUrl(opponent?.imagePath ?? null)}
-          alt={opponent?.name ?? "—"}
-          className="h-full w-full object-contain"
-        />
-      </div>
+      {/* Logo — plain image, no circular clip */}
+      <img
+        src={resolvePlayerImageUrl(opponent?.imagePath ?? null)}
+        alt={opponent?.name ?? "—"}
+        className="h-9 w-9 object-contain"
+      />
       <div className="flex w-full flex-col items-center gap-0.5">
         <span className="w-full truncate text-center text-[11px] font-semibold text-slate-700 leading-tight">
           {opponent?.shortCode ?? opponent?.name?.split(" ").at(-1) ?? "—"}
@@ -246,13 +244,15 @@ const RecentFormCard = ({
           </span>
         )}
       </div>
-      {/* Circular rating badge with star */}
-      <div
-        className="flex h-11 w-11 flex-col items-center justify-center rounded-full gap-0.5"
-        style={{ background: ratingFill }}
-      >
-        <StarInline fill="rgba(255,255,255,0.75)" size={8} />
-        <span className="text-xs font-black tabular-nums text-white leading-none">{rating.toFixed(1)}</span>
+      {/* Star outside circle, number inside */}
+      <div className="flex flex-col items-center gap-0.5">
+        <StarInline fill={ratingFill} size={9} />
+        <div
+          className="flex h-9 w-9 items-center justify-center rounded-full"
+          style={{ background: ratingFill }}
+        >
+          <span className="text-xs font-black tabular-nums text-white leading-none">{rating.toFixed(1)}</span>
+        </div>
       </div>
       <span className="text-[9px] text-slate-400 leading-none">{formatDate(fixture.kickoffAt)}</span>
     </Link>
@@ -261,13 +261,15 @@ const RecentFormCard = ({
 
 const RecentFormEmptySlot = () => (
   <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white/40 px-3 py-3">
-    <div className="h-9 w-9 rounded-full bg-slate-100 ring-1 ring-slate-200" />
+    <div className="h-9 w-9 rounded bg-slate-100" />
     <div className="flex w-full flex-col items-center gap-0.5">
       <span className="text-[11px] text-slate-300">—</span>
     </div>
-    <div className="flex h-11 w-11 flex-col items-center justify-center rounded-full bg-slate-100 gap-0.5">
-      <StarInline fill="#e2e8f0" size={8} />
-      <span className="text-xs font-black tabular-nums text-slate-300 leading-none">—</span>
+    <div className="flex flex-col items-center gap-0.5">
+      <StarInline fill="#e2e8f0" size={9} />
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
+        <span className="text-xs font-black tabular-nums text-slate-300 leading-none">—</span>
+      </div>
     </div>
     <span className="text-[9px] text-slate-300 leading-none">No data</span>
   </div>
@@ -322,10 +324,12 @@ const SeasonHistoryRow = ({
   season,
   membership,
   isSelected,
+  avgRating,
 }: {
   season: { id: number; name: string }
   membership: PlayerMembership | null
   isSelected: boolean
+  avgRating: number | null
 }) => (
   <div className={`flex items-center gap-3 px-4 py-3 ${isSelected ? "bg-slate-50" : ""}`}>
     <span className="w-10 shrink-0 text-xs font-bold text-slate-400">{season.name}</span>
@@ -353,12 +357,16 @@ const SeasonHistoryRow = ({
         <span className="text-sm text-slate-400">No data</span>
       </div>
     )}
-    <div className="flex items-center gap-2 shrink-0">
-      {membership?.positionId && POSITION_CONFIG[membership.positionId] && (
-        <PositionCircle positionId={membership.positionId} size={18} />
-      )}
-      {membership?.shirtNumber != null && (
-        <span className="text-xs font-medium text-slate-400">#{membership.shirtNumber}</span>
+    <div className="shrink-0">
+      {membership && avgRating !== null ? (
+        <span
+          className="inline-flex items-center justify-center rounded-md px-1.5 font-black tabular-nums text-xs text-white"
+          style={{ background: getRatingFill(avgRating), minWidth: 34, height: 20 }}
+        >
+          {avgRating.toFixed(2)}
+        </span>
+      ) : (
+        <span className="text-xs text-slate-300">—</span>
       )}
     </div>
   </div>
@@ -457,6 +465,28 @@ const PlayerSeasonContent = async ({
 
   const hasAppearances = aggregates.appearances > 0
 
+  // Fetch season-level (all stages) avg ratings for each membership to show in history
+  const membershipRatingResults = await Promise.allSettled(
+    memberships.map((membership) =>
+      getPlayerStatsByType(player.id, STAT_TYPE_RATING, membership.season.id)
+    )
+  )
+  const seasonAvgRatingMap = new Map<number, number | null>()
+  memberships.forEach((membership, index) => {
+    const result = membershipRatingResults[index]
+    if (result.status === "fulfilled") {
+      const ratingValues = result.value
+        .map((stat) => stat.value.normalizedValue)
+        .filter((value): value is number => typeof value === "number")
+      const avg = ratingValues.length > 0
+        ? Math.round((ratingValues.reduce((sum, value) => sum + value, 0) / ratingValues.length) * 100) / 100
+        : null
+      seasonAvgRatingMap.set(membership.season.id, avg)
+    } else {
+      seasonAvgRatingMap.set(membership.season.id, null)
+    }
+  })
+
   // All seasons sorted descending — always show every season even if no membership
   const sortedAllSeasons = [...allSeasons].sort(
     (firstSeason, secondSeason) => Number(secondSeason.name) - Number(firstSeason.name),
@@ -536,6 +566,7 @@ const PlayerSeasonContent = async ({
                   season={season}
                   membership={membershipBySeasonId.get(season.id) ?? null}
                   isSelected={season.id === selectedSeasonId}
+                  avgRating={seasonAvgRatingMap.get(season.id) ?? null}
                 />
               ))}
             </div>

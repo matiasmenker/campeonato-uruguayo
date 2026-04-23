@@ -7,7 +7,7 @@ import HeroTexture from "@/components/hero-texture"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamSeasonSelector from "@/components/team-season-selector"
-import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, type SquadMember, type TeamFixture } from "@/lib/teams"
+import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, getTeamVenue, type SquadMember, type TeamFixture } from "@/lib/teams"
 import { resolvePlayerImageUrl } from "@/lib/player"
 import { getSeasons, getStages, getSeasonChampion, type Season } from "@/lib/seasons"
 
@@ -159,6 +159,34 @@ const ChampionBadge = async ({
   )
 }
 
+const TeamHeroDetails = async ({
+  teamId,
+  seasonId,
+}: {
+  teamId: number
+  seasonId: number
+}) => {
+  const [coachResult, venueResult] = await Promise.allSettled([
+    getTeamCoach(teamId, seasonId),
+    getTeamVenue(teamId, seasonId),
+  ])
+  const coach = coachResult.status === "fulfilled" ? coachResult.value : null
+  const venue = venueResult.status === "fulfilled" ? venueResult.value : null
+
+  if (!coach && !venue) return null
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      {coach && (
+        <span className="text-sm font-medium text-white/70">{coach.name}</span>
+      )}
+      {venue && (
+        <span className="text-xs text-white/50">{venue.name}</span>
+      )}
+    </div>
+  )
+}
+
 const ContentSkeleton = () => (
   <div className="grid gap-x-6 gap-y-3 lg:grid-cols-[1fr_340px]">
     <div className="flex items-center gap-2 px-1">
@@ -228,15 +256,13 @@ const TeamContent = async ({
   teamId: number
   selectedSeason: Season
 }) => {
-  const [squadResult, fixturesResult, coachResult] = await Promise.allSettled([
+  const [squadResult, fixturesResult] = await Promise.allSettled([
     getTeamSquad(teamId, selectedSeason.id),
     getTeamFixtures(teamId, selectedSeason.id, 15),
-    getTeamCoach(teamId, selectedSeason.id),
   ])
 
   const squad = squadResult.status === "fulfilled" ? squadResult.value : []
   const allFixtures = fixturesResult.status === "fulfilled" ? fixturesResult.value : []
-  const coach = coachResult.status === "fulfilled" ? coachResult.value : null
 
   const recentFixtures = allFixtures
     .filter((fixture) => fixture.homeScore !== null && fixture.awayScore !== null)
@@ -257,11 +283,6 @@ const TeamContent = async ({
       <div className="flex items-center gap-2 px-1">
         <h2 className="text-sm font-bold text-slate-700">Squad</h2>
         <span className="text-sm font-normal text-slate-400">· {selectedSeason.name}</span>
-        {coach && (
-          <span className="text-sm text-slate-400">
-            · <span className="font-medium text-slate-600">{coach.name}</span>
-          </span>
-        )}
       </div>
 
       <h2 className="px-1 text-sm font-bold text-slate-700">
@@ -448,6 +469,9 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                 )}
                 <div className="min-w-0 flex flex-col gap-1 pb-1">
                   <h1 className="text-3xl font-black text-white leading-none drop-shadow">{team.name}</h1>
+                  <Suspense fallback={null}>
+                    <TeamHeroDetails teamId={teamId} seasonId={selectedSeason.id} />
+                  </Suspense>
                 </div>
               </div>
               {seasons.length > 1 && (
