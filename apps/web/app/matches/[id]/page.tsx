@@ -259,12 +259,11 @@ const GloveSaveIcon = ({ size = 12 }: { size?: number }) => (
 interface EventBadgesProps {
   events: FixtureEvent[]
   assists: number
-  saves?: number
   offsetBottom?: number
   isStarter?: boolean
 }
 
-const EventBadges = ({ events, assists, saves = 0, offsetBottom = 0, isStarter = true }: EventBadgesProps) => {
+const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: EventBadgesProps) => {
   const regularGoals = events.filter(e => e.typeId === EVENT_GOAL || e.typeId === EVENT_GOAL_PENALTY)
   const ownGoals     = events.filter(e => e.typeId === EVENT_GOAL_OWN)
   const yellows      = events.filter(e => e.typeId === EVENT_YELLOW).length
@@ -272,7 +271,7 @@ const EventBadges = ({ events, assists, saves = 0, offsetBottom = 0, isStarter =
   const reds         = events.filter(e => e.typeId === EVENT_RED).length
   const subEvents    = isStarter ? [] : events.filter(e => e.typeId === EVENT_SUBSTITUTION)
 
-  if (!regularGoals.length && !ownGoals.length && !assists && !yellows && !yellowReds && !reds && !subEvents.length && !saves) return null
+  if (!regularGoals.length && !ownGoals.length && !assists && !yellows && !yellowReds && !reds && !subEvents.length) return null
 
   return (
     <div
@@ -305,12 +304,6 @@ const EventBadges = ({ events, assists, saves = 0, offsetBottom = 0, isStarter =
           <SubInIcon size={13} />
         </span>
       ))}
-      {saves > 0 && (
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 2, background: "rgba(99,102,241,0.9)", borderRadius: 3, padding: "1px 3px", flexShrink: 0 }}>
-          <GloveSaveIcon size={9} />
-          <span style={{ fontSize: 8, fontWeight: 900, color: "white", lineHeight: 1 }}>{saves}</span>
-        </span>
-      )}
     </div>
   )
 }
@@ -320,13 +313,12 @@ interface PlayerTokenProps {
   events: FixtureEvent[]
   rating: number | null
   assists: number
-  saves: number
   x: number
   y: number
   substitutedOut: boolean
 }
 
-const PlayerToken = ({ player, events, rating, assists, saves, x, y, substitutedOut }: PlayerTokenProps) => {
+const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: PlayerTokenProps) => {
   const fullName = player.player.displayName ?? player.player.name
   const parts = fullName.trim().split(/\s+/)
   const shortName = parts.length > 2 ? parts[parts.length - 1] : parts.slice(-2).join(" ")
@@ -340,7 +332,7 @@ const PlayerToken = ({ player, events, rating, assists, saves, x, y, substituted
       style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: TOKEN_WIDTH, gap: 3 }}
     >
       <div className="relative" style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}>
-        <EventBadges events={events} assists={assists} saves={saves} offsetBottom={1} isStarter={true} />
+        <EventBadges events={events} assists={assists} offsetBottom={1} isStarter={true} />
         <div
           className="overflow-hidden rounded-full"
           style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, background: "#fff", border: "2px solid rgba(255,255,255,0.95)", boxShadow: "0 3px 10px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.35)" }}
@@ -359,7 +351,7 @@ const PlayerToken = ({ player, events, rating, assists, saves, x, y, substituted
         <span
           className="absolute flex items-center justify-center rounded-full font-black text-white leading-none"
           style={{
-            width: 20, height: 20, fontSize: 7, top: -2, right: -2,
+            width: 20, height: 20, fontSize: 8, top: -2, right: -2,
             background: rating !== null ? getRatingFill(rating) : "rgba(15,23,42,0.7)",
             boxShadow: "0 1px 3px rgba(0,0,0,0.6)",
           }}
@@ -377,7 +369,7 @@ const PlayerToken = ({ player, events, rating, assists, saves, x, y, substituted
 
       {/* Name bar — position badge on left, then name */}
       <div
-        className="flex items-center gap-1 rounded-lg px-1.5 py-0.5"
+        className="flex items-center gap-1 rounded-lg px-2 py-1"
         style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)", maxWidth: TOKEN_WIDTH }}
       >
         {positionConfig && (
@@ -387,14 +379,14 @@ const PlayerToken = ({ player, events, rating, assists, saves, x, y, substituted
               width: 15, height: 15, borderRadius: "50%", background: positionConfig.bg, flexShrink: 0,
             }}
           >
-            <span style={{ fontSize: 6, fontWeight: 900, color: "white", lineHeight: 1, WebkitFontSmoothing: "antialiased" } as React.CSSProperties}>
+            <span style={{ fontSize: 7, fontWeight: 900, color: "white", lineHeight: 1, WebkitFontSmoothing: "antialiased" } as React.CSSProperties}>
               {positionConfig.label}
             </span>
           </span>
         )}
         <span
           className="text-white font-semibold leading-none"
-          style={{ fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}
+          style={{ fontSize: 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}
           title={fullName}
         >
           {shortName}
@@ -412,11 +404,10 @@ interface PitchProps {
   eventsByPlayer: Map<number, FixtureEvent[]>
   ratingByPlayer: Map<number, number>
   assistsByPlayer: Map<number, number>
-  savesByPlayer: Map<number, number>
   substitutedOutIds: Set<number>
 }
 
-const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByPlayer, ratingByPlayer, assistsByPlayer, savesByPlayer, substitutedOutIds }: PitchProps) => {
+const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByPlayer, ratingByPlayer, assistsByPlayer, substitutedOutIds }: PitchProps) => {
 
   const renderTeam = (lineup: LineupPlayer[], isHome: boolean, formation: string | null) => {
     const allStarters = lineup.filter(p => p.typeId === 11)
@@ -455,7 +446,6 @@ const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByP
             events={eventsByPlayer.get(player.player.id) ?? []}
             rating={ratingByPlayer.get(player.player.id) ?? null}
             assists={assistsByPlayer.get(player.player.id) ?? 0}
-            saves={savesByPlayer.get(player.player.id) ?? 0}
             x={xPositions[rowIndex] ?? 50}
             y={yPos[playerIndex] ?? 50}
             substitutedOut={substitutedOutIds.has(player.player.id)}
@@ -476,7 +466,6 @@ const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByP
           events={eventsByPlayer.get(player.player.id) ?? []}
           rating={ratingByPlayer.get(player.player.id) ?? null}
           assists={assistsByPlayer.get(player.player.id) ?? 0}
-          saves={savesByPlayer.get(player.player.id) ?? 0}
           x={xPositions[rowIndex] ?? 50}
           y={yPos[playerIndex] ?? 50}
           substitutedOut={substitutedOutIds.has(player.player.id)}
@@ -659,8 +648,10 @@ type TimelineItem =
   | { kind: "goal"; event: FixtureEvent; assister: PlayerSummary | null }
   | { kind: "card"; event: FixtureEvent }
   | { kind: "sub";  subEvent: SubstitutionEvent }
+  | { kind: "save"; playerId: number; playerName: string; playerImage: string | null; positionId: number | null; count: number }
 
 const getItemMinuteStr = (item: TimelineItem): string => {
+  if (item.kind === "save") return "—"
   const minute   = item.kind === "sub" ? item.subEvent.minute    : item.event.minute
   const extraMin = item.kind === "sub" ? item.subEvent.extraMinute : item.event.extraMinute
   if (minute == null) return "—"
@@ -684,6 +675,7 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
             className="flex items-center gap-1.5 min-w-0 hover:opacity-80 transition-opacity"
           >
             <img src={playerImg} alt={name} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+            <PositionBadge positionId={event.player?.positionId ?? null} size={13} />
             <p className="text-xs font-semibold text-slate-900 truncate leading-tight">{name}</p>
           </Link>
           <div className="flex items-center gap-1.5 mt-0.5">
@@ -724,6 +716,7 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
       <div className="flex items-center gap-2.5 rounded-xl bg-white border border-slate-100 px-3 py-2.5 shadow-sm w-full">
         {isDouble ? <DoubleCard /> : <CardRect color={event.typeId === EVENT_YELLOW ? "#facc15" : "#ff0000"} />}
         <img src={playerImg} alt={name} style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+        <PositionBadge positionId={event.player?.positionId ?? null} size={13} />
         {event.player ? (
           <Link href={`/players/${event.player.id}`} className="text-xs font-semibold text-slate-900 truncate flex-1 min-w-0 hover:text-slate-600 transition-colors">
             {name}
@@ -731,6 +724,21 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
         ) : (
           <p className="text-xs font-semibold text-slate-900 truncate flex-1 min-w-0">{name}</p>
         )}
+      </div>
+    )
+  }
+
+  if (item.kind === "save") {
+    const playerImg = resolvePlayerImageUrl(item.playerImage)
+    return (
+      <div className="flex items-center gap-2.5 rounded-xl bg-white border border-slate-100 px-3 py-2.5 shadow-sm w-full">
+        <span style={{ color: "#6366f1", display: "inline-flex", flexShrink: 0 }}><GloveSaveIcon size={15} /></span>
+        <img src={playerImg} alt={item.playerName} style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+        <PositionBadge positionId={item.positionId} size={13} />
+        <Link href={`/players/${item.playerId}`} className="text-xs font-semibold text-slate-900 truncate flex-1 min-w-0 hover:text-slate-600 transition-colors">
+          {item.playerName}
+        </Link>
+        <span style={{ fontSize: 10, fontWeight: 900, color: "#6366f1", whiteSpace: "nowrap", flexShrink: 0 }}>{item.count} saves</span>
       </div>
     )
   }
@@ -746,6 +754,7 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
         <div className="flex items-center gap-2 min-w-0">
           <SubOutIcon size={14} />
           <img src={imgOut} alt={nameOut} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+          <PositionBadge positionId={subEvent.playerOut?.positionId ?? null} size={13} />
           {subEvent.playerOut ? (
             <Link href={`/players/${subEvent.playerOut.id}`} className="text-xs font-semibold text-slate-900 truncate hover:text-slate-600 transition-colors">
               {nameOut}
@@ -758,6 +767,7 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
       <div className="flex items-center gap-2 min-w-0">
         <SubInIcon size={14} />
         <img src={imgIn} alt={nameIn} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
+        <PositionBadge positionId={subEvent.playerIn?.positionId ?? null} size={13} />
         {subEvent.playerIn ? (
           <Link href={`/players/${subEvent.playerIn.id}`} className="text-xs font-semibold text-slate-900 truncate hover:text-slate-600 transition-colors">
             {nameIn}
@@ -876,12 +886,32 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   })
 
 
+  // Build save timeline items from savesByPlayer — one entry per GK with saves
+  const allLineupPlayers = [...homeLineup, ...awayLineup]
+  const saveTimelineItems: TimelineItem[] = Array.from(savesByPlayer.entries())
+    .flatMap(([playerId, count]) => {
+      const lineupPlayer = allLineupPlayers.find(lp => lp.player.id === playerId)
+      if (!lineupPlayer) return []
+      const item: TimelineItem = {
+        kind: "save" as const,
+        playerId,
+        playerName: lineupPlayer.player.displayName ?? lineupPlayer.player.name,
+        playerImage: lineupPlayer.player.imagePath,
+        positionId: lineupPlayer.player.positionId,
+        count,
+      }
+      return [item]
+    })
+
+  const fullTimeline: TimelineItem[] = [...sortedTimeline, ...saveTimelineItems]
+
   const getItemSide = (item: TimelineItem): "home" | "away" | null => {
+    if (item.kind === "save") return playerSideMap.get(item.playerId) ?? null
     const playerId = item.kind === "sub" ? item.subEvent.playerIn?.id : item.event.player?.id
     return playerId != null ? (playerSideMap.get(playerId) ?? null) : null
   }
 
-  const hasTimeline = sortedTimeline.length > 0
+  const hasTimeline = fullTimeline.length > 0
   const hasLineups  = lineups.some(p => (p.typeId === 11 && p.formationField != null) || p.formationPosition !== null)
 
   return (
@@ -987,7 +1017,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
         )}
 
         {hasLineups ? (
-          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} homeFormation={fixture.homeFormation ?? null} awayFormation={fixture.awayFormation ?? null} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} savesByPlayer={savesByPlayer} substitutedOutIds={substitutedOutIds} />
+          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} homeFormation={fixture.homeFormation ?? null} awayFormation={fixture.awayFormation ?? null} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} substitutedOutIds={substitutedOutIds} />
         ) : (
           <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
             Lineup not available
@@ -1031,7 +1061,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                   <div />
                 </div>
 
-                {sortedTimeline.map((item, index) => {
+                {fullTimeline.map((item, index) => {
                   const side      = getItemSide(item)
                   const minuteStr = getItemMinuteStr(item)
                   const isHome    = side === "home"
