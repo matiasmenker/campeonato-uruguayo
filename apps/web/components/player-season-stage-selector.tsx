@@ -12,8 +12,6 @@ interface PlayerSeasonStageSelectorProps {
   selectedStageId: number | null
 }
 
-const ALL_STAGES_ID = 0
-
 const PlayerSeasonStageSelector = ({
   seasons,
   stages,
@@ -34,27 +32,18 @@ const PlayerSeasonStageSelector = ({
 
   const handleStageChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString())
-    if (value === String(ALL_STAGES_ID)) {
-      params.delete("stageId")
-    } else {
-      params.set("stageId", value)
-    }
+    params.set("stageId", value)
     signalNavigationStart()
     router.push(`?${params.toString()}`)
   }
 
-  const stageOptions = [
-    { id: ALL_STAGES_ID, name: "All stages" },
-    ...stages,
-  ]
-
   return (
     <div className="flex items-center gap-2">
-      {stages.length > 0 && (
+      {stages.length > 1 && (
         <HeroSelect
-          value={selectedStageId ? String(selectedStageId) : String(ALL_STAGES_ID)}
+          value={selectedStageId !== null ? String(selectedStageId) : String(stages[0]?.id ?? "")}
           onValueChange={handleStageChange}
-          options={stageOptions}
+          options={stages}
           isLoading={isNavigating}
           openUp
         />

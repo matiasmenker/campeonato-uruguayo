@@ -3,9 +3,10 @@ import Link from "next/link"
 import { IconShieldFilled } from "@tabler/icons-react"
 import HeroTexture from "@/components/hero-texture"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
-import TeamSeasonSelector from "@/components/team-season-selector"
-import { getSeasons } from "@/lib/seasons"
+import PlayerSeasonStageSelector from "@/components/player-season-stage-selector"
+import { getSeasons, getStages } from "@/lib/seasons"
 import { getLeaders, type LeaderEntry } from "@/lib/metrics"
+import { getRatingColors, getRatingFill } from "@/lib/rating"
 import { resolvePlayerImageUrl } from "@/lib/player"
 import { POSITION_CODES } from "@/lib/players"
 
@@ -62,9 +63,18 @@ const CategoryHighlight = ({
         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
           {CATEGORY_LABELS[category]}
         </span>
-        <span className="text-3xl font-black tabular-nums text-slate-950 leading-none">
-          {formatValue(category, entry.value)}
-        </span>
+        {category === "topRated" ? (
+          <span
+            className="text-3xl font-black tabular-nums leading-none"
+            style={{ color: getRatingColors(entry.value).text }}
+          >
+            {formatValue(category, entry.value)}
+          </span>
+        ) : (
+          <span className="text-3xl font-black tabular-nums text-slate-950 leading-none">
+            {formatValue(category, entry.value)}
+          </span>
+        )}
         <span className="text-[11px] text-slate-400">{CATEGORY_VALUE_LABELS[category]}</span>
       </div>
       <div className="flex flex-col items-center gap-0.5">
@@ -129,10 +139,21 @@ const LeaderRow = ({
         </div>
       </div>
       <div className="shrink-0 text-right">
-        <span className="text-sm font-black tabular-nums text-slate-900">
-          {formatValue(category, entry.value)}
-        </span>
-        <span className="ml-1 text-[10px] text-slate-400">{CATEGORY_VALUE_LABELS[category]}</span>
+        {category === "topRated" ? (
+          <span
+            className="inline-flex items-center justify-center rounded-md px-1.5 font-black tabular-nums text-sm leading-none text-white"
+            style={{ background: getRatingFill(entry.value), minWidth: 34, height: 20 }}
+          >
+            {formatValue(category, entry.value)}
+          </span>
+        ) : (
+          <>
+            <span className="text-sm font-black tabular-nums text-slate-900">
+              {formatValue(category, entry.value)}
+            </span>
+            <span className="ml-1 text-[10px] text-slate-400">{CATEGORY_VALUE_LABELS[category]}</span>
+          </>
+        )}
       </div>
     </Link>
   )
@@ -202,8 +223,18 @@ const ContentSkeleton = () => (
   </div>
 )
 
-const PlayersContent = async ({ selectedSeasonId }: { selectedSeasonId: number }) => {
-  const leaders = await getLeaders({ seasonId: selectedSeasonId, limit: 8 }).catch(() => null)
+const PlayersContent = async ({
+  selectedSeasonId,
+  selectedStageId,
+}: {
+  selectedSeasonId: number
+  selectedStageId: number | null
+}) => {
+  const leaders = await getLeaders({
+    seasonId: selectedSeasonId,
+    stageId: selectedStageId ?? undefined,
+    limit: 8,
+  }).catch(() => null)
 
   if (!leaders) {
     return (
@@ -224,7 +255,7 @@ const PlayersContent = async ({ selectedSeasonId }: { selectedSeasonId: number }
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         {categories.map(({ key, entries }) => (
           <CategoryHighlight
             key={key}
@@ -251,11 +282,11 @@ const PlayersContent = async ({ selectedSeasonId }: { selectedSeasonId: number }
 }
 
 interface PlayersPageProps {
-  searchParams: Promise<{ seasonId?: string }>
+  searchParams: Promise<{ seasonId?: string; stageId?: string }>
 }
 
 const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
-  const { seasonId: seasonIdParam } = await searchParams
+  const { seasonId: seasonIdParam, stageId: stageIdParam } = await searchParams
 
   const seasons = await getSeasons().catch(() => [])
   const sortedSeasons = [...seasons].sort((firstSeason, secondSeason) =>
@@ -264,14 +295,12 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
 
   // Prefer the most recently completed season — it has the richest stats.
   // Fall back to the current season only if no completed season exists.
-  const currentSeason =
+  const defaultSeason =
     sortedSeasons.find((season) => !season.isCurrent) ??
     sortedSeasons.find((season) => season.isCurrent) ??
     sortedSeasons[0]
-  const selectedSeasonId = seasonIdParam
-    ? Number(seasonIdParam)
-    : (currentSeason?.id ?? null)
-  const selectedSeason = sortedSeasons.find((season) => season.id === selectedSeasonId) ?? currentSeason
+  const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (defaultSeason?.id ?? null)
+  const selectedSeason = sortedSeasons.find((season) => season.id === selectedSeasonId) ?? defaultSeason
 
   if (!selectedSeason) {
     return (
@@ -282,6 +311,19 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
       </main>
     )
   }
+
+  const stages = await getStages(selectedSeason.id).catch(() => [])
+  // Default to current stage, fallback to last stage in the season (most recently completed).
+  const defaultStage = stages.find((stage) => stage.isCurrent) ?? stages[stages.length - 1] ?? null
+  const requestedStageId = stageIdParam ? Number(stageIdParam) : null
+  const hasRequestedStage = requestedStageId !== null && stages.some((stage) => stage.id === requestedStageId)
+  const selectedStageId: number | null = stages.length > 0
+    ? (hasRequestedStage ? requestedStageId! : (defaultStage?.id ?? null))
+    : null
+  const selectedStage = stages.find((stage) => stage.id === selectedStageId) ?? defaultStage
+
+  const committedParams: Record<string, string> = { seasonId: String(selectedSeason.id) }
+  if (hasRequestedStage && selectedStageId !== null) committedParams.stageId = String(selectedStageId)
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
@@ -294,26 +336,31 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">
               <div className="flex flex-col gap-0.5">
                 <h1 className="text-3xl font-black text-white drop-shadow leading-none">Players</h1>
-                <p className="text-sm text-white/60">{selectedSeason.name} season leaders</p>
+                <p className="text-sm text-white/60">
+                  {[selectedStage?.name, selectedSeason.name].filter(Boolean).join(" · ")} leaders
+                </p>
               </div>
-              {sortedSeasons.length > 1 && (
-                <Suspense>
-                  <TeamSeasonSelector
-                    seasons={sortedSeasons}
-                    selectedSeasonId={selectedSeason.id}
-                  />
-                </Suspense>
-              )}
+              <Suspense>
+                <PlayerSeasonStageSelector
+                  seasons={sortedSeasons}
+                  stages={stages}
+                  selectedSeasonId={selectedSeason.id}
+                  selectedStageId={selectedStageId}
+                />
+              </Suspense>
             </div>
           </div>
         </div>
 
         <Suspense fallback={<ContentSkeleton />}>
           <SearchParamsLoadingBoundary
-            committedParams={{ seasonId: String(selectedSeason.id) }}
+            committedParams={committedParams}
             skeleton={<ContentSkeleton />}
           >
-            <PlayersContent selectedSeasonId={selectedSeason.id} />
+            <PlayersContent
+              selectedSeasonId={selectedSeason.id}
+              selectedStageId={selectedStageId}
+            />
           </SearchParamsLoadingBoundary>
         </Suspense>
 

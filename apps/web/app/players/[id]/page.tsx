@@ -1,4 +1,4 @@
-import { Suspense } from "react"
+import React, { Suspense } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { IconArrowLeft, IconShieldFilled } from "@tabler/icons-react"
@@ -47,11 +47,11 @@ const PositionCircle = ({ positionId, size = 20 }: { positionId: number | null; 
     <span
       style={{
         display: "inline-flex", alignItems: "center", justifyContent: "center",
-        width: size, height: size, borderRadius: "50%",
-        background: config.bg, border: "1.5px solid rgba(255,255,255,0.85)", flexShrink: 0,
+        width: size + 4, height: size + 4, borderRadius: "50%",
+        background: config.bg, flexShrink: 0,
       }}
     >
-      <span style={{ fontSize: Math.round(size * 0.42), fontWeight: 900, color: "white", lineHeight: 1 }}>
+      <span style={{ fontSize: Math.round(size * 0.42), fontWeight: 900, color: "white", lineHeight: 1, letterSpacing: "-0.01em", WebkitFontSmoothing: "antialiased" } as React.CSSProperties}>
         {config.label}
       </span>
     </span>
@@ -206,11 +206,11 @@ const RecentFormCard = ({
   teamId,
 }: {
   stat: PlayerStatEntry
-  fixture: PlayerFixture | undefined
+  fixture: PlayerFixture
   teamId: number
 }) => {
   const rating = typeof stat.value.normalizedValue === "number" ? stat.value.normalizedValue : null
-  if (rating === null || !fixture) return null
+  if (rating === null) return null
 
   const isHome = fixture.homeTeam?.id === teamId
   const opponent = isHome ? fixture.awayTeam : fixture.homeTeam
@@ -220,8 +220,7 @@ const RecentFormCard = ({
   return (
     <Link
       href={`/matches/${fixture.id}`}
-      className="flex flex-col items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3 py-3 shadow-sm transition-all hover:border-slate-300 hover:shadow-md shrink-0"
-      style={{ minWidth: 80, maxWidth: 96 }}
+      className="flex flex-col items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3 py-3 shadow-sm transition-all hover:border-slate-300 hover:shadow-md"
     >
       <div className="h-8 w-8 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
         <img
@@ -259,6 +258,19 @@ const RecentFormCard = ({
   )
 }
 
+const RecentFormEmptySlot = () => (
+  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-white/50 px-3 py-3 opacity-60">
+    <div className="h-8 w-8 rounded-full bg-slate-100 ring-1 ring-slate-200" />
+    <div className="flex w-full flex-col items-center gap-1">
+      <span className="text-[11px] text-slate-300">—</span>
+    </div>
+    <span className="flex w-full items-center justify-center rounded-lg py-1 text-sm font-black text-slate-300 leading-none">—</span>
+    <span className="text-[9px] text-slate-300 leading-none">No data</span>
+  </div>
+)
+
+const RECENT_FORM_SLOTS = 5
+
 const RecentForm = ({
   ratingStats,
   fixtures,
@@ -266,33 +278,38 @@ const RecentForm = ({
 }: {
   ratingStats: PlayerStatEntry[]
   fixtures: PlayerFixture[]
-  teamId: number
+  teamId: number | null
 }) => {
   const fixtureMap = new Map(fixtures.map((fixture) => [fixture.id, fixture]))
 
-  const sortedStats = [...ratingStats]
-    .filter((stat) => typeof stat.value.normalizedValue === "number")
-    .sort((statA, statB) => statB.fixtureId - statA.fixtureId)
-    .slice(0, 12)
+  const last5 = teamId
+    ? [...ratingStats]
+        .filter((stat) => typeof stat.value.normalizedValue === "number")
+        .sort((statA, statB) => statB.fixtureId - statA.fixtureId)
+        .slice(0, RECENT_FORM_SLOTS)
+    : []
 
-  if (sortedStats.length === 0) return null
+  const slots = Array.from({ length: RECENT_FORM_SLOTS }, (_, index) => last5[index] ?? null)
+  const hasAnyData = last5.length > 0
 
   return (
     <div className="flex flex-col gap-3">
       <h2 className="px-1 text-sm font-bold text-slate-700">Recent form</h2>
       <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50/60 shadow-sm">
-        <div className="flex gap-3 overflow-x-auto px-4 py-4 scrollbar-none">
-          {sortedStats.map((stat) => (
-            <RecentFormCard
-              key={stat.id}
-              stat={stat}
-              fixture={fixtureMap.get(stat.fixtureId)}
-              teamId={teamId}
-            />
-          ))}
+        <div className="grid grid-cols-5 gap-3 px-4 py-4">
+          {slots.map((stat, index) => {
+            if (!stat || !teamId) return <RecentFormEmptySlot key={index} />
+            const fixtureData = fixtureMap.get(stat.fixtureId)
+            if (!fixtureData) return <RecentFormEmptySlot key={index} />
+            return (
+              <RecentFormCard key={stat.id} stat={stat} fixture={fixtureData} teamId={teamId} />
+            )
+          })}
         </div>
         <p className="border-t border-slate-100 px-4 py-2 text-center text-[10px] text-slate-400">
-          Last {sortedStats.length} matches · newest left · click to view match
+          {hasAnyData
+            ? `Last ${last5.length} match${last5.length !== 1 ? "es" : ""} · newest left · click to view match`
+            : "No match data available for this season"}
         </p>
       </div>
     </div>
@@ -302,37 +319,45 @@ const RecentForm = ({
 // ─── Season history row ───────────────────────────────────────────────────────
 
 const SeasonHistoryRow = ({
+  season,
   membership,
   isSelected,
 }: {
-  membership: PlayerMembership
+  season: { id: number; name: string }
+  membership: PlayerMembership | null
   isSelected: boolean
 }) => (
   <div className={`flex items-center gap-3 px-4 py-3 ${isSelected ? "bg-slate-50" : ""}`}>
-    <span className="w-10 shrink-0 text-xs font-bold text-slate-400">{membership.season.name}</span>
-    <div className="flex items-center gap-2 min-w-0 flex-1">
-      {membership.team.imagePath ? (
-        <img src={membership.team.imagePath} alt={membership.team.name} className="h-5 w-5 shrink-0 object-contain" />
-      ) : (
-        <IconShieldFilled size={14} className="shrink-0 text-slate-300" />
-      )}
-      <Link
-        href={`/teams/${membership.team.id}`}
-        className="truncate text-sm font-semibold text-slate-800 hover:text-slate-600 transition-colors"
-      >
-        {membership.team.name}
-      </Link>
-      {membership.isLoan && (
-        <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
-          Loan
-        </span>
-      )}
-    </div>
+    <span className="w-10 shrink-0 text-xs font-bold text-slate-400">{season.name}</span>
+    {membership ? (
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        {membership.team.imagePath ? (
+          <img src={membership.team.imagePath} alt={membership.team.name} className="h-5 w-5 shrink-0 object-contain" />
+        ) : (
+          <IconShieldFilled size={14} className="shrink-0 text-slate-300" />
+        )}
+        <Link
+          href={`/teams/${membership.team.id}`}
+          className="truncate text-sm font-semibold text-slate-800 hover:text-slate-600 transition-colors"
+        >
+          {membership.team.name}
+        </Link>
+        {membership.isLoan && (
+          <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+            Loan
+          </span>
+        )}
+      </div>
+    ) : (
+      <div className="flex flex-1 items-center">
+        <span className="text-sm text-slate-400">No data</span>
+      </div>
+    )}
     <div className="flex items-center gap-2 shrink-0">
-      {membership.positionId && POSITION_CONFIG[membership.positionId] && (
+      {membership?.positionId && POSITION_CONFIG[membership.positionId] && (
         <PositionCircle positionId={membership.positionId} size={18} />
       )}
-      {membership.shirtNumber !== null && (
+      {membership?.shirtNumber != null && (
         <span className="text-xs font-medium text-slate-400">#{membership.shirtNumber}</span>
       )}
       {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-slate-900" />}
@@ -402,11 +427,13 @@ const ContentSkeleton = () => (
 const PlayerSeasonContent = async ({
   player,
   memberships,
+  allSeasons,
   selectedSeasonId,
   selectedStageId,
 }: {
   player: PlayerDetail
   memberships: PlayerMembership[]
+  allSeasons: import("@/lib/seasons").Season[]
   selectedSeasonId: number
   selectedStageId: number | null
 }) => {
@@ -431,10 +458,11 @@ const PlayerSeasonContent = async ({
 
   const hasAppearances = aggregates.appearances > 0
 
-  const sortedMemberships = [...memberships].sort(
-    (firstMembership, secondMembership) =>
-      Number(secondMembership.season.name) - Number(firstMembership.season.name),
+  // All seasons sorted descending — always show every season even if no membership
+  const sortedAllSeasons = [...allSeasons].sort(
+    (firstSeason, secondSeason) => Number(secondSeason.name) - Number(firstSeason.name),
   )
+  const membershipBySeasonId = new Map(memberships.map((membership) => [membership.season.id, membership]))
 
   const dobFormatted = formatDateOfBirth(player.dateOfBirth)
   const age = formatAge(player.dateOfBirth)
@@ -489,56 +517,54 @@ const PlayerSeasonContent = async ({
         </div>
       )}
 
-      {/* ── Recent form ── */}
-      {hasAppearances && ratingStats.length > 0 && teamId && (
-        <RecentForm ratingStats={ratingStats} fixtures={fixtures} teamId={teamId} />
-      )}
+      {/* ── Recent form — always 5 fixed slots ── */}
+      <RecentForm ratingStats={ratingStats} fixtures={fixtures} teamId={teamId} />
 
       {/* ── Two-column: Season history + Profile ── */}
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
 
-        {sortedMemberships.length > 0 && (
-          <div className="flex flex-col gap-3">
-            <h2 className="px-1 text-sm font-bold text-slate-700">Season history</h2>
+        <div className="flex flex-col gap-3">
+          <h2 className="px-1 text-sm font-bold text-slate-700">Season history</h2>
+          {sortedAllSeasons.length === 0 ? (
+            <div className="flex h-24 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
+              No season data available
+            </div>
+          ) : (
             <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm divide-y divide-slate-100">
-              {sortedMemberships.map((membership) => (
+              {sortedAllSeasons.map((season) => (
                 <SeasonHistoryRow
-                  key={membership.id}
-                  membership={membership}
-                  isSelected={membership.season.id === selectedSeasonId}
+                  key={season.id}
+                  season={season}
+                  membership={membershipBySeasonId.get(season.id) ?? null}
+                  isSelected={season.id === selectedSeasonId}
                 />
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="flex flex-col gap-3">
           <h2 className="px-1 text-sm font-bold text-slate-700">Profile</h2>
           <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm divide-y divide-slate-100">
-            {dobFormatted && (
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-xs font-semibold text-slate-500">Date of birth</span>
-                <span className="text-sm text-slate-800">
-                  {dobFormatted}
-                  {age && <span className="ml-1.5 text-slate-400">({age} yrs)</span>}
-                </span>
-              </div>
-            )}
-            {player.height && (
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-xs font-semibold text-slate-500">Height</span>
-                <span className="text-sm text-slate-800">{player.height} cm</span>
-              </div>
-            )}
-            {player.weight && (
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-xs font-semibold text-slate-500">Weight</span>
-                <span className="text-sm text-slate-800">{player.weight} kg</span>
-              </div>
-            )}
-            {player.country && (
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-xs font-semibold text-slate-500">Nationality</span>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-xs font-semibold text-slate-500">Date of birth</span>
+              <span className="text-sm text-slate-800">
+                {dobFormatted
+                  ? <>{dobFormatted}{age && <span className="ml-1.5 text-slate-400">({age} yrs)</span>}</>
+                  : "—"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-xs font-semibold text-slate-500">Height</span>
+              <span className="text-sm text-slate-800">{player.height ? `${player.height} cm` : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-xs font-semibold text-slate-500">Weight</span>
+              <span className="text-sm text-slate-800">{player.weight ? `${player.weight} kg` : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-xs font-semibold text-slate-500">Nationality</span>
+              {player.country ? (
                 <div className="flex items-center gap-2">
                   {player.country.imageUrl && (
                     <img
@@ -549,19 +575,16 @@ const PlayerSeasonContent = async ({
                   )}
                   <span className="text-sm text-slate-800">{player.country.name}</span>
                 </div>
-              </div>
-            )}
-            {selectedMembership?.shirtNumber != null && (
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-xs font-semibold text-slate-500">Shirt number</span>
-                <span className="text-sm font-bold text-slate-900">#{selectedMembership.shirtNumber}</span>
-              </div>
-            )}
-            {!dobFormatted && !player.height && !player.country && !selectedMembership?.shirtNumber && (
-              <div className="flex h-24 items-center justify-center text-sm text-slate-400">
-                No profile data available
-              </div>
-            )}
+              ) : (
+                <span className="text-sm text-slate-800">—</span>
+              )}
+            </div>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-xs font-semibold text-slate-500">Shirt number</span>
+              <span className="text-sm font-bold text-slate-900">
+                {selectedMembership?.shirtNumber != null ? `#${selectedMembership.shirtNumber}` : "—"}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -626,10 +649,14 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
     ? await getStages(selectedSeasonId).catch(() => [])
     : []
 
+  // Default to the current/active stage; never leave it unset when stages exist.
+  const defaultStage = stages.find((stage) => stage.isCurrent) ?? stages[0] ?? null
   const requestedStageId = stageIdParam ? Number(stageIdParam) : null
   const hasRequestedStage =
     requestedStageId !== null && stages.some((stage) => stage.id === requestedStageId)
-  const selectedStageId = hasRequestedStage ? requestedStageId : null
+  const selectedStageId: number | null = stages.length > 0
+    ? (hasRequestedStage ? requestedStageId! : (defaultStage?.id ?? null))
+    : null
 
   const displayName = player.displayName ?? player.commonName ?? player.name
   const positionId = selectedMembership?.positionId ?? player.positionId ?? null
@@ -647,7 +674,9 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
   }
 
   const committedParams: Record<string, string> = { seasonId: String(selectedSeasonId) }
-  if (selectedStageId) committedParams.stageId = String(selectedStageId)
+  // Only include stageId in committedParams when it was explicitly navigated to via URL.
+  // This prevents the loading boundary from getting stuck when stage is defaulted server-side.
+  if (hasRequestedStage && selectedStageId !== null) committedParams.stageId = String(selectedStageId)
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
@@ -682,13 +711,11 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
                   <h1 className="text-3xl font-black text-white leading-none drop-shadow">{displayName}</h1>
                   <div className="flex flex-wrap items-center gap-2">
                     {positionId && POSITION_CONFIG[positionId] && (
-                      <span className="flex items-center gap-1.5">
-                        <PositionCircle positionId={positionId} size={20} />
-                        {positionStyle && (
-                          <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${positionStyle.badge}`}>
-                            {positionLabel}
-                          </span>
-                        )}
+                      <PositionCircle positionId={positionId} size={20} />
+                    )}
+                    {positionStyle && !POSITION_CONFIG[positionId ?? -1] && (
+                      <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${positionStyle.badge}`}>
+                        {positionLabel}
                       </span>
                     )}
                     {selectedMembership?.team && (
@@ -739,6 +766,7 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
             <PlayerSeasonContent
               player={player}
               memberships={memberships}
+              allSeasons={allSeasons}
               selectedSeasonId={selectedSeasonId}
               selectedStageId={selectedStageId}
             />

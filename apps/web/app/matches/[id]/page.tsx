@@ -83,7 +83,16 @@ const parseFormationRows = (formation: string | null | undefined): number[] => {
 }
 
 const groupLegacyByFormation = (starters: LineupPlayer[], formation: string | null | undefined): LineupPlayer[][] => {
-  const sorted = [...starters].sort((a, b) => (a.formationPosition ?? 0) - (b.formationPosition ?? 0))
+  // Deduplicate by formationPosition — keeps first occurrence (DB order: fp ASC, id ASC).
+  // Prevents duplicate GKs at position 1 when backend data has ambiguous team assignment.
+  const seenPositions = new Set<number>()
+  const deduplicated = starters.filter(player => {
+    if (player.formationPosition == null) return true
+    if (seenPositions.has(player.formationPosition)) return false
+    seenPositions.add(player.formationPosition)
+    return true
+  })
+  const sorted = [...deduplicated].sort((a, b) => (a.formationPosition ?? 0) - (b.formationPosition ?? 0))
   const rowSizes = parseFormationRows(formation)
   const rows: LineupPlayer[][] = []
   const gk = sorted.filter(p => p.formationPosition === 1)
@@ -179,11 +188,11 @@ const PositionBadge = ({ positionId, size = 17 }: { positionId: number | null; s
     <span
       style={{
         display: "inline-flex", alignItems: "center", justifyContent: "center",
-        width: size, height: size, borderRadius: "50%",
-        background: config.bg, border: "1.5px solid rgba(255,255,255,0.9)", flexShrink: 0,
+        width: size + 4, height: size + 4, borderRadius: "50%",
+        background: config.bg, flexShrink: 0,
       }}
     >
-      <span style={{ fontSize: Math.round(size * 0.42), fontWeight: 900, color: "white", lineHeight: 1, letterSpacing: "-0.01em" }}>
+      <span style={{ fontSize: Math.round(size * 0.42), fontWeight: 900, color: "white", lineHeight: 1, letterSpacing: "-0.01em", WebkitFontSmoothing: "antialiased", MozOsxFontSmoothing: "grayscale" } as React.CSSProperties}>
         {config.label}
       </span>
     </span>
@@ -423,7 +432,7 @@ const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByP
       })
     }
 
-    const legacyStarters = lineup.filter(p => p.formationPosition !== null)
+    const legacyStarters = allStarters.filter(p => p.formationPosition !== null)
     const filledLegacyRows = groupLegacyByFormation(legacyStarters, formation)
     const xPositions = buildRowXPositions(filledLegacyRows.length, isHome)
     return filledLegacyRows.flatMap((rowPlayers, rowIndex) => {

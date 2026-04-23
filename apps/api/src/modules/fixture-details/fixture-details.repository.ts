@@ -189,17 +189,29 @@ export const resolveLineupTeams = async (
     }),
   ]);
   const teamsMap = new Map(teams.map((team) => [team.id, team]));
-  const squadKey = (playerId: number, seasonId: number) => `${playerId}:${seasonId}`;
-  const squadTeamMap = new Map<string, number>();
+  // Build playerId:seasonId → Set<teamId> to handle loan players with multiple memberships.
+  const playerSeasonTeamsMap = new Map<string, Set<number>>();
+  const playerSeasonKey = (playerId: number, seasonId: number) => `${playerId}:${seasonId}`;
   for (const squad of squads) {
-    squadTeamMap.set(squadKey(squad.playerId, squad.seasonId), squad.teamId);
+    const key = playerSeasonKey(squad.playerId, squad.seasonId);
+    const existing = playerSeasonTeamsMap.get(key) ?? new Set<number>();
+    existing.add(squad.teamId);
+    playerSeasonTeamsMap.set(key, existing);
   }
   const result = new Map<number, Team>();
   for (const lineup of lineups) {
     const fixture = fixtureMap.get(lineup.fixtureId);
     if (!fixture) continue;
-    const resolvedTeamId = squadTeamMap.get(squadKey(lineup.playerId, fixture.seasonId));
-    if (resolvedTeamId) {
+    const key = playerSeasonKey(lineup.playerId, fixture.seasonId);
+    const playerTeamIds = playerSeasonTeamsMap.get(key);
+    if (!playerTeamIds) continue;
+    const fixtureTeamIds = [fixture.homeTeamId, fixture.awayTeamId].filter(
+      (id): id is number => id !== null
+    );
+    // Prefer the team that actually played in this fixture (handles loan players).
+    const matchingTeamId = fixtureTeamIds.find((id) => playerTeamIds.has(id));
+    const resolvedTeamId = matchingTeamId ?? playerTeamIds.values().next().value;
+    if (resolvedTeamId !== undefined) {
       const team = teamsMap.get(resolvedTeamId);
       if (team) result.set(lineup.id, team);
     }
