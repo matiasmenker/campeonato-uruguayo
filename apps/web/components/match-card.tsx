@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { IconShield, IconClock, IconPlayerPlayFilled } from "@tabler/icons-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
@@ -174,6 +175,7 @@ const MatchCard = ({
   roundName,
   onVideoClick,
 }: MatchCardProps) => {
+  const router = useRouter()
   const status = getMatchStatus(stateCode, homeScore, awayScore)
   const isLive = status === "live"
   const isFinished = status === "finished"
@@ -187,9 +189,17 @@ const MatchCard = ({
       stateCode === "INPLAY_ET" ||
       stateCode === "INPLAY_ET_SECOND_HALF")
 
+  // Outer wrapper is an <article>, not a <Link>, to avoid nested <a> tags
+  // (TeamBadge renders its own <Link> for team navigation).
+  // Navigation to the match detail is handled via onClick.
   return (
-    <Link href={`/matches/${id}`} className="block">
-      <article className="group relative h-[188px] overflow-hidden rounded-[28px] bg-slate-900 cursor-pointer">
+    <article
+      className="group relative h-[188px] overflow-hidden rounded-[28px] bg-slate-900 cursor-pointer"
+      onClick={() => router.push(`/matches/${id}`)}
+      onKeyDown={(event) => { if (event.key === "Enter") router.push(`/matches/${id}`) }}
+      role="link"
+      tabIndex={0}
+    >
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
           style={{ backgroundImage, backgroundColor: "#0f172a" }}
@@ -281,8 +291,7 @@ const MatchCard = ({
             )}
           </div>
         </div>
-      </article>
-    </Link>
+    </article>
   )
 }
 

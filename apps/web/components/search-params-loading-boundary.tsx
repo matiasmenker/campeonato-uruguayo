@@ -19,6 +19,20 @@ const signalNavigationEnd = () => {
   listeners.forEach(fn => fn(false))
 }
 
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+// Use in selector components to disable themselves while navigation is in flight.
+
+export const useIsNavigating = () => {
+  const [isNavigating, setIsNavigating] = useState(false)
+
+  useEffect(() => {
+    listeners.add(setIsNavigating)
+    return () => { listeners.delete(setIsNavigating) }
+  }, [])
+
+  return isNavigating
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 interface SearchParamsLoadingBoundaryProps {

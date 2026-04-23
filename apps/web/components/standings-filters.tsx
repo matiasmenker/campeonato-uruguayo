@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import HeroSelect from "@/components/hero-select"
-import { signalNavigationStart } from "@/components/search-params-loading-boundary"
+import { signalNavigationStart, useIsNavigating } from "@/components/search-params-loading-boundary"
 import type { Season, Stage } from "@/lib/seasons"
 
 // ---------------------------------------------------------------------------
@@ -35,12 +35,14 @@ interface StandingsSeasonFilterProps {
 
 export const StandingsSeasonFilter = ({ seasons, selectedSeasonId }: StandingsSeasonFilterProps) => {
   const { updateParam } = useStandingsNav()
+  const isNavigating = useIsNavigating()
 
   return (
     <HeroSelect
       value={String(selectedSeasonId)}
       onValueChange={value => updateParam("seasonId", value)}
       options={seasons}
+      isLoading={isNavigating}
       openUp
     />
   )
@@ -57,12 +59,14 @@ interface StandingsStageFilterProps {
 
 export const StandingsStageFilter = ({ stages, selectedStageId }: StandingsStageFilterProps) => {
   const { updateParam } = useStandingsNav()
+  const isNavigating = useIsNavigating()
 
   return (
     <HeroSelect
       value={selectedStageId !== null ? String(selectedStageId) : ""}
       onValueChange={value => updateParam("stageId", value)}
       options={stages}
+      isLoading={isNavigating}
     />
   )
 }
