@@ -18,6 +18,7 @@ import {
   STAT_TYPE_RATING,
   STAT_TYPE_MINUTES,
   STAT_TYPE_ASSISTS,
+  STAT_TYPE_SAVES,
   POSITION_LABELS,
   POSITION_COLORS,
   type PlayerDetail,
@@ -106,6 +107,14 @@ const YellowCard = ({ size = 16 }: { size?: number }) => (
 const RedCard = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={Math.round(size * 1.3)} viewBox="0 0 16 21" xmlns="http://www.w3.org/2000/svg">
     <rect x="0" y="0" width="16" height="21" rx="3" fill="#ef4444" />
+  </svg>
+)
+
+const SavesIcon = ({ size = 20 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="12" fill="#6366f1" />
+    {/* glove shape */}
+    <path d="M8 7.5C8 6.67 8.67 6 9.5 6S11 6.67 11 7.5V11h1V8.5C12 7.67 12.67 7 13.5 7S15 7.67 15 8.5V11h.5c.83 0 1.5.67 1.5 1.5v2A4.5 4.5 0 0 1 12.5 19h-1A4.5 4.5 0 0 1 7 14.5V11H7.5C7.78 11 8 10.78 8 10.5V7.5Z" fill="#fff"/>
   </svg>
 )
 
@@ -448,8 +457,9 @@ const PlayerSeasonContent = async ({
     memberships.find((membership) => membership.season.id === selectedSeasonId) ?? null
 
   const teamId = selectedMembership?.team.id ?? null
+  const isGoalkeeper = (selectedMembership?.positionId ?? player.positionId) === 24
 
-  const [ratingStats, minuteStats, assistStats, events, fixtures] = await Promise.all([
+  const [ratingStats, minuteStats, assistStats, events, fixtures, saveStats] = await Promise.all([
     getPlayerStatsByType(player.id, STAT_TYPE_RATING, selectedSeasonId, selectedStageId ?? undefined).catch(() => []),
     getPlayerStatsByType(player.id, STAT_TYPE_MINUTES, selectedSeasonId, selectedStageId ?? undefined).catch(() => []),
     getPlayerStatsByType(player.id, STAT_TYPE_ASSISTS, selectedSeasonId, selectedStageId ?? undefined).catch(() => []),
@@ -457,10 +467,13 @@ const PlayerSeasonContent = async ({
     teamId
       ? getPlayerTeamFixtures(teamId, selectedSeasonId, selectedStageId ?? undefined).catch(() => [])
       : Promise.resolve([]),
+    isGoalkeeper
+      ? getPlayerStatsByType(player.id, STAT_TYPE_SAVES, selectedSeasonId, selectedStageId ?? undefined).catch(() => [])
+      : Promise.resolve([]),
   ])
 
   const aggregates: PlayerSeasonAggregates = computePlayerSeasonAggregates(
-    ratingStats, minuteStats, assistStats, events,
+    ratingStats, minuteStats, assistStats, events, saveStats,
   )
 
   const hasAppearances = aggregates.appearances > 0
@@ -532,12 +545,21 @@ const PlayerSeasonContent = async ({
           icon={<YellowCard size={14} />}
           hasData={hasAppearances}
         />
-        <StatCard
-          label="Reds"
-          value={aggregates.redCards}
-          icon={<RedCard size={14} />}
-          hasData={hasAppearances}
-        />
+        {isGoalkeeper ? (
+          <StatCard
+            label="Saves"
+            value={aggregates.saves}
+            icon={<SavesIcon size={20} />}
+            hasData={hasAppearances}
+          />
+        ) : (
+          <StatCard
+            label="Reds"
+            value={aggregates.redCards}
+            icon={<RedCard size={14} />}
+            hasData={hasAppearances}
+          />
+        )}
       </div>
 
       {!hasAppearances && (

@@ -72,6 +72,7 @@ export interface PlayerEventEntry {
 export const STAT_TYPE_RATING = 118
 export const STAT_TYPE_MINUTES = 119
 export const STAT_TYPE_ASSISTS = 79
+export const STAT_TYPE_SAVES = 57
 
 export const EVENT_TYPE_GOAL = 14
 export const EVENT_TYPE_GOAL_OWN = 15
@@ -191,6 +192,7 @@ export interface PlayerSeasonAggregates {
   totalMinutes: number | null
   goals: number
   assists: number
+  saves: number
   yellowCards: number
   redCards: number
 }
@@ -200,6 +202,7 @@ export const computePlayerSeasonAggregates = (
   minuteStats: PlayerStatEntry[],
   assistStats: PlayerStatEntry[],
   events: PlayerEventEntry[],
+  saveStats: PlayerStatEntry[] = [],
 ): PlayerSeasonAggregates => {
   const appearanceFixtureIds = new Set<number>()
   for (const stat of minuteStats) {
@@ -226,6 +229,11 @@ export const computePlayerSeasonAggregates = (
     return sum + value
   }, 0)
 
+  const savesSum = saveStats.reduce((sum, stat) => {
+    const value = typeof stat.value.normalizedValue === "number" ? stat.value.normalizedValue : 0
+    return sum + value
+  }, 0)
+
   const goals = events.filter(
     (event) => event.typeId === EVENT_TYPE_GOAL || event.typeId === EVENT_TYPE_GOAL_PENALTY,
   ).length
@@ -240,6 +248,7 @@ export const computePlayerSeasonAggregates = (
     totalMinutes,
     goals,
     assists: assistSum,
+    saves: savesSum,
     yellowCards,
     redCards,
   }
