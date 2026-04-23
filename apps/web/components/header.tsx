@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import {
   IconBallFootball,
   IconHomeFilled,
@@ -26,11 +26,15 @@ const NAV_ITEMS = [
 const Header = () => {
   const pathname = usePathname()
   const [pendingHref, setPendingHref] = useState<string | null>(null)
+  const [trackedPathname, setTrackedPathname] = useState(pathname)
 
-  // Reset the pending state whenever the pathname actually changes
-  useEffect(() => {
+  // React 18 derived-state pattern: call setState during render when a tracked
+  // dependency changes. React re-renders once immediately and skips painting the
+  // intermediate state — no cascading renders, no useEffect needed.
+  if (trackedPathname !== pathname) {
+    setTrackedPathname(pathname)
     setPendingHref(null)
-  }, [pathname])
+  }
 
   const handleNavClick = (href: string, isActive: boolean) => {
     if (!isActive) setPendingHref(href)
