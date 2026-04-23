@@ -12,7 +12,7 @@ export type YoutubeVideo = {
 }
 
 const formatVideoDate = (isoDate: string) =>
-  new Intl.DateTimeFormat("es-UY", {
+  new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: "short",
     timeZone: "America/Montevideo",
