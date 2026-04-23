@@ -125,7 +125,7 @@ export const getPlayerStatsByType = async (
     playerId: String(playerId),
     typeId: String(typeId),
     seasonId: String(seasonId),
-    pageSize: "500",
+    pageSize: "100",
   })
   const response = await apiFetch<ListResponse<PlayerStatEntry>>(
     `/api/v1/fixture-player-statistics?${params.toString()}`,
@@ -141,7 +141,7 @@ export const getPlayerSeasonEvents = async (
   const params = new URLSearchParams({
     playerId: String(playerId),
     seasonId: String(seasonId),
-    pageSize: "500",
+    pageSize: "100",
   })
   const response = await apiFetch<ListResponse<PlayerEventEntry>>(
     `/api/v1/events?${params.toString()}`,
