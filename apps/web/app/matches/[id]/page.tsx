@@ -648,10 +648,8 @@ type TimelineItem =
   | { kind: "goal"; event: FixtureEvent; assister: PlayerSummary | null }
   | { kind: "card"; event: FixtureEvent }
   | { kind: "sub";  subEvent: SubstitutionEvent }
-  | { kind: "save"; playerId: number; playerName: string; playerImage: string | null; positionId: number | null; count: number }
 
 const getItemMinuteStr = (item: TimelineItem): string => {
-  if (item.kind === "save") return "—"
   const minute   = item.kind === "sub" ? item.subEvent.minute    : item.event.minute
   const extraMin = item.kind === "sub" ? item.subEvent.extraMinute : item.event.extraMinute
   if (minute == null) return "—"
@@ -724,21 +722,6 @@ const TimelineEventCard = ({ item }: { item: TimelineItem }) => {
         ) : (
           <p className="text-xs font-semibold text-slate-900 truncate flex-1 min-w-0">{name}</p>
         )}
-      </div>
-    )
-  }
-
-  if (item.kind === "save") {
-    const playerImg = resolvePlayerImageUrl(item.playerImage)
-    return (
-      <div className="flex items-center gap-2.5 rounded-xl bg-white border border-slate-100 px-3 py-2.5 shadow-sm w-full">
-        <span style={{ color: "#6366f1", display: "inline-flex", flexShrink: 0 }}><GloveSaveIcon size={15} /></span>
-        <img src={playerImg} alt={item.playerName} style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", objectPosition: "top", flexShrink: 0 }} />
-        <PositionBadge positionId={item.positionId} size={13} />
-        <Link href={`/players/${item.playerId}`} className="text-xs font-semibold text-slate-900 truncate flex-1 min-w-0 hover:text-slate-600 transition-colors">
-          {item.playerName}
-        </Link>
-        <span style={{ fontSize: 10, fontWeight: 900, color: "#6366f1", whiteSpace: "nowrap", flexShrink: 0 }}>{item.count} saves</span>
       </div>
     )
   }
@@ -886,32 +869,12 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   })
 
 
-  // Build save timeline items from savesByPlayer — one entry per GK with saves
-  const allLineupPlayers = [...homeLineup, ...awayLineup]
-  const saveTimelineItems: TimelineItem[] = Array.from(savesByPlayer.entries())
-    .flatMap(([playerId, count]) => {
-      const lineupPlayer = allLineupPlayers.find(lp => lp.player.id === playerId)
-      if (!lineupPlayer) return []
-      const item: TimelineItem = {
-        kind: "save" as const,
-        playerId,
-        playerName: lineupPlayer.player.displayName ?? lineupPlayer.player.name,
-        playerImage: lineupPlayer.player.imagePath,
-        positionId: lineupPlayer.player.positionId,
-        count,
-      }
-      return [item]
-    })
-
-  const fullTimeline: TimelineItem[] = [...sortedTimeline, ...saveTimelineItems]
-
   const getItemSide = (item: TimelineItem): "home" | "away" | null => {
-    if (item.kind === "save") return playerSideMap.get(item.playerId) ?? null
     const playerId = item.kind === "sub" ? item.subEvent.playerIn?.id : item.event.player?.id
     return playerId != null ? (playerSideMap.get(playerId) ?? null) : null
   }
 
-  const hasTimeline = fullTimeline.length > 0
+  const hasTimeline = sortedTimeline.length > 0
   const hasLineups  = lineups.some(p => (p.typeId === 11 && p.formationField != null) || p.formationPosition !== null)
 
   return (
@@ -1061,7 +1024,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                   <div />
                 </div>
 
-                {fullTimeline.map((item, index) => {
+                {sortedTimeline.map((item, index) => {
                   const side      = getItemSide(item)
                   const minuteStr = getItemMinuteStr(item)
                   const isHome    = side === "home"
