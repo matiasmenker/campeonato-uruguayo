@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { IconShield, IconClock, IconPlayerPlayFilled } from "@tabler/icons-react"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
@@ -119,30 +118,27 @@ export const TeamBadge = ({
     </div>
   )
 
-  const inner = teamHref ? (
-    <Link
-      href={teamHref}
-      className={cn(
-        "group flex min-w-0 flex-1 items-center gap-3",
-        isEnd ? "flex-row-reverse text-right" : "text-left"
-      )}
-      onClick={(event) => event.stopPropagation()}
-    >
-      {logo}
-      <p className="min-w-0 truncate text-[13px] font-semibold text-white">{name}</p>
-    </Link>
-  ) : (
+  if (teamHref) {
+    return (
+      <Link
+        href={teamHref}
+        className={cn(
+          "group flex min-w-0 flex-1 items-center gap-3",
+          isEnd ? "flex-row-reverse text-right" : "text-left"
+        )}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {logo}
+        <p className="min-w-0 truncate text-[13px] font-semibold text-white">{name}</p>
+      </Link>
+    )
+  }
+
+  return (
     <div className={cn("flex min-w-0 flex-1 items-center gap-3", isEnd ? "flex-row-reverse text-right" : "text-left")}>
       {logo}
       <p className="min-w-0 truncate text-[13px] font-semibold text-white">{name}</p>
     </div>
-  )
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{inner}</TooltipTrigger>
-      <TooltipContent><p>{name}</p></TooltipContent>
-    </Tooltip>
   )
 }
 

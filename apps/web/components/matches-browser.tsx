@@ -380,7 +380,7 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
                     value={String(currentSeasonId ?? "")}
                     onValueChange={value => handleSeasonChange(Number(value))}
                     options={seasons}
-                    disabled={isFetching}
+                    isLoading={isFetching}
                     openUp
                   />
                 )}
@@ -389,7 +389,7 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
                     value={String(effectiveStageId ?? "")}
                     onValueChange={value => handleStageChange(Number(value))}
                     options={stages}
-                    disabled={isFetching}
+                    isLoading={isFetching}
                     openUp
                   />
                 )}
