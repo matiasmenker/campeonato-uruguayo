@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation"
 import { IconShield, IconClock, IconPlayerPlayFilled } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 
-// ─── Status helpers ───────────────────────────────────────────────────────────
-
 const LIVE_STATES = new Set([
   "INPLAY_1ST_HALF",
   "INPLAY_2ND_HALF",
@@ -32,11 +30,11 @@ export const getMatchStatus = (
 }
 
 const getLiveLabel = (stateCode: string | null) => {
-  if (stateCode === "HT") return "Entretiempo"
-  if (stateCode === "INPLAY_ET" || stateCode === "INPLAY_ET_SECOND_HALF") return "Prórroga"
-  if (stateCode === "INPLAY_PENALTIES") return "Penales"
-  if (stateCode === "EXTRA_TIME_BREAK") return "Descanso"
-  return "En vivo"
+  if (stateCode === "HT") return "Half time"
+  if (stateCode === "INPLAY_ET" || stateCode === "INPLAY_ET_SECOND_HALF") return "Extra time"
+  if (stateCode === "INPLAY_PENALTIES") return "Penalties"
+  if (stateCode === "EXTRA_TIME_BREAK") return "Break"
+  return "Live"
 }
 
 export const getStatusBadge = (stateCode: string | null, homeScore: number | null, awayScore: number | null) => {
@@ -54,7 +52,7 @@ export const getStatusBadge = (stateCode: string | null, homeScore: number | nul
     return {
       isLive: false,
       dotClassName: "bg-emerald-400",
-      label: "Finalizado",
+      label: "Finished",
       textClassName: "text-emerald-100",
       wrapperClassName: "border-emerald-400/20 bg-emerald-500/14 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
     }
@@ -62,15 +60,15 @@ export const getStatusBadge = (stateCode: string | null, homeScore: number | nul
   return {
     isLive: false,
     dotClassName: "bg-white/45",
-    label: "Próximo partido",
+    label: "Upcoming",
     textClassName: "text-white/80",
     wrapperClassName: "border-white/12 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
   }
 }
 
 export const formatMatchDay = (value: string | null) => {
-  if (!value) return "Sin fecha"
-  const formatted = new Intl.DateTimeFormat("es-UY", {
+  if (!value) return "No date"
+  const formatted = new Intl.DateTimeFormat("en-GB", {
     weekday: "long",
     day: "2-digit",
     month: "2-digit",
@@ -82,15 +80,13 @@ export const formatMatchDay = (value: string | null) => {
 
 export const formatKickoffTime = (value: string | null) => {
   if (!value) return "--:--"
-  return new Intl.DateTimeFormat("es-UY", {
+  return new Intl.DateTimeFormat("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
     timeZone: "America/Montevideo",
   }).format(new Date(value))
 }
-
-// ─── TeamBadge ────────────────────────────────────────────────────────────────
 
 export const TeamBadge = ({
   team,
@@ -99,7 +95,7 @@ export const TeamBadge = ({
   team: { id: number; name: string; imagePath: string | null } | null
   align?: "start" | "end"
 }) => {
-  const name = team?.name ?? "Equipo"
+  const name = team?.name ?? "Team"
   const imagePath = team?.imagePath ?? null
   const isEnd = align === "end"
   const teamHref = team?.id ? `/teams/${team.id}` : null
@@ -142,8 +138,6 @@ export const TeamBadge = ({
   )
 }
 
-// ─── MatchCard ────────────────────────────────────────────────────────────────
-
 export interface MatchCardProps {
   id: number
   kickoffAt: string | null
@@ -185,9 +179,6 @@ const MatchCard = ({
       stateCode === "INPLAY_ET" ||
       stateCode === "INPLAY_ET_SECOND_HALF")
 
-  // Outer wrapper is an <article>, not a <Link>, to avoid nested <a> tags
-  // (TeamBadge renders its own <Link> for team navigation).
-  // Navigation to the match detail is handled via onClick.
   return (
     <article
       className="group relative h-[188px] overflow-hidden rounded-[28px] bg-slate-900 cursor-pointer"
@@ -210,17 +201,15 @@ const MatchCard = ({
         />
 
         <div className="relative flex h-full flex-col justify-between p-4 sm:p-5">
-          {/* Top: round badge + date */}
           <div className="flex items-start justify-between gap-3">
             <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold tracking-[0.22em] text-white/80 uppercase backdrop-blur-sm">
-              {roundName ? `Fecha ${roundName}` : "Última fecha"}
+              {roundName ? `Round ${roundName}` : "Latest round"}
             </span>
             <span className="text-[11px] font-medium text-white/78">
               {formatMatchDay(kickoffAt)}
             </span>
           </div>
 
-          {/* Middle: teams + score */}
           <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <TeamBadge team={homeTeam} />
             <div className="flex min-w-[96px] flex-col items-center rounded-[22px] border border-white/10 bg-black/20 px-4 py-2 text-center backdrop-blur-sm">
@@ -243,7 +232,6 @@ const MatchCard = ({
             <TeamBadge team={awayTeam} align="end" />
           </div>
 
-          {/* Bottom: status badge + optional minute + optional video */}
           <div className="flex items-center justify-between">
             <div
               className={cn(
@@ -280,7 +268,7 @@ const MatchCard = ({
                   onVideoClick()
                 }}
                 className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-sm transition-all hover:border-primary/50 hover:bg-primary hover:scale-110"
-                aria-label="Ver resumen del partido"
+                aria-label="Watch match highlights"
               >
                 <IconPlayerPlayFilled size={13} className="translate-x-[1px]" />
               </button>

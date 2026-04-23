@@ -12,10 +12,6 @@ import type { FixtureListItem } from "@/lib/matches"
 import type { Season } from "@/lib/seasons"
 
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 interface StageSummary {
   id: number
   name: string
@@ -32,10 +28,6 @@ interface RoundGroup {
   round: RoundSummary
   fixtures: FixtureListItem[]
 }
-
-// ---------------------------------------------------------------------------
-// sessionStorage — persist season + stage + round so back button restores state
-// ---------------------------------------------------------------------------
 
 const SEASON_STORAGE_KEY = "matches:season"
 const stageKey = (seasonId: number) => `matches:stage:${seasonId}`
@@ -54,28 +46,20 @@ const storageDel = (key: string) => {
   try { sessionStorage.removeItem(key) } catch {}
 }
 
-// ---------------------------------------------------------------------------
-// Status helpers
-// ---------------------------------------------------------------------------
-
 const getRoundStatus = (fixtures: FixtureListItem[]) => {
   const liveCount     = fixtures.filter(f => getMatchStatus(f.state?.developerName ?? null, f.homeScore, f.awayScore) === "live").length
   const finishedCount = fixtures.filter(f => getMatchStatus(f.state?.developerName ?? null, f.homeScore, f.awayScore) === "finished").length
   if (liveCount > 0) {
-    return { label: "En vivo",    dotClass: "bg-red-500 animate-pulse", textClass: "text-red-500" }
+    return { label: "Live",        dotClass: "bg-red-500 animate-pulse", textClass: "text-red-500" }
   }
   if (finishedCount === fixtures.length && fixtures.length > 0) {
-    return { label: "Finalizado", dotClass: "bg-emerald-500",           textClass: "text-emerald-600" }
+    return { label: "Finished",    dotClass: "bg-emerald-500",           textClass: "text-emerald-600" }
   }
   if (finishedCount > 0) {
-    return { label: "En curso",   dotClass: "bg-amber-400",             textClass: "text-amber-600" }
+    return { label: "In progress", dotClass: "bg-amber-400",             textClass: "text-amber-600" }
   }
-  return              { label: "Por jugar", dotClass: "bg-slate-300",        textClass: "text-slate-400" }
+  return              { label: "Upcoming",  dotClass: "bg-slate-300",    textClass: "text-slate-400" }
 }
-
-// ---------------------------------------------------------------------------
-// Round carousel — Embla + outside arrows + gradient fades
-// ---------------------------------------------------------------------------
 
 interface RoundSelectorProps {
   roundGroups: RoundGroup[]
@@ -106,7 +90,6 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
     return () => { emblaApi.off("init", update).off("scroll", update) }
   }, [emblaApi])
 
-  // Auto-scroll to the active pill whenever the selection changes
   useEffect(() => {
     if (!emblaApi || effectiveRoundId === null) return
     const index = roundGroups.findIndex(g => g.round.id === effectiveRoundId)
@@ -116,7 +99,6 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
   return (
     <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
 
-      {/* Left arrow — frosted glass so pills scrolling behind are partially visible */}
       <button
         onClick={() => emblaApi?.scrollPrev()}
         disabled={!canScrollPrev}
@@ -124,12 +106,11 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
           "absolute top-1/2 left-3 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200/60 bg-white/60 text-slate-600 shadow-xs backdrop-blur-sm transition-[opacity,background-color] hover:bg-white/80 hover:text-slate-900",
           !canScrollPrev && "pointer-events-none opacity-30"
         )}
-        aria-label="Fechas anteriores"
+        aria-label="Previous rounds"
       >
         <IconChevronLeft size={15} />
       </button>
 
-      {/* Right arrow — frosted glass */}
       <button
         onClick={() => emblaApi?.scrollNext()}
         disabled={!canScrollNext}
@@ -137,12 +118,11 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
           "absolute top-1/2 right-3 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200/60 bg-white/60 text-slate-600 shadow-xs backdrop-blur-sm transition-[opacity,background-color] hover:bg-white/80 hover:text-slate-900",
           !canScrollNext && "pointer-events-none opacity-30"
         )}
-        aria-label="Fechas siguientes"
+        aria-label="Next rounds"
       >
         <IconChevronRight size={15} />
       </button>
 
-      {/* Gradient fades — pointer-events-none so they don't block arrow clicks */}
       {canScrollPrev && (
         <div className="pointer-events-none absolute left-0 top-0 bottom-0 z-10 w-16 bg-gradient-to-r from-white via-white/70 to-transparent" />
       )}
@@ -150,9 +130,6 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
         <div className="pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-16 bg-gradient-to-l from-white via-white/70 to-transparent" />
       )}
 
-      {/* Embla viewport is inset mx-14 (56 px each side) so its overflow-hidden
-          boundary sits 12 px past the arrow buttons (which end at ~44 px).
-          Pills are clipped at the viewport edge — they can never reach the arrows. */}
       <div ref={emblaRef} className="mx-14 overflow-hidden py-3">
         <div className="flex -ml-2 px-2">
           {roundGroups.map(group => {
@@ -173,7 +150,7 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
                     "whitespace-nowrap text-xs font-black",
                     isActive ? "text-white" : "text-slate-800"
                   )}>
-                    Fecha {group.round.name}
+                    Round {group.round.name}
                   </span>
                   <div className="flex items-center gap-1">
                     <span className={cn("h-1.5 w-1.5 rounded-full", roundStatus.dotClass)} />
@@ -195,10 +172,6 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
   )
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 const buildRoundGroups = (fixtures: FixtureListItem[]): RoundGroup[] => {
   const map = new Map<number, RoundGroup>()
   for (const fixture of fixtures) {
@@ -218,10 +191,6 @@ const buildRoundGroups = (fixtures: FixtureListItem[]): RoundGroup[] => {
   })
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-
 interface MatchesBrowserProps {
   seasons: Season[]
   initialSeasonId: number | null
@@ -229,10 +198,6 @@ interface MatchesBrowserProps {
 }
 
 const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBrowserProps) => {
-  // Season + fixtures are managed entirely client-side to survive navigation.
-  // On mount we restore from sessionStorage; if the saved season differs from the
-  // server-provided initial, we fetch the correct fixtures via /api/fixtures.
-  // This guarantees pressing browser back always returns to the last selected season.
   const [currentSeasonId, setCurrentSeasonId] = useState<number | null>(initialSeasonId)
   const [currentFixtures, setCurrentFixtures] = useState<FixtureListItem[]>(initialFixtures)
   const [isFetching, setIsFetching] = useState(false)
@@ -262,18 +227,15 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
           .finally(() => setIsFetching(false))
       }
 
-      // Always persist so the next mount can restore it
       storageSet(SEASON_STORAGE_KEY, targetSeasonId)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSeasonChange = useCallback(async (seasonId: number) => {
     if (seasonId === currentSeasonId) return
     setCurrentSeasonId(seasonId)
     storageSet(SEASON_STORAGE_KEY, seasonId)
 
-    // Restore stored stage/round for this season (or reset to null so defaults apply)
     const savedStage = storageGet(stageKey(seasonId))
     const savedRound = storageGet(roundKey(seasonId))
     setSelectedStageId(savedStage)
@@ -285,13 +247,11 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
       const data: FixtureListItem[] = await response.json()
       setCurrentFixtures(data)
     } catch {
-      // Keep current fixtures on error
     } finally {
       setIsFetching(false)
     }
   }, [currentSeasonId])
 
-  // Derive valid stages — filter stages with fewer than 5 fixtures (playoffs, finals, etc.)
   const stages = useMemo<StageSummary[]>(() => {
     const stageMap   = new Map<number, StageSummary>()
     const roundCount = new Map<number, number>()
@@ -305,7 +265,6 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
       .sort((a, b) => a.id - b.id)
   }, [currentFixtures])
 
-  // Resolve pattern: if stored selection is no longer valid, fall back gracefully
   const defaultStageId   = stages.find(s => s.isCurrent)?.id ?? stages[0]?.id ?? null
   const effectiveStageId = stages.some(s => s.id === selectedStageId) ? selectedStageId : defaultStageId
 
@@ -350,22 +309,20 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
   return (
     <div className="flex flex-col gap-6">
 
-      {/* Hero — title bottom-left, selectors top-right */}
       <div className="overflow-hidden rounded-2xl shadow-lg">
         <div className="relative min-h-52 bg-slate-900">
           <HeroTexture />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40 pointer-events-none" />
 
-          {/* Bottom — title left, selectors right */}
           <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">
             <div className="flex items-center gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
                 <IconBallFootball size={28} className="text-white/80" />
               </div>
               <div className="flex flex-col gap-0.5">
-                <h1 className="text-3xl font-black text-white leading-none drop-shadow">Partidos</h1>
+                <h1 className="text-3xl font-black text-white leading-none drop-shadow">Matches</h1>
                 <p className="text-sm text-white/65">
-                  Primera División
+                  First Division
                   {selectedSeason && (
                     <span className="font-semibold text-white/85"> · {selectedSeason.name}</span>
                   )}
@@ -401,7 +358,6 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
 
       <div className="flex flex-col gap-3">
 
-      {/* Round carousel */}
       {isFetching ? (
         <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
           <div className="flex items-center gap-2 px-14 py-3">
@@ -421,16 +377,13 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
         />
       ) : null}
 
-      {/* Cards grid */}
       {isFetching ? (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, index) => (
             <div key={index} className="relative h-[188px] overflow-hidden rounded-[28px] bg-slate-800">
               <div className="absolute inset-0 bg-gradient-to-br from-slate-700/60 to-transparent" />
               <div className="relative flex h-full flex-col justify-between p-4 sm:p-5">
-                {/* Round badge */}
                 <div className="h-5 w-20 animate-pulse rounded-full bg-slate-700" />
-                {/* Teams + score */}
                 <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                   <div className="flex items-center gap-2">
                     <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-slate-700" />
@@ -442,7 +395,6 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
                     <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-slate-700" />
                   </div>
                 </div>
-                {/* Status badge */}
                 <div className="h-7 w-24 animate-pulse rounded-full bg-slate-700" />
               </div>
             </div>
@@ -450,7 +402,7 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
         </div>
       ) : activeGroup === null ? (
         <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
-          No hay partidos disponibles
+          No matches available
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

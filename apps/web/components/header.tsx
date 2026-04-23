@@ -28,9 +28,6 @@ const Header = () => {
   const [pendingHref, setPendingHref] = useState<string | null>(null)
   const [trackedPathname, setTrackedPathname] = useState(pathname)
 
-  // React 18 derived-state pattern: call setState during render when a tracked
-  // dependency changes. React re-renders once immediately and skips painting the
-  // intermediate state — no cascading renders, no useEffect needed.
   if (trackedPathname !== pathname) {
     setTrackedPathname(pathname)
     setPendingHref(null)
@@ -42,7 +39,6 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white shadow-sm">
-      {/* Top progress bar — visible while a navigation is in flight */}
       <div className="absolute inset-x-0 top-0 h-[2px] overflow-hidden" aria-hidden>
         <div
           className={cn(

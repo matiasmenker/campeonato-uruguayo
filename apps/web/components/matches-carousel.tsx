@@ -28,7 +28,7 @@ const CarouselPrevButton = () => {
         "absolute top-1/2 left-0 z-10 hidden h-8 w-8 -translate-x-[calc(100%+10px)] -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition-[opacity,box-shadow,background-color,color] hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm sm:flex",
         !canScrollPrev && "pointer-events-none opacity-30"
       )}
-      aria-label="Ir al partido anterior"
+      aria-label="Previous match"
     >
       <IconChevronLeft size={15} />
     </button>
@@ -46,7 +46,7 @@ const CarouselNextButton = () => {
         "absolute top-1/2 right-0 z-10 hidden h-8 w-8 -translate-y-1/2 translate-x-[calc(100%+10px)] items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-xs transition-[opacity,box-shadow,background-color,color] hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm sm:flex",
         !canScrollNext && "pointer-events-none opacity-30"
       )}
-      aria-label="Ir al siguiente partido"
+      aria-label="Next match"
     >
       <IconChevronRight size={15} />
     </button>
@@ -64,12 +64,11 @@ const MatchesCarousel = ({ matches, roundName, fixtureVideoMap = {} }: MatchesCa
   if (!matches.length) {
     return (
       <div className="flex h-32 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
-        No hay partidos disponibles
+        No matches available
       </div>
     )
   }
 
-  // Finished first (most recent → oldest), then live, then upcoming (soonest first)
   const statusOrder = { finished: 0, live: 1, upcoming: 2 } as const
 
   const sortedMatches = [...matches].sort((matchA, matchB) => {
@@ -83,7 +82,6 @@ const MatchesCarousel = ({ matches, roundName, fixtureVideoMap = {} }: MatchesCa
     const timeA = new Date(matchA.kickoffAt ?? 0).getTime()
     const timeB = new Date(matchB.kickoffAt ?? 0).getTime()
 
-    // Finished: most recent first; upcoming: soonest first
     return statusA === "finished" ? timeB - timeA : timeA - timeB
   })
 

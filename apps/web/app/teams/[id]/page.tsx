@@ -24,19 +24,17 @@ const POSITION_LABELS: Record<number, string> = {
 const CHAMPIONSHIP_FINALS_NAME = "championship - finals"
 const INTERMEDIATE_ROUND_FINAL_NAME = "intermediate round - final"
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 const formatKickoff = (kickoffAt: string | null): string => {
   if (!kickoffAt) return "TBD"
   const date = new Date(kickoffAt)
-  const weekday = new Intl.DateTimeFormat("es-UY", { weekday: "long", timeZone: "America/Montevideo" }).format(date)
-  const dayMonthYear = new Intl.DateTimeFormat("es-UY", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Montevideo" }).format(date)
+  const weekday = new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "America/Montevideo" }).format(date)
+  const dayMonthYear = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Montevideo" }).format(date)
   return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${dayMonthYear}`
 }
 
 const formatKickoffTime = (kickoffAt: string | null): string => {
   if (!kickoffAt) return "--:--"
-  return new Intl.DateTimeFormat("es-UY", {
+  return new Intl.DateTimeFormat("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -56,8 +54,6 @@ const getMatchResult = (
   if (teamScore < opponentScore) return { label: "L", bg: "bg-red-100", text: "text-red-600" }
   return { label: "D", bg: "bg-slate-100", text: "text-slate-600" }
 }
-
-// ─── FixtureCard ──────────────────────────────────────────────────────────────
 
 const FixtureCard = ({ fixture, teamId }: { fixture: TeamFixture; teamId: number }) => {
   const isFinished = fixture.homeScore !== null && fixture.awayScore !== null
@@ -121,8 +117,6 @@ const FixtureCard = ({ fixture, teamId }: { fixture: TeamFixture; teamId: number
   )
 }
 
-// ─── ChampionBadge — async, renders in hero via its own Suspense ──────────────
-
 const ChampionBadge = async ({
   teamId,
   seasonId,
@@ -158,14 +152,12 @@ const ChampionBadge = async ({
     <div className="absolute right-5 top-5 flex items-center gap-2.5 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-500/25 via-amber-400/15 to-amber-500/25 px-4 py-1.5 shadow-lg shadow-amber-900/20 backdrop-blur-sm">
       <IconTrophy size={14} className="shrink-0 text-amber-300 drop-shadow" />
       <div className="flex flex-col leading-none">
-        <span className="text-[11px] font-black uppercase tracking-wide text-amber-200">Campeón</span>
+        <span className="text-[11px] font-black uppercase tracking-wide text-amber-200">Champion</span>
         <span className="text-[10px] text-amber-300/70">{seasonName}</span>
       </div>
     </div>
   )
 }
-
-// ─── ContentSkeleton — shown while TeamContent loads ─────────────────────────
 
 const ContentSkeleton = () => (
   <div className="grid gap-x-6 gap-y-3 lg:grid-cols-[1fr_340px]">
@@ -177,7 +169,6 @@ const ContentSkeleton = () => (
       <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
     </div>
 
-    {/* Squad skeleton */}
     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
       <div className="grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center border-b border-slate-100 px-4 py-2.5">
         {[4, 4, 12, 8, 14, 10].map((width, index) => (
@@ -206,7 +197,6 @@ const ContentSkeleton = () => (
       ))}
     </div>
 
-    {/* Fixtures skeleton */}
     <div className="flex flex-col gap-2">
       {Array.from({ length: 5 }).map((_, index) => (
         <div
@@ -230,8 +220,6 @@ const ContentSkeleton = () => (
     </div>
   </div>
 )
-
-// ─── TeamContent — async, all slow fetches, wrapped in Suspense ───────────────
 
 const TeamContent = async ({
   teamId,
@@ -266,7 +254,6 @@ const TeamContent = async ({
   return (
     <div className="grid gap-x-6 gap-y-3 lg:grid-cols-[1fr_340px]">
 
-      {/* Heading: Squad */}
       <div className="flex items-center gap-2 px-1">
         <h2 className="text-sm font-bold text-slate-700">Squad</h2>
         <span className="text-sm font-normal text-slate-400">· {selectedSeason.name}</span>
@@ -277,12 +264,10 @@ const TeamContent = async ({
         )}
       </div>
 
-      {/* Heading: Matches */}
       <h2 className="px-1 text-sm font-bold text-slate-700">
         {nextFixture ? "Next match" : recentFixtures.length > 0 ? "Last 5 results" : "Matches"}
       </h2>
 
-      {/* Squad table */}
       <div className="flex flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
         {squad.length > 0 && (
           <div className="grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center border-b border-slate-100 px-4 py-2.5">
@@ -361,7 +346,6 @@ const TeamContent = async ({
         )}
       </div>
 
-      {/* Right column: fixtures */}
       <div className="flex flex-col gap-2">
         {recentFixtures.length === 0 && !nextFixture ? (
           <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
@@ -391,8 +375,6 @@ const TeamContent = async ({
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 interface TeamPageProps {
   params: Promise<{ id: string }>
   searchParams: Promise<{ seasonId?: string }>
@@ -404,7 +386,6 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
 
   if (isNaN(teamId)) notFound()
 
-  // Only fast fetches here — hero renders immediately from these
   const [teamResult, seasonsResult] = await Promise.allSettled([
     getTeam(teamId),
     getSeasons(),
@@ -435,18 +416,15 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
-        {/* Hero — stable, only uses fast-fetched data */}
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <div className="relative min-h-52 bg-slate-900">
             <HeroTexture />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40 pointer-events-none" />
 
-            {/* Back — top left */}
             <div className="absolute left-5 top-5">
               <HeroBackLink label="Back" href="/teams" />
             </div>
 
-            {/* Champion badge — async check, appears when ready, no skeleton */}
             <Suspense fallback={null}>
               <ChampionBadge
                 teamId={teamId}
@@ -456,7 +434,6 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
               />
             </Suspense>
 
-            {/* Bottom — team info left, season selector right */}
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-5 p-6">
               <div className="flex items-end gap-5 min-w-0">
                 {team.imagePath && (
@@ -479,7 +456,6 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
           </div>
         </div>
 
-        {/* Content — skeleton on initial stream AND on every client-side param change */}
         <Suspense fallback={<ContentSkeleton />}>
           <SearchParamsLoadingBoundary
             committedParams={{ seasonId: String(selectedSeason.id) }}

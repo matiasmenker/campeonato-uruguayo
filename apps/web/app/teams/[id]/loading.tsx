@@ -2,12 +2,9 @@ const TeamDetailLoading = () => (
   <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
-      {/* Hero skeleton */}
       <div className="overflow-hidden rounded-2xl shadow-lg">
         <div className="relative min-h-52 animate-pulse bg-slate-800">
-          {/* Back button — top left */}
           <div className="absolute left-5 top-5 h-8 w-20 rounded-xl bg-white/15" />
-          {/* Bottom — team info left, season selector right */}
           <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-5 p-6">
             <div className="flex items-end gap-5">
               <div className="h-20 w-20 shrink-0 rounded-xl bg-white/10" />
@@ -22,21 +19,17 @@ const TeamDetailLoading = () => (
         </div>
       </div>
 
-      {/* Single grid — matches page layout: 1fr + 340px */}
       <div className="grid gap-x-6 gap-y-3 lg:grid-cols-[1fr_340px]">
 
-        {/* Heading: Squad */}
         <div className="flex items-center gap-2 px-1">
           <div className="h-4 w-12 animate-pulse rounded bg-slate-200" />
           <div className="h-4 w-16 animate-pulse rounded bg-slate-100" />
         </div>
 
-        {/* Heading: Matches */}
         <div className="px-1">
           <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
         </div>
 
-        {/* Squad table skeleton */}
         <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
           <div className="grid grid-cols-[28px_36px_1fr_56px_80px_44px] items-center border-b border-slate-100 px-4 py-2.5">
             <div className="h-3 w-4 animate-pulse rounded bg-slate-100" />
@@ -68,7 +61,6 @@ const TeamDetailLoading = () => (
           ))}
         </div>
 
-        {/* Right column: fixtures skeleton */}
         <div className="flex flex-col gap-2">
           {Array.from({ length: 6 }).map((_, index) => (
             <div

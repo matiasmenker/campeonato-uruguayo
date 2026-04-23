@@ -42,10 +42,10 @@ const getFixtureStatusBadge = (
   const isFinished = !isLive && homeScore !== null && awayScore !== null
 
   if (isLive) {
-    const label = stateCode === "HT" ? "Entretiempo"
-      : stateCode === "INPLAY_ET" || stateCode === "INPLAY_ET_SECOND_HALF" ? "Prórroga"
-      : stateCode === "INPLAY_PENALTIES" ? "Penales"
-      : "En vivo"
+    const label = stateCode === "HT" ? "Half time"
+      : stateCode === "INPLAY_ET" || stateCode === "INPLAY_ET_SECOND_HALF" ? "Extra time"
+      : stateCode === "INPLAY_PENALTIES" ? "Penalties"
+      : "Live"
     return {
       isLive: true,
       label,
@@ -57,7 +57,7 @@ const getFixtureStatusBadge = (
   if (isFinished) {
     return {
       isLive: false,
-      label: "Finalizado",
+      label: "Finished",
       dotClassName: "bg-emerald-400",
       textClassName: "text-emerald-100",
       wrapperClassName: "border-emerald-400/20 bg-emerald-500/14 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
@@ -65,7 +65,7 @@ const getFixtureStatusBadge = (
   }
   return {
     isLive: false,
-    label: "Por jugar",
+    label: "Upcoming",
     dotClassName: "bg-white/45",
     textClassName: "text-white/80",
     wrapperClassName: "border-white/12 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
@@ -77,14 +77,11 @@ const parseFormationField = (formationField: string): { row: number; col: number
   return { row: parseInt(rowStr ?? "0", 10), col: parseInt(colStr ?? "0", 10) }
 }
 
-// Parses "4-2-3-1" → [4, 2, 3, 1] (outfield rows, GK excluded)
 const parseFormationRows = (formation: string | null | undefined): number[] => {
   if (!formation) return []
   return formation.split("-").map(Number).filter(n => !isNaN(n) && n > 0)
 }
 
-// Groups legacy starters (formationPosition 1–11) into rows using the formation string.
-// Position 1 is always GK; the remaining positions are split per formation row sizes.
 const groupLegacyByFormation = (starters: LineupPlayer[], formation: string | null | undefined): LineupPlayer[][] => {
   const sorted = [...starters].sort((a, b) => (a.formationPosition ?? 0) - (b.formationPosition ?? 0))
   const rowSizes = parseFormationRows(formation)
@@ -101,7 +98,6 @@ const groupLegacyByFormation = (starters: LineupPlayer[], formation: string | nu
       cursor += rowSize
     }
   } else {
-    // No formation string — fall back to a generic 4-row split
     const def = sorted.filter(p => p.formationPosition != null && p.formationPosition >= 2 && p.formationPosition <= 5)
     const mid = sorted.filter(p => p.formationPosition != null && p.formationPosition >= 6 && p.formationPosition <= 8)
     const fwd = sorted.filter(p => p.formationPosition != null && p.formationPosition >= 9)
@@ -140,14 +136,14 @@ const formatRating = (rating: number): string => {
 const formatKickoff = (kickoffAt: string | null): string => {
   if (!kickoffAt) return "TBD"
   const date = new Date(kickoffAt)
-  const weekday = new Intl.DateTimeFormat("es-UY", { weekday: "long", timeZone: "America/Montevideo" }).format(date)
-  const rest = new Intl.DateTimeFormat("es-UY", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Montevideo" }).format(date)
+  const weekday = new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "America/Montevideo" }).format(date)
+  const rest = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Montevideo" }).format(date)
   return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${rest}`
 }
 
 const formatKickoffTime = (kickoffAt: string | null): string => {
   if (!kickoffAt) return "--:--"
-  return new Intl.DateTimeFormat("es-UY", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Montevideo" }).format(new Date(kickoffAt))
+  return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Montevideo" }).format(new Date(kickoffAt))
 }
 
 interface SubstitutionEvent {
@@ -713,8 +709,6 @@ const MatchPage = async ({ params }: MatchPageProps) => {
     if (typeof value === "number") minutesByPlayer.set(stat.player.id, value)
   }
 
-  // A starter is considered substituted out if they played fewer than 90 minutes
-  // and did not receive a red card (which also ends their game early).
   const redCardedIds = new Set(
     events
       .filter(e => e.typeId === EVENT_RED || e.typeId === EVENT_YELLOW_RED)
@@ -790,7 +784,6 @@ const MatchPage = async ({ params }: MatchPageProps) => {
             <div className="absolute bottom-0 left-0 right-0 p-6">
               <div className="flex flex-col gap-4">
 
-                {/* Teams + score */}
                 <div className="flex items-end justify-center gap-6">
                   <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
                     {homeTeam?.imagePath
@@ -819,9 +812,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                   </div>
                 </div>
 
-                {/* Status badge (left) + stage/round info chip (right) */}
                 <div className="flex items-center justify-between gap-3">
-                  {/* Status badge — same style as home carousel cards */}
                   <div className={`flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-sm ${statusBadge.wrapperClassName}`}>
                     <span className="relative flex h-2 w-2">
                       {statusBadge.isLive && (
@@ -834,10 +825,9 @@ const MatchPage = async ({ params }: MatchPageProps) => {
                     </span>
                   </div>
 
-                  {/* Round chip — "Fecha X" */}
-                  {fixture.round && (
+                  {(fixture.stage || fixture.round) && (
                     <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-semibold tracking-[0.22em] text-white/80 uppercase backdrop-blur-sm">
-                      Fecha {fixture.round.name}
+                      {[fixture.stage?.name, fixture.round && `Round ${fixture.round.name}`].filter(Boolean).join(" · ")}
                     </span>
                   )}
                 </div>
@@ -903,7 +893,6 @@ const MatchPage = async ({ params }: MatchPageProps) => {
 
               <div className="flex flex-col gap-3 py-1">
 
-                {/* Kick-off marker */}
                 <div className="grid grid-cols-[1fr_40px_1fr] items-center">
                   <div />
                   <div className="relative z-10 flex flex-col items-center gap-0.5">

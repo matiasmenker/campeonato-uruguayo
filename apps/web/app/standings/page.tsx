@@ -29,8 +29,6 @@ const INTERMEDIATE_ROUND_FINAL_NAME = "intermediate round - final"
 const isMainStage = (stageName: string) =>
   MAIN_STAGE_NAMES.some((name) => stageName.toLowerCase() === name)
 
-// ─── Table ────────────────────────────────────────────────────────────────────
-
 const PositionIndicator = ({ position, total }: { position: number; total: number }) => {
   const isRelegation = position > total - RELEGATION_ZONE_SIZE
   return (
@@ -99,8 +97,6 @@ const StandingsTable = ({ standings, seasonId }: { standings: StandingEntry[]; s
     </div>
   )
 }
-
-// ─── Stat cards ───────────────────────────────────────────────────────────────
 
 const ChampionCard = ({ champion, seasonName, seasonId }: { champion: SeasonChampion; seasonName: string; seasonId: number }) => (
   <Link href={`/teams/${champion.team.id}?seasonId=${seasonId}`} className="block hover:opacity-90 transition-opacity">
@@ -221,13 +217,9 @@ const PlayerStatCard = ({
   )
 }
 
-// ─── Content skeleton ─────────────────────────────────────────────────────────
-
 const StandingsContentSkeleton = () => (
   <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-    {/* Table skeleton */}
     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-      {/* Header row */}
       <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3">
         <div className="h-3 w-6 animate-pulse rounded bg-slate-200" />
         <div className="h-3 flex-1 animate-pulse rounded bg-slate-200" />
@@ -236,23 +228,19 @@ const StandingsContentSkeleton = () => (
         ))}
         <div className="h-3 w-8 animate-pulse rounded bg-slate-200" />
       </div>
-      {/* Data rows */}
       {[...Array(16)].map((_, rowIndex) => (
         <div
           key={rowIndex}
           className="flex items-center gap-3 border-b border-slate-100 px-4 py-2.5 last:border-0"
         >
-          {/* Position indicator */}
           <div className="flex items-center gap-2">
             <div className="h-3.5 w-1 animate-pulse rounded-full bg-slate-100" />
             <div className="h-3 w-4 animate-pulse rounded bg-slate-100" />
           </div>
-          {/* Team logo + name */}
           <div className="flex flex-1 items-center gap-3">
             <div className="h-5 w-5 animate-pulse rounded-full bg-slate-100 shrink-0" />
             <div className="h-3.5 w-28 animate-pulse rounded bg-slate-100" />
           </div>
-          {/* Stat columns */}
           {[...Array(8)].map((_, colIndex) => (
             <div key={colIndex} className="h-3 w-6 animate-pulse rounded bg-slate-100" />
           ))}
@@ -260,9 +248,7 @@ const StandingsContentSkeleton = () => (
       ))}
     </div>
 
-    {/* Sidebar skeleton */}
     <div className="flex flex-col gap-3">
-      {/* Champion-style dark card */}
       <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-800 p-5">
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 animate-pulse rounded-2xl bg-slate-700 shrink-0" />
@@ -273,7 +259,6 @@ const StandingsContentSkeleton = () => (
           </div>
         </div>
       </div>
-      {/* Stat cards */}
       {[0, 1, 2].map((index) => (
         <div key={index} className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
           <div className="flex items-center gap-4 p-4">
@@ -296,8 +281,6 @@ const StandingsContentSkeleton = () => (
     </div>
   </div>
 )
-
-// ─── Content (slow fetches) ───────────────────────────────────────────────────
 
 interface StandingsContentProps {
   selectedSeasonId: number
@@ -437,8 +420,6 @@ const StandingsContent = async ({
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 interface StandingsPageProps {
   searchParams: Promise<{ seasonId?: string; stageId?: string }>
 }
@@ -446,7 +427,6 @@ interface StandingsPageProps {
 const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
   const { seasonId: seasonIdParam, stageId: stageIdParam } = await searchParams
 
-  // Fast fetches — needed for the hero to render
   let seasons: Season[] = []
   let stages: Stage[] = []
 
@@ -476,7 +456,6 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
-        {/* Hero — renders immediately */}
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <div className="relative min-h-52 bg-slate-900">
             <HeroTexture />
@@ -488,9 +467,9 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
                   <IconTrophy size={28} className="text-white/80" />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <h1 className="text-3xl font-black text-white leading-none drop-shadow">Tabla</h1>
+                  <h1 className="text-3xl font-black text-white leading-none drop-shadow">Standings</h1>
                   <p className="text-sm text-white/65">
-                    Primera División
+                    First Division
                     {selectedSeason && <span className="font-semibold text-white/85"> · {selectedSeason.name}</span>}
                   </p>
                 </div>
@@ -514,7 +493,6 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
           </div>
         </div>
 
-        {/* Content — skeleton on initial stream AND on every client-side param change */}
         <Suspense fallback={<StandingsContentSkeleton />}>
           <SearchParamsLoadingBoundary
             committedParams={{
