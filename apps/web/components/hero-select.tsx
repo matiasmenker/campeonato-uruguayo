@@ -1,7 +1,5 @@
 "use client"
 
-// Radix Select with a native-looking dark pill trigger and styled custom options.
-
 import {
   Select,
   SelectContent,
@@ -22,9 +20,7 @@ interface HeroSelectProps {
   options: HeroSelectOption[]
   placeholder?: string
   disabled?: boolean
-  /** Shows a spinner and locks the select — use while a navigation is in flight */
   isLoading?: boolean
-  /** Opens upward — use for selects anchored near the bottom of a hero */
   openUp?: boolean
 }
 

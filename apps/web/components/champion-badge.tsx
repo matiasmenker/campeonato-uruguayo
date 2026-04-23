@@ -1,6 +1,3 @@
-// Original trophy badge design for Campeonato Uruguayo.
-// Not affiliated with or copying any AUF official artwork.
-
 const ChampionBadge = ({ year, size = 80 }: { year: string; size?: number }) => (
   <svg
     width={size}
@@ -10,7 +7,6 @@ const ChampionBadge = ({ year, size = 80 }: { year: string; size?: number }) => 
     xmlns="http://www.w3.org/2000/svg"
     aria-label={`Champion ${year}`}
   >
-    {/* Cup body */}
     <path
       d="M68 110 Q68 140 100 148 Q132 140 132 110 L132 76 L68 76 Z"
       fill="url(#cupBody)"
@@ -18,7 +14,6 @@ const ChampionBadge = ({ year, size = 80 }: { year: string; size?: number }) => 
       strokeWidth="1.5"
     />
 
-    {/* Cup body highlight */}
     <path
       d="M80 82 Q76 110 82 136"
       stroke="rgba(255,255,255,0.35)"
@@ -27,17 +22,12 @@ const ChampionBadge = ({ year, size = 80 }: { year: string; size?: number }) => 
       fill="none"
     />
 
-    {/* Lid base */}
     <rect x="64" y="70" width="72" height="10" rx="5" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1" />
-    {/* Lid middle */}
     <rect x="74" y="58" width="52" height="14" rx="5" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1" />
-    {/* Lid top */}
     <rect x="86" y="46" width="28" height="14" rx="4" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1" />
-    {/* Knob */}
     <circle cx="100" cy="40" r="7" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1.5" />
     <circle cx="100" cy="40" r="3" fill="rgba(255,255,255,0.4)" />
 
-    {/* Left handle */}
     <path
       d="M68 84 Q44 84 44 106 Q44 128 68 126"
       stroke="url(#handle)"
@@ -53,7 +43,6 @@ const ChampionBadge = ({ year, size = 80 }: { year: string; size?: number }) => 
       strokeLinecap="round"
     />
 
-    {/* Right handle */}
     <path
       d="M132 84 Q156 84 156 106 Q156 128 132 126"
       stroke="url(#handle)"
@@ -69,14 +58,10 @@ const ChampionBadge = ({ year, size = 80 }: { year: string; size?: number }) => 
       strokeLinecap="round"
     />
 
-    {/* Stem */}
     <rect x="94" y="148" width="12" height="20" rx="3" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1" />
-
-    {/* Base tiers */}
     <rect x="76" y="167" width="48" height="10" rx="4" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1" />
     <rect x="68" y="176" width="64" height="10" rx="4" fill="url(#cupLid)" stroke="url(#silver)" strokeWidth="1.5" />
 
-    {/* Year — large, crisp */}
     <text
       x="100"
       y="165"

@@ -10,8 +10,6 @@ import HeroTexture from "@/components/hero-texture"
 
 export const dynamic = "force-dynamic"
 
-// ─── Content skeleton ─────────────────────────────────────────────────────────
-
 const TeamsContentSkeleton = () => (
   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
     {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((index) => (
@@ -25,8 +23,6 @@ const TeamsContentSkeleton = () => (
     ))}
   </div>
 )
-
-// ─── Content (slow fetch) ─────────────────────────────────────────────────────
 
 interface TeamsContentProps {
   selectedSeasonId: number | null
@@ -78,8 +74,6 @@ const TeamsContent = async ({ selectedSeasonId }: TeamsContentProps) => {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 interface TeamsPageProps {
   searchParams: Promise<{ seasonId?: string }>
 }
@@ -87,7 +81,6 @@ interface TeamsPageProps {
 const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
   const { seasonId: seasonIdParam } = await searchParams
 
-  // Fast fetch — needed for hero
   let seasons: Season[] = []
   const seasonsResult = await Promise.allSettled([getSeasons()])
   if (seasonsResult[0].status === "fulfilled") seasons = seasonsResult[0].value
@@ -100,7 +93,6 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
-        {/* Hero — renders immediately */}
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <div className="relative min-h-52 bg-slate-900">
             <HeroTexture />
@@ -114,7 +106,7 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
                 <div className="flex flex-col gap-0.5">
                   <h1 className="text-3xl font-black text-white leading-none drop-shadow">Teams</h1>
                   <p className="text-sm text-white/65">
-                    Uruguayan Primera División
+                    Uruguayan First Division
                     {selectedSeason && <span className="font-semibold text-white/85"> · {selectedSeason.name}</span>}
                   </p>
                 </div>
@@ -131,7 +123,6 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
           </div>
         </div>
 
-        {/* Content — skeleton on initial stream AND on every client-side param change */}
         <Suspense fallback={<TeamsContentSkeleton />}>
           <SearchParamsLoadingBoundary
             committedParams={{ seasonId: String(selectedSeasonId) }}

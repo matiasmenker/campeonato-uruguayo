@@ -5,7 +5,6 @@ import {
   IconPlayerPlay,
   IconStar,
   IconTrophy,
-  IconUsersGroup,
 } from "@tabler/icons-react"
 import MatchesCarousel from "@/components/matches-carousel"
 import PlayerCard from "@/components/player-card"
@@ -39,9 +38,6 @@ export const dynamic = "force-dynamic"
 const getPlayerName = (leader: LeaderEntry) =>
   leader.player.displayName ?? leader.player.name
 
-const formatRating = (value: number) =>
-  new Intl.NumberFormat("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 2 }).format(value)
-
 const PlayerLeaderCard = ({ leader }: { leader: LeaderEntry }) => (
   <PlayerCard
     name={leader.player.displayName ?? leader.player.name}
@@ -74,7 +70,6 @@ const SectionTitle = ({
   </div>
 )
 
-// Fallback videos used when YOUTUBE_API_KEY / YOUTUBE_CHANNEL_ID are not configured
 const AUF_VIDEOS_FALLBACK: YoutubeVideo[] = [
   {
     videoId: "rJSbulDa9QM",
@@ -114,13 +109,7 @@ const AUF_VIDEOS_FALLBACK: YoutubeVideo[] = [
   },
 ]
 
-// MVP: fixture ID → YouTube video mapping — populate with real IDs once YouTube API is integrated
-// Key: fixture ID from the API, Value: video data from AUF YouTube playlist
-const FIXTURE_VIDEO_MAP: Record<number, { videoId: string; title: string; thumbnailUrl: string; publishedAt: string }> = {
-  // Example entries — replace keys with real fixture IDs from the API:
-  // 12345: { videoId: "cylnr4P_dwo", title: "Peñarol 0-2 Liverpool | HL Largo | Fecha 11", thumbnailUrl: "https://i.ytimg.com/vi/cylnr4P_dwo/hqdefault.jpg", publishedAt: "2026-04-12T20:00:00+00:00" },
-  // 12346: { videoId: "ZSpTEVmSW94", title: "Racing 2-1 Juventud | HL Largo | Fecha 10", thumbnailUrl: "https://i.ytimg.com/vi/ZSpTEVmSW94/hqdefault.jpg", publishedAt: "2026-04-07T20:00:00+00:00" },
-}
+const FIXTURE_VIDEO_MAP: Record<number, { videoId: string; title: string; thumbnailUrl: string; publishedAt: string }> = {}
 
 const HomePage = async () => {
   let overview: DashboardOverview | null = null
@@ -137,7 +126,6 @@ const HomePage = async () => {
         : "Could not load the dashboard from the API."
   }
 
-  // Two separate calls: round-scoped for ratings, season-scoped for scorers
   let seasonLeaders: LeadersContract | null = null
 
   if (overview?.season?.id) {
@@ -161,9 +149,7 @@ const HomePage = async () => {
   try {
     const fetched = await fetchLatestAufVideos(6)
     if (fetched.length > 0) aufVideos = fetched
-  } catch {
-    // silently keep fallback
-  }
+  } catch {}
 
   const topRatedPlayers = leaders?.topRated.leaders ?? []
   const topScorers = seasonLeaders?.topScorers.leaders ?? []
@@ -262,7 +248,7 @@ const HomePage = async () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(overview?.standings ?? []).map((standing, index) => (
+                    {(overview?.standings ?? []).map((standing) => (
                       <TableRow key={standing.id}>
                         <TableCell className="text-center">
                           <span className="text-xs font-medium text-slate-400">
@@ -313,14 +299,12 @@ const HomePage = async () => {
               />
               {topScorers.length > 0 ? (
                 <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-                  {/* Header */}
                   <div className="grid grid-cols-[36px_1fr_1fr_48px] border-b border-slate-100 bg-slate-50 px-3 py-2">
                     <span className="text-center text-xs text-slate-400">#</span>
                     <span className="text-xs text-slate-400">Player</span>
                     <span className="text-xs text-slate-400">Team</span>
                     <span className="text-center text-xs text-slate-400">Goals</span>
                   </div>
-                  {/* Rows — flex-1 so they share remaining height equally */}
                   {topScorers.map((leader, index) => (
                     <div
                       key={`${leader.player.id}-${leader.value}`}

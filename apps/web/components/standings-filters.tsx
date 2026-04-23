@@ -5,10 +5,6 @@ import HeroSelect from "@/components/hero-select"
 import { signalNavigationStart, useIsNavigating } from "@/components/search-params-loading-boundary"
 import type { Season, Stage } from "@/lib/seasons"
 
-// ---------------------------------------------------------------------------
-// Shared navigation hook
-// ---------------------------------------------------------------------------
-
 const useStandingsNav = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -23,10 +19,6 @@ const useStandingsNav = () => {
 
   return { updateParam }
 }
-
-// ---------------------------------------------------------------------------
-// Season filter
-// ---------------------------------------------------------------------------
 
 interface StandingsSeasonFilterProps {
   seasons: Season[]
@@ -47,10 +39,6 @@ export const StandingsSeasonFilter = ({ seasons, selectedSeasonId }: StandingsSe
     />
   )
 }
-
-// ---------------------------------------------------------------------------
-// Stage filter
-// ---------------------------------------------------------------------------
 
 interface StandingsStageFilterProps {
   stages: Stage[]

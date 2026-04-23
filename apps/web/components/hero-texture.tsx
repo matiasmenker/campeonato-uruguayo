@@ -1,6 +1,3 @@
-// Shared SVG background for all hero sections.
-// Amanecer — #438fd7 top bloom · #0a377b base · #1b5cab / #134692 accents
-
 const HeroTexture = () => (
   <svg
     className="absolute inset-0 h-full w-full"

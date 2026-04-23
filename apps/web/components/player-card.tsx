@@ -1,6 +1,3 @@
-// Shared player card component — same design as home page top players.
-// Used in: home page leaders, team detail squad grid.
-
 import { getRatingFill } from "@/lib/rating"
 import { resolvePlayerImageUrl } from "@/lib/player"
 
@@ -45,7 +42,6 @@ const PlayerCard = ({ name, imagePath, positionId, teamImagePath, rating }: Play
         border: "1px solid #e2e8f0",
       }}
     >
-      {/* Player name */}
       <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-center px-3 pt-2.5" style={{ height: 40 }}>
         <div className="text-center">
           {last ? (
@@ -59,7 +55,6 @@ const PlayerCard = ({ name, imagePath, positionId, teamImagePath, rating }: Play
         </div>
       </div>
 
-      {/* Photo + position badge */}
       <div className="absolute inset-x-0 z-20 flex items-center justify-center" style={{ top: 42, bottom: 50 }}>
         <div className="relative">
           <PlayerCirclePhoto src={imagePath} alt={name} />
@@ -86,7 +81,6 @@ const PlayerCard = ({ name, imagePath, positionId, teamImagePath, rating }: Play
         </div>
       </div>
 
-      {/* Bottom strip */}
       <div className="absolute inset-x-0 bottom-0 z-30" style={{ height: 48 }}>
         <div className="absolute inset-0 bg-white" />
         <div className="absolute inset-x-0 top-0 h-px bg-slate-200" />
