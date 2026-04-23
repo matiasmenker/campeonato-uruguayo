@@ -17,7 +17,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   topScorers: "Top scorers",
   topAssists: "Most assists",
   topYellowCards: "Yellow cards",
-  topRedCards: "Red cards",
+  topSaves: "Most saves",
   topMinutes: "Most minutes",
 }
 
@@ -26,7 +26,7 @@ const CATEGORY_VALUE_LABELS: Record<string, string> = {
   topScorers: "goals",
   topAssists: "assists",
   topYellowCards: "cards",
-  topRedCards: "cards",
+  topSaves: "saves",
   topMinutes: "min",
 }
 
@@ -263,7 +263,7 @@ const PlayersContent = async ({
     { key: "topAssists", entries: leaders.topAssists.leaders },
     { key: "topMinutes", entries: leaders.topMinutes.leaders },
     { key: "topYellowCards", entries: leaders.topYellowCards.leaders },
-    { key: "topRedCards", entries: leaders.topRedCards.leaders },
+    { key: "topSaves", entries: leaders.topSaves.leaders },
   ]
 
   return (
@@ -344,14 +344,14 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
         <div className="overflow-hidden rounded-2xl shadow-lg">
-          <div className="relative min-h-40 bg-slate-900">
+          <div className="relative min-h-52 bg-slate-900">
             <HeroTexture />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/40 pointer-events-none" />
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">
               <div className="flex flex-col gap-0.5">
                 <h1 className="text-3xl font-black text-white drop-shadow leading-none">Players</h1>
                 <p className="text-sm text-white/60">
-                  {[selectedStage?.name, selectedSeason.name].filter(Boolean).join(" · ")} leaders
+                  {selectedStage?.name ?? selectedSeason.name} {selectedStage ? selectedSeason.name : ""}
                 </p>
               </div>
               <Suspense>

@@ -36,7 +36,7 @@ export interface LeadersContract {
   topScorers: LeaderCategory
   topAssists: LeaderCategory
   topYellowCards: LeaderCategory
-  topRedCards: LeaderCategory
+  topSaves: LeaderCategory
   topMinutes: LeaderCategory
 }
 

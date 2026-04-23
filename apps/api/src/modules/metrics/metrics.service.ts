@@ -211,12 +211,12 @@ export const getSquadRatings = async (query: SquadRatingsQuery): Promise<SquadPl
 };
 
 export const getLeaders = async (query: LeadersQuery): Promise<DetailResponse<LeadersContract>> => {
-  const [topRated, topScorers, topAssists, topYellowCards, topRedCards, topMinutes] = await Promise.all([
+  const [topRated, topScorers, topAssists, topYellowCards, topSaves, topMinutes] = await Promise.all([
     buildLeaderCategory("topRated", "RATING", query.seasonId, query.stageId, query.roundId, query.limit, "average"),
     buildLeaderCategory("topScorers", "GOALS", query.seasonId, query.stageId, query.roundId, query.limit),
     buildLeaderCategory("topAssists", "ASSISTS", query.seasonId, query.stageId, query.roundId, query.limit),
     buildLeaderCategory("topYellowCards", "YELLOWCARDS", query.seasonId, query.stageId, query.roundId, query.limit),
-    buildLeaderCategory("topRedCards", "REDCARDS", query.seasonId, query.stageId, query.roundId, query.limit),
+    buildLeaderCategory("topSaves", "SAVES", query.seasonId, query.stageId, query.roundId, query.limit),
     buildLeaderCategory("topMinutes", "MINUTES_PLAYED", query.seasonId, query.stageId, query.roundId, query.limit),
   ]);
 
@@ -226,7 +226,7 @@ export const getLeaders = async (query: LeadersQuery): Promise<DetailResponse<Le
       topScorers,
       topAssists,
       topYellowCards,
-      topRedCards,
+      topSaves,
       topMinutes,
     },
   };
