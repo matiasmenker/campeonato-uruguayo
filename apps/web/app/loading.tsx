@@ -1,3 +1,33 @@
+const PlayerCardSkeleton = () => (
+  <div
+    className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50 shadow-sm"
+    style={{ aspectRatio: "2.5/3.5" }}
+  >
+    <div className="absolute inset-x-0 top-0 flex flex-col items-center gap-1 px-3 pt-3">
+      <div className="h-2 w-14 animate-pulse rounded bg-slate-200" />
+      <div className="h-2.5 w-10 animate-pulse rounded bg-slate-200" />
+    </div>
+
+    <div className="absolute inset-x-0 flex items-center justify-center" style={{ top: 44, bottom: 50 }}>
+      <div className="relative">
+        <div className="h-[76px] w-[76px] animate-pulse rounded-full bg-slate-200" />
+        <div
+          className="absolute bottom-0 left-[-4px] h-6 w-6 animate-pulse rounded-full bg-slate-300"
+          style={{ border: "2px solid #f8fafc" }}
+        />
+      </div>
+    </div>
+
+    <div className="absolute inset-x-0 bottom-0 flex h-12 items-center justify-between border-t border-slate-200 bg-white px-3">
+      <div className="flex items-center gap-1">
+        <div className="h-3 w-3 animate-pulse rounded-full bg-slate-200" />
+        <div className="h-3 w-7 animate-pulse rounded bg-slate-200" />
+      </div>
+      <div className="h-8 w-8 animate-pulse rounded bg-slate-100" />
+    </div>
+  </div>
+)
+
 const HomeLoading = () => (
   <main className="bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-8 sm:px-8 lg:px-10">
@@ -63,11 +93,7 @@ const HomeLoading = () => (
             </div>
             <div className="grid grid-cols-5 gap-3">
               {Array.from({ length: 10 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="animate-pulse overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm"
-                  style={{ aspectRatio: "2.5/3.5" }}
-                />
+                <PlayerCardSkeleton key={index} />
               ))}
             </div>
           </div>
