@@ -15,10 +15,12 @@ import {
 } from "@/components/ui/table"
 import ChampionBadge from "@/components/champion-badge"
 import { StandingsSeasonFilter, StandingsStageFilter } from "@/components/standings-filters"
+import MatchCard from "@/components/match-card"
 import { getLeaders, type LeadersContract } from "@/lib/metrics"
 import { getStandings, type StandingEntry } from "@/lib/standings"
+import { getFixtures, type FixtureListItem } from "@/lib/matches"
 import { getSeasons, getStages, getSeasonChampion, type Season, type Stage, type SeasonChampion } from "@/lib/seasons"
-import { groupStages, getStageGroupById, buildStageGroupSelectOptions } from "@/lib/stage-groups"
+import { groupStages, getStageGroupById, buildStageGroupSelectOptions, getStageGroup } from "@/lib/stage-groups"
 
 export const revalidate = 300
 
@@ -315,6 +317,23 @@ const StandingsContent = async ({
   else errorMessage = "Could not load standings."
   if (leadersResult.status === "fulfilled") leaders = leadersResult.value
 
+  const selectedGroup = selectedStage ? getStageGroup(selectedStage.name) : null
+  const isKnockoutStage = selectedGroup === "finales"
+  let knockoutFixtures: FixtureListItem[] = []
+  if (standings.length === 0 && isKnockoutStage && selectedStageId !== null) {
+    const knockoutResult = await getFixtures({
+      seasonId: selectedSeasonId,
+      stageId: selectedStageId,
+      pageSize: 20,
+    }).catch(() => null)
+    knockoutFixtures = knockoutResult?.data ?? []
+    knockoutFixtures.sort((first, second) => {
+      const firstTime = first.kickoffAt ? new Date(first.kickoffAt).getTime() : 0
+      const secondTime = second.kickoffAt ? new Date(second.kickoffAt).getTime() : 0
+      return firstTime - secondTime
+    })
+  }
+
   if (!selectedSeason?.isCurrent) {
     if (championshipFinalsStage) {
       champion = await getSeasonChampion(championshipFinalsStage.id).catch(() => null)
@@ -345,11 +364,7 @@ const StandingsContent = async ({
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
       <div className="flex flex-col gap-3">
-        {standings.length === 0 ? (
-          <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
-            No standings available for this stage
-          </div>
-        ) : (
+        {standings.length > 0 ? (
           <>
             <StandingsTable standings={standings} seasonId={selectedSeasonId} />
             <div className="flex items-center gap-1.5 px-1 text-xs text-slate-400">
@@ -357,6 +372,40 @@ const StandingsContent = async ({
               <span>Relegation zone</span>
             </div>
           </>
+        ) : isKnockoutStage && knockoutFixtures.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm text-amber-900">
+              This stage is decided by knockout — no league table. Below are the fixtures that determine the {selectedStage?.name ?? "stage"}.
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {knockoutFixtures.map((fixture) => (
+                <MatchCard
+                  key={fixture.id}
+                  id={fixture.id}
+                  kickoffAt={fixture.kickoffAt}
+                  homeScore={fixture.homeScore}
+                  awayScore={fixture.awayScore}
+                  stateCode={fixture.state?.developerName ?? null}
+                  venueImagePath={fixture.venue?.imagePath ?? null}
+                  homeTeam={fixture.homeTeam}
+                  awayTeam={fixture.awayTeam}
+                  roundName={fixture.round?.name ?? null}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white/60 px-6 py-10 text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+              <IconTrophy size={20} className="text-slate-300" />
+            </div>
+            <p className="text-sm font-semibold text-slate-600">No standings available</p>
+            <p className="max-w-xs text-xs text-slate-400">
+              {isKnockoutStage
+                ? "The knockout fixtures for this stage have not been played yet."
+                : "There is no data for this stage yet."}
+            </p>
+          </div>
         )}
       </div>
 

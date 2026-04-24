@@ -157,7 +157,7 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
                     "whitespace-nowrap text-xs font-black",
                     isActive ? "text-white" : "text-slate-800"
                   )}>
-                    Round {group.round.name}
+                    {group.round.id < 0 ? group.round.name : `Round ${group.round.name}`}
                   </span>
                   <div className="flex items-center gap-1">
                     <span className={cn("h-1.5 w-1.5 rounded-full", roundStatus.dotClass)} />
@@ -179,21 +179,29 @@ const RoundSelector = ({ roundGroups, effectiveRoundId, onSelectRound }: RoundSe
   )
 }
 
+const synthesizeRoundFromStage = (stage: { id: number; name: string; isCurrent: boolean }): RoundSummary => {
+  const cleanName = stage.name.replace(/^championship\s*-\s*/i, "").trim()
+  return { id: -stage.id, name: cleanName || stage.name, isCurrent: stage.isCurrent }
+}
+
 const buildRoundGroups = (fixtures: FixtureListItem[]): RoundGroup[] => {
   const map = new Map<number, RoundGroup>()
   for (const fixture of fixtures) {
-    if (!fixture.round) continue
-    const existing = map.get(fixture.round.id)
+    const round = fixture.round ?? (fixture.stage ? synthesizeRoundFromStage(fixture.stage) : null)
+    if (!round) continue
+    const existing = map.get(round.id)
     if (existing) {
       existing.fixtures.push(fixture)
     } else {
-      map.set(fixture.round.id, { round: fixture.round, fixtures: [fixture] })
+      map.set(round.id, { round, fixtures: [fixture] })
     }
   }
   return Array.from(map.values()).sort((a, b) => {
     const numA = parseInt(a.round.name, 10)
     const numB = parseInt(b.round.name, 10)
     if (!isNaN(numA) && !isNaN(numB)) return numA - numB
+    if (!isNaN(numA)) return -1
+    if (!isNaN(numB)) return 1
     return a.round.name.localeCompare(b.round.name)
   })
 }

@@ -181,14 +181,21 @@ const RatingStatCard = ({ avgRating, hasData }: { avgRating: number | null; hasD
   )
 }
 
+const resolvePlayerSide = (fixture: PlayerFixture, teamIds: Set<number>): "home" | "away" | null => {
+  if (fixture.homeTeam && teamIds.has(fixture.homeTeam.id)) return "home"
+  if (fixture.awayTeam && teamIds.has(fixture.awayTeam.id)) return "away"
+  return null
+}
+
 const getMatchResult = (
   fixture: PlayerFixture,
-  teamId: number,
+  teamIds: Set<number>,
 ): { label: "W" | "D" | "L"; color: string; bg: string } | null => {
   if (fixture.homeScore === null || fixture.awayScore === null) return null
-  const isHome = fixture.homeTeam?.id === teamId
-  const teamScore = isHome ? fixture.homeScore : fixture.awayScore
-  const opponentScore = isHome ? fixture.awayScore : fixture.homeScore
+  const side = resolvePlayerSide(fixture, teamIds)
+  if (side === null) return null
+  const teamScore = side === "home" ? fixture.homeScore : fixture.awayScore
+  const opponentScore = side === "home" ? fixture.awayScore : fixture.homeScore
   if (teamScore > opponentScore) return { label: "W", color: "#15803d", bg: "#dcfce7" }
   if (teamScore < opponentScore) return { label: "L", color: "#b91c1c", bg: "#fee2e2" }
   return { label: "D", color: "#475569", bg: "#f1f5f9" }
@@ -197,23 +204,24 @@ const getMatchResult = (
 const RecentFormCard = ({
   stat,
   fixture,
-  teamId,
+  teamIds,
 }: {
   stat: PlayerStatEntry
   fixture: PlayerFixture
-  teamId: number
+  teamIds: Set<number>
 }) => {
   const rating = typeof stat.value.normalizedValue === "number" ? stat.value.normalizedValue : null
   if (rating === null) return null
 
-  const isHome = fixture.homeTeam?.id === teamId
-  const ownTeam = isHome ? fixture.homeTeam : fixture.awayTeam
-  const opponent = isHome ? fixture.awayTeam : fixture.homeTeam
-  const result = getMatchResult(fixture, teamId)
+  const side = resolvePlayerSide(fixture, teamIds)
+  const isHome = side === "home"
+  const ownTeam = side === null ? null : isHome ? fixture.homeTeam : fixture.awayTeam
+  const opponent = side === null ? fixture.awayTeam : isHome ? fixture.awayTeam : fixture.homeTeam
+  const result = getMatchResult(fixture, teamIds)
   const ratingFill = getRatingFill(rating)
   const isFinished = fixture.homeScore !== null && fixture.awayScore !== null
-  const ownScore = isHome ? fixture.homeScore : fixture.awayScore
-  const opponentScore = isHome ? fixture.awayScore : fixture.homeScore
+  const ownScore = side === null ? fixture.homeScore : isHome ? fixture.homeScore : fixture.awayScore
+  const opponentScore = side === null ? fixture.awayScore : isHome ? fixture.awayScore : fixture.homeScore
 
   return (
     <Link
@@ -328,15 +336,16 @@ const RECENT_FORM_SLOTS = 5
 const RecentForm = ({
   ratingStats,
   fixtures,
-  teamId,
+  teamIds,
 }: {
   ratingStats: PlayerStatEntry[]
   fixtures: PlayerFixture[]
-  teamId: number | null
+  teamIds: number[]
 }) => {
   const fixtureMap = new Map(fixtures.map((fixture) => [fixture.id, fixture]))
+  const teamIdSet = new Set(teamIds)
 
-  const last5 = teamId
+  const last5 = teamIds.length > 0
     ? [...ratingStats]
         .filter((stat) => typeof stat.value.normalizedValue === "number")
         .map((stat) => ({ stat, fixture: fixtureMap.get(stat.fixtureId) ?? null }))
@@ -357,7 +366,7 @@ const RecentForm = ({
       <h2 className="px-1 text-sm font-bold text-slate-700">Last matches</h2>
       <div className="flex gap-2">
         {last5.map(({ stat, fixture }) => (
-          <RecentFormCard key={stat.id} stat={stat} fixture={fixture} teamId={teamId!} />
+          <RecentFormCard key={stat.id} stat={stat} fixture={fixture} teamIds={teamIdSet} />
         ))}
         {Array.from({ length: missingSlots }).map((_, index) => (
           <RecentFormEmptySlot key={`empty-${index}`} />
@@ -395,15 +404,67 @@ const formatMinutes = (minutes: number | null) => {
   return new Intl.NumberFormat("en-GB").format(minutes)
 }
 
+const CareerTeamsCell = ({ memberships }: { memberships: PlayerMembership[] }) => {
+  if (memberships.length === 0) {
+    return <span className="text-sm text-slate-400">No data</span>
+  }
+  const uniqueTeams = Array.from(
+    new Map(memberships.map((membership) => [membership.team.id, membership])).values()
+  )
+  const hasLoan = uniqueTeams.some((membership) => membership.isLoan)
+
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <div className="flex shrink-0 items-center -space-x-1.5">
+        {uniqueTeams.map((membership) =>
+          membership.team.imagePath ? (
+            <img
+              key={membership.team.id}
+              src={membership.team.imagePath}
+              alt={membership.team.name}
+              className="h-5 w-5 rounded-full bg-white object-contain ring-2 ring-white"
+            />
+          ) : (
+            <span
+              key={membership.team.id}
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 ring-2 ring-white"
+            >
+              <IconShieldFilled size={12} className="text-slate-300" />
+            </span>
+          )
+        )}
+      </div>
+      <div className="flex min-w-0 items-center gap-1.5">
+        {uniqueTeams.map((membership, index) => (
+          <span key={membership.team.id} className="flex items-center gap-1.5 min-w-0">
+            {index > 0 && <span className="text-xs text-slate-300">/</span>}
+            <Link
+              href={`/teams/${membership.team.id}`}
+              className="truncate text-sm font-semibold text-slate-800 hover:text-slate-600 transition-colors"
+            >
+              {membership.team.name}
+            </Link>
+          </span>
+        ))}
+        {hasLoan && (
+          <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+            Loan
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const CareerHistoryRow = ({
   season,
-  membership,
+  memberships,
   isSelected,
   aggregates,
   showSaves,
 }: {
   season: { id: number; name: string }
-  membership: PlayerMembership | null
+  memberships: PlayerMembership[]
   isSelected: boolean
   aggregates: PlayerSeasonAggregates | null
   showSaves: boolean
@@ -428,28 +489,7 @@ const CareerHistoryRow = ({
   return (
     <div className={`grid ${careerColumnTemplate(showSaves)} items-center gap-2 px-4 py-3 ${isSelected ? "bg-slate-50" : ""}`}>
       <span className="text-xs font-bold text-slate-600">{season.name}</span>
-      {membership ? (
-        <div className="flex items-center gap-2 min-w-0">
-          {membership.team.imagePath ? (
-            <img src={membership.team.imagePath} alt={membership.team.name} className="h-5 w-5 shrink-0 object-contain" />
-          ) : (
-            <IconShieldFilled size={14} className="shrink-0 text-slate-300" />
-          )}
-          <Link
-            href={`/teams/${membership.team.id}`}
-            className="truncate text-sm font-semibold text-slate-800 hover:text-slate-600 transition-colors"
-          >
-            {membership.team.name}
-          </Link>
-          {membership.isLoan && (
-            <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
-              Loan
-            </span>
-          )}
-        </div>
-      ) : (
-        <span className="text-sm text-slate-400">No data</span>
-      )}
+      <CareerTeamsCell memberships={memberships} />
       {numericCell(appearances)}
       <span className="text-center text-xs font-semibold tabular-nums text-slate-800">
         {minutes != null ? formatMinutes(minutes) : <span className="text-slate-300">—</span>}
@@ -552,12 +592,11 @@ const PlayerSeasonContent = async ({
   selectedSeasonId: number
   selectedGroupStageIds: number[]
 }) => {
-  const selectedMembership =
-    memberships.find((membership) => membership.season.id === selectedSeasonId) ?? null
-
-  const teamId = selectedMembership?.team.id ?? null
+  const selectedSeasonMemberships = memberships.filter((membership) => membership.season.id === selectedSeasonId)
+  const selectedTeamIds = selectedSeasonMemberships.map((membership) => membership.team.id)
+  const primaryMembership = selectedSeasonMemberships[0] ?? null
   const resolvedPositionId =
-    selectedMembership?.positionId ??
+    selectedSeasonMemberships.find((membership) => membership.positionId != null)?.positionId ??
     player.positionId ??
     memberships.find((m) => m.positionId != null)?.positionId ??
     null
@@ -571,9 +610,13 @@ const PlayerSeasonContent = async ({
         getPlayerStatsByType(player.id, STAT_TYPE_MINUTES, selectedSeasonId, stageId ?? undefined).catch(() => []),
         getPlayerStatsByType(player.id, STAT_TYPE_ASSISTS, selectedSeasonId, stageId ?? undefined).catch(() => []),
         getPlayerSeasonEvents(player.id, selectedSeasonId, stageId ?? undefined).catch(() => []),
-        teamId
-          ? getPlayerTeamFixtures(teamId, selectedSeasonId, stageId ?? undefined).catch(() => [])
-          : Promise.resolve([]),
+        selectedTeamIds.length > 0
+          ? Promise.all(
+              selectedTeamIds.map((teamId) =>
+                getPlayerTeamFixtures(teamId, selectedSeasonId, stageId ?? undefined).catch(() => [])
+              )
+            ).then((results) => results.flat())
+          : Promise.resolve([] as PlayerFixture[]),
         getPlayerStatsByType(player.id, STAT_TYPE_SAVES, selectedSeasonId, stageId ?? undefined).catch(() => []),
       ])
     )
@@ -582,7 +625,12 @@ const PlayerSeasonContent = async ({
   const minuteStats = perStagePayloads.flatMap((payload) => payload[1])
   const assistStats = perStagePayloads.flatMap((payload) => payload[2])
   const events = perStagePayloads.flatMap((payload) => payload[3])
-  const fixtures = perStagePayloads.flatMap((payload) => payload[4])
+  const rawFixtures = perStagePayloads.flatMap((payload) => payload[4])
+  const fixtureDedup = new Map<number, PlayerFixture>()
+  for (const fixture of rawFixtures) {
+    if (!fixtureDedup.has(fixture.id)) fixtureDedup.set(fixture.id, fixture)
+  }
+  const fixtures = Array.from(fixtureDedup.values())
   const saveStats = perStagePayloads.flatMap((payload) => payload[5])
 
   const aggregates: PlayerSeasonAggregates = computePlayerSeasonAggregates(
@@ -593,11 +641,18 @@ const PlayerSeasonContent = async ({
   const showSavesCard = isGoalkeeper || aggregates.saves > 0
 
   const seasonAggregatesMap = new Map<number, PlayerSeasonAggregates>()
-  if (memberships.length > 0) {
+  const uniqueMembershipSeasonIds = Array.from(new Set(memberships.map((membership) => membership.season.id)))
+  if (uniqueMembershipSeasonIds.length > 0) {
+    const membershipsByIdForSeasons = new Map<number, PlayerMembership[]>()
+    for (const membership of memberships) {
+      const list = membershipsByIdForSeasons.get(membership.season.id) ?? []
+      list.push(membership)
+      membershipsByIdForSeasons.set(membership.season.id, list)
+    }
     const perSeasonResults = await Promise.all(
-      memberships.map(async (membership) => {
-        const seasonId = membership.season.id
-        const isMembershipGoalkeeper = membership.positionId === 24 || isGoalkeeper
+      uniqueMembershipSeasonIds.map(async (seasonId) => {
+        const seasonMemberships = membershipsByIdForSeasons.get(seasonId) ?? []
+        const seasonIsGoalkeeper = seasonMemberships.some((membership) => membership.positionId === 24) || isGoalkeeper
         const seasonStages = filterMainStages(await getStages(seasonId).catch(() => []))
         if (seasonStages.length === 0) {
           return { seasonId, aggregates: computePlayerSeasonAggregates([], [], [], [], []) }
@@ -609,7 +664,7 @@ const PlayerSeasonContent = async ({
               getPlayerStatsByType(player.id, STAT_TYPE_MINUTES, seasonId, stage.id).catch(() => []),
               getPlayerStatsByType(player.id, STAT_TYPE_ASSISTS, seasonId, stage.id).catch(() => []),
               getPlayerSeasonEvents(player.id, seasonId, stage.id).catch(() => []),
-              isMembershipGoalkeeper
+              seasonIsGoalkeeper
                 ? getPlayerStatsByType(player.id, STAT_TYPE_SAVES, seasonId, stage.id).catch(() => [])
                 : Promise.resolve([] as PlayerStatEntry[]),
             ])
@@ -631,7 +686,12 @@ const PlayerSeasonContent = async ({
   const sortedAllSeasons = [...allSeasons].sort(
     (firstSeason, secondSeason) => Number(secondSeason.name) - Number(firstSeason.name),
   )
-  const membershipBySeasonId = new Map(memberships.map((membership) => [membership.season.id, membership]))
+  const membershipsBySeasonId = new Map<number, PlayerMembership[]>()
+  for (const membership of memberships) {
+    const list = membershipsBySeasonId.get(membership.season.id) ?? []
+    list.push(membership)
+    membershipsBySeasonId.set(membership.season.id, list)
+  }
   const careerShowSaves =
     isGoalkeeper || Array.from(seasonAggregatesMap.values()).some((entry) => entry.saves > 0)
 
@@ -695,7 +755,7 @@ const PlayerSeasonContent = async ({
       )}
 
       
-      <RecentForm ratingStats={ratingStats} fixtures={fixtures} teamId={teamId} />
+      <RecentForm ratingStats={ratingStats} fixtures={fixtures} teamIds={selectedTeamIds} />
 
       
       <div className="flex flex-col gap-3">
@@ -716,7 +776,7 @@ const PlayerSeasonContent = async ({
                   <CareerHistoryRow
                     key={season.id}
                     season={season}
-                    membership={membershipBySeasonId.get(season.id) ?? null}
+                    memberships={membershipsBySeasonId.get(season.id) ?? []}
                     isSelected={season.id === selectedSeasonId}
                     aggregates={seasonAggregatesMap.get(season.id) ?? null}
                     showSaves={careerShowSaves}
@@ -776,8 +836,11 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
     ? requestedSeasonId
     : (defaultMembership?.season.id ?? null)
 
+  const selectedSeasonMemberships = sortedMemberships.filter(
+    (membership) => membership.season.id === selectedSeasonId
+  )
   const selectedMembership =
-    sortedMemberships.find((membership) => membership.season.id === selectedSeasonId) ??
+    selectedSeasonMemberships[0] ??
     defaultMembership ??
     null
 
@@ -794,9 +857,28 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
   const requestedStageId = stageIdParam ? Number(stageIdParam) : null
   const requestedGroup = requestedStageId !== null ? getStageGroupById(allStages, requestedStageId) : null
   const hasRequestedGroup = requestedGroup !== null && availableGroups.some((group) => group.group === requestedGroup)
-  const resolvedGroup = hasRequestedGroup
+
+  let resolvedGroup = hasRequestedGroup
     ? availableGroups.find((group) => group.group === requestedGroup) ?? null
     : currentGroup
+
+  if (!hasRequestedGroup && selectedSeasonId && availableGroups.length > 0) {
+    const groupActivity = await Promise.all(
+      availableGroups.map(async (group) => {
+        const stageFetches = group.stages.map((stage) =>
+          getPlayerStatsByType(playerId, STAT_TYPE_MINUTES, selectedSeasonId, stage.id).catch(() => [])
+        )
+        const statsPerStage = await Promise.all(stageFetches)
+        const hasMinutes = statsPerStage.some((stats) =>
+          stats.some((stat) => typeof stat.value.normalizedValue === "number" && stat.value.normalizedValue > 0)
+        )
+        return { group, hasMinutes }
+      })
+    )
+    const preferred = [...groupActivity].reverse().find((entry) => entry.hasMinutes)
+    if (preferred) resolvedGroup = preferred.group
+  }
+
   const selectedStageId: number | null = resolvedGroup?.primaryStageId ?? null
   const selectedGroupStageIds = resolvedGroup ? resolvedGroup.stages.map((stage) => stage.id) : []
 
@@ -824,7 +906,10 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
   if (heroDob) heroMetaParts.push(heroAge ? `${heroDob} (${heroAge} yrs)` : heroDob)
   if (player.height) heroMetaParts.push(`${player.height} cm`)
   if (player.weight) heroMetaParts.push(`${player.weight} kg`)
-  if (selectedMembership?.shirtNumber != null) heroMetaParts.push(`#${selectedMembership.shirtNumber}`)
+  const heroShirtNumbers = Array.from(
+    new Set(selectedSeasonMemberships.map((membership) => membership.shirtNumber).filter((n): n is number => n != null))
+  )
+  if (heroShirtNumbers.length > 0) heroMetaParts.push(heroShirtNumbers.map((shirt) => `#${shirt}`).join(" / "))
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
@@ -866,16 +951,27 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
                         {positionLabel}
                       </span>
                     )}
-                    {selectedMembership?.team && (
-                      <Link
-                        href={`/teams/${selectedMembership.team.id}`}
-                        className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
-                      >
-                        {selectedMembership.team.imagePath && (
-                          <img src={selectedMembership.team.imagePath} alt={selectedMembership.team.name} className="h-4 w-4 object-contain" />
-                        )}
-                        <span className="text-sm font-semibold text-white/80">{selectedMembership.team.name}</span>
-                      </Link>
+                    {selectedSeasonMemberships.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        {Array.from(
+                          new Map(
+                            selectedSeasonMemberships.map((membership) => [membership.team.id, membership])
+                          ).values()
+                        ).map((membership, index) => (
+                          <span key={membership.team.id} className="flex items-center gap-1.5">
+                            {index > 0 && <span className="text-xs text-white/40">/</span>}
+                            <Link
+                              href={`/teams/${membership.team.id}`}
+                              className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+                            >
+                              {membership.team.imagePath && (
+                                <img src={membership.team.imagePath} alt={membership.team.name} className="h-4 w-4 object-contain" />
+                              )}
+                              <span className="text-sm font-semibold text-white/80">{membership.team.name}</span>
+                            </Link>
+                          </span>
+                        ))}
+                      </div>
                     )}
                     {player.country && (
                       <div className="flex items-center gap-1.5">
