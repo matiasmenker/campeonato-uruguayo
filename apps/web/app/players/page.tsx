@@ -47,7 +47,19 @@ const CategoryHighlight = ({
   seasonId: number
   stageId: number | null
 }) => {
-  if (!entry) return null
+  if (!entry) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white/50 p-5 text-center shadow-sm">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+          <IconShieldFilled size={20} className="text-slate-300" />
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          {CATEGORY_LABELS[category]}
+        </span>
+        <span className="text-xs text-slate-400">No data</span>
+      </div>
+    )
+  }
   const displayName = entry.player.displayName ?? entry.player.name
   const positionCode = entry.player.positionId ? (POSITION_CODES[entry.player.positionId] ?? null) : null
   const playerHref = stageId
@@ -188,8 +200,12 @@ const LeaderList = ({
       <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">{label}</h2>
     </div>
     {entries.length === 0 ? (
-      <div className="flex h-28 items-center justify-center text-sm text-slate-400">
-        No data available
+      <div className="flex h-28 flex-col items-center justify-center gap-1.5 text-center">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+          <IconShieldFilled size={14} className="text-slate-300" />
+        </div>
+        <span className="text-xs font-semibold text-slate-500">No data</span>
+        <span className="text-[10px] text-slate-400">No {label.toLowerCase()} for this stage</span>
       </div>
     ) : (
       <div className="flex flex-col divide-y divide-slate-100">

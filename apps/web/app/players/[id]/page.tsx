@@ -760,8 +760,8 @@ const PlayerSeasonContent = async ({
       
       <div className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between px-1">
-          <h2 className="text-sm font-bold text-slate-700">Career history</h2>
-          <span className="text-[11px] text-slate-400">Apertura + Clausura · {sortedAllSeasons.length} seasons</span>
+          <h2 className="text-sm font-bold text-slate-700">Season comparison</h2>
+          <span className="text-[11px] text-slate-400">All stages · {sortedAllSeasons.length} seasons</span>
         </div>
         {sortedAllSeasons.length === 0 ? (
           <div className="flex h-24 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
@@ -882,8 +882,41 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
   const selectedStageId: number | null = resolvedGroup?.primaryStageId ?? null
   const selectedGroupStageIds = resolvedGroup ? resolvedGroup.stages.map((stage) => stage.id) : []
 
+  let activeMembership: PlayerMembership | null = selectedSeasonMemberships[0] ?? null
+  if (selectedSeasonMemberships.length > 1 && resolvedGroup && selectedSeasonId) {
+    const playerMinutesByStage = await Promise.all(
+      resolvedGroup.stages.map((stage) =>
+        getPlayerStatsByType(playerId, STAT_TYPE_MINUTES, selectedSeasonId, stage.id).catch(() => [])
+      )
+    )
+    const playerFixtureIds = new Set(
+      playerMinutesByStage.flat()
+        .filter((stat) => typeof stat.value.normalizedValue === "number" && stat.value.normalizedValue > 0)
+        .map((stat) => stat.fixtureId)
+    )
+    if (playerFixtureIds.size > 0) {
+      const teamFixtureSets = await Promise.all(
+        selectedSeasonMemberships.map(async (membership) => {
+          const perStage = await Promise.all(
+            resolvedGroup.stages.map((stage) =>
+              getPlayerTeamFixtures(membership.team.id, selectedSeasonId, stage.id).catch(() => [])
+            )
+          )
+          return { membership, fixtureIds: new Set(perStage.flat().map((fixture) => fixture.id)) }
+        })
+      )
+      const overlaps = teamFixtureSets.map(({ membership, fixtureIds }) => {
+        let count = 0
+        for (const fixtureId of playerFixtureIds) if (fixtureIds.has(fixtureId)) count++
+        return { membership, count }
+      })
+      overlaps.sort((first, second) => second.count - first.count)
+      if (overlaps[0] && overlaps[0].count > 0) activeMembership = overlaps[0].membership
+    }
+  }
+
   const displayName = player.displayName ?? player.commonName ?? player.name
-  const positionId = selectedMembership?.positionId ?? player.positionId ?? null
+  const positionId = activeMembership?.positionId ?? selectedMembership?.positionId ?? player.positionId ?? null
   const positionLabel = positionId ? (POSITION_LABELS[positionId] ?? null) : null
   const positionStyle = positionId ? (POSITION_COLORS[positionId] ?? null) : null
 
@@ -906,10 +939,7 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
   if (heroDob) heroMetaParts.push(heroAge ? `${heroDob} (${heroAge} yrs)` : heroDob)
   if (player.height) heroMetaParts.push(`${player.height} cm`)
   if (player.weight) heroMetaParts.push(`${player.weight} kg`)
-  const heroShirtNumbers = Array.from(
-    new Set(selectedSeasonMemberships.map((membership) => membership.shirtNumber).filter((n): n is number => n != null))
-  )
-  if (heroShirtNumbers.length > 0) heroMetaParts.push(heroShirtNumbers.map((shirt) => `#${shirt}`).join(" / "))
+  if (activeMembership?.shirtNumber != null) heroMetaParts.push(`#${activeMembership.shirtNumber}`)
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
@@ -951,27 +981,16 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
                         {positionLabel}
                       </span>
                     )}
-                    {selectedSeasonMemberships.length > 0 && (
-                      <div className="flex items-center gap-2">
-                        {Array.from(
-                          new Map(
-                            selectedSeasonMemberships.map((membership) => [membership.team.id, membership])
-                          ).values()
-                        ).map((membership, index) => (
-                          <span key={membership.team.id} className="flex items-center gap-1.5">
-                            {index > 0 && <span className="text-xs text-white/40">/</span>}
-                            <Link
-                              href={`/teams/${membership.team.id}`}
-                              className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
-                            >
-                              {membership.team.imagePath && (
-                                <img src={membership.team.imagePath} alt={membership.team.name} className="h-4 w-4 object-contain" />
-                              )}
-                              <span className="text-sm font-semibold text-white/80">{membership.team.name}</span>
-                            </Link>
-                          </span>
-                        ))}
-                      </div>
+                    {activeMembership?.team && (
+                      <Link
+                        href={`/teams/${activeMembership.team.id}`}
+                        className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+                      >
+                        {activeMembership.team.imagePath && (
+                          <img src={activeMembership.team.imagePath} alt={activeMembership.team.name} className="h-4 w-4 object-contain" />
+                        )}
+                        <span className="text-sm font-semibold text-white/80">{activeMembership.team.name}</span>
+                      </Link>
                     )}
                     {player.country && (
                       <div className="flex items-center gap-1.5">

@@ -6,9 +6,9 @@ export const STAGE_GROUP_ORDER: StageGroup[] = ["apertura", "intermedio", "claus
 
 export const STAGE_GROUP_LABELS: Record<StageGroup, string> = {
   apertura: "Apertura",
-  intermedio: "Intermedio",
+  intermedio: "Intermediate",
   clausura: "Clausura",
-  finales: "Finales",
+  finales: "Finals",
 }
 
 const STAGE_GROUP_PATTERNS: Record<StageGroup, RegExp> = {

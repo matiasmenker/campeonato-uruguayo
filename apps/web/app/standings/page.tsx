@@ -155,6 +155,27 @@ const LeaderCard = ({ standing, stageName, isWinner, seasonId }: { standing: Sta
   </div>
 )
 
+const EmptyStatCard = ({
+  icon: Icon,
+  label,
+}: {
+  icon: React.ComponentType<{ size?: number; className?: string }>
+  label: string
+}) => (
+  <div className="overflow-hidden rounded-2xl border border-dashed border-slate-200 bg-white/50 shadow-sm">
+    <div className="flex items-center gap-4 p-4">
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-slate-100">
+        <Icon size={20} className="text-slate-300" />
+      </div>
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</span>
+        <span className="text-sm font-semibold text-slate-500">No data</span>
+        <span className="text-[11px] text-slate-400">No player stats for this stage</span>
+      </div>
+    </div>
+  </div>
+)
+
 const PlayerStatCard = ({
   icon: Icon,
   accentColor,
@@ -421,7 +442,7 @@ const StandingsContent = async ({
             seasonId={selectedSeasonId}
           />
         )}
-        {topScorer && (
+        {topScorer ? (
           <PlayerStatCard
             icon={IconBallFootball}
             accentColor="text-emerald-500"
@@ -433,8 +454,10 @@ const StandingsContent = async ({
             value={topScorer.value}
             unit="goals"
           />
+        ) : (
+          <EmptyStatCard icon={IconBallFootball} label="Top scorer" />
         )}
-        {topAssist && (
+        {topAssist ? (
           <PlayerStatCard
             icon={IconUsers}
             accentColor="text-sky-500"
@@ -446,8 +469,10 @@ const StandingsContent = async ({
             value={topAssist.value}
             unit="assists"
           />
+        ) : (
+          <EmptyStatCard icon={IconUsers} label="Top assists" />
         )}
-        {topRated && (
+        {topRated ? (
           <PlayerStatCard
             icon={IconStar}
             accentColor="text-amber-500"
@@ -460,6 +485,8 @@ const StandingsContent = async ({
             unit="rating"
             isRating
           />
+        ) : (
+          <EmptyStatCard icon={IconStar} label="Best rated" />
         )}
       </div>
     </div>
