@@ -37,16 +37,6 @@ const resolveGoals = (
   if (typeof value === "object" && "goals" in value) return value.goals ?? null;
   return null;
 };
-/**
- * Health check: thorough comparison of DB vs SportMonks API
- * for the current season.
- *
- * Sections:
- *  - Structure: seasons, stages, rounds
- *  - Squads: teams, players per team
- *  - Fixtures: total, finished, scores, events, lineups
- *  - Standings & coaches
- */
 export const syncHealth = async (dependencies: SyncDependencies): Promise<void> => {
   const { client, db, log } = dependencies;
   log.info("=== HEALTH CHECK START ===");
@@ -62,7 +52,6 @@ export const syncHealth = async (dependencies: SyncDependencies): Promise<void> 
   log.info(`Current season: ${currentSeason.name} (${currentSeason.sportmonksId})`);
   const results: HealthCheckResult[] = [];
   const fixtureIssues: FixtureIssue[] = [];
-  // ── Structure ──────────────────────────────────────────────────────
   const apiSeasonDetail = await client.get<{
     stages?:
       | {
@@ -107,7 +96,6 @@ export const syncHealth = async (dependencies: SyncDependencies): Promise<void> 
     api: apiRounds.length,
     match: databaseRoundCount >= apiRounds.length,
   });
-  // ── Squads ─────────────────────────────────────────────────────────
   const apiTeams = await client.getAllPages<TeamDto>(
     `/teams/seasons/${currentSeason.sportmonksId}`,
     { perPage: 50 }
@@ -166,7 +154,6 @@ export const syncHealth = async (dependencies: SyncDependencies): Promise<void> 
     api: totalApiPlayers,
     match: totalDatabasePlayers >= totalApiPlayers,
   });
-  // ── Fixtures ───────────────────────────────────────────────────────
   const seasonFixturesResponse = await client.get<{
     fixtures?:
       | {
@@ -187,7 +174,6 @@ export const syncHealth = async (dependencies: SyncDependencies): Promise<void> 
     api: apiFixtures.length,
     match: databaseFixtureCount >= apiFixtures.length,
   });
-  // Finished fixtures — compare state_id=5
   const finishedStateId = 5;
   const apiFinishedFixtures = apiFixtures.filter((fixture) => fixture.state_id === finishedStateId);
   const databaseFinishedFixtures = await db.fixture.findMany({
@@ -208,7 +194,6 @@ export const syncHealth = async (dependencies: SyncDependencies): Promise<void> 
     api: apiFinishedFixtures.length,
     match: databaseFinishedFixtures.length >= apiFinishedFixtures.length,
   });
-  // Score verification — compare fixture by fixture
   const databaseScoreByFixtureId = new Map(
     databaseFinishedFixtures.map((fixture) => [fixture.sportmonksId, fixture])
   );
@@ -266,7 +251,6 @@ export const syncHealth = async (dependencies: SyncDependencies): Promise<void> 
     api: apiFinishedFixtures.length,
     match: correctScoreCount === apiFinishedFixtures.length,
   });
-  // Events and lineups for finished fixtures in DB
   const finishedFixtureSportmonksIds = databaseFinishedFixtures.map(
     (fixture) => fixture.sportmonksId
   );
@@ -301,7 +285,6 @@ export const syncHealth = async (dependencies: SyncDependencies): Promise<void> 
     api: finishedInDatabaseCount,
     match: fixturesWithLineups >= finishedInDatabaseCount * 0.9,
   });
-  // ── Standings & Coaches ────────────────────────────────────────────
   const apiStandings = await client.get<
     | Array<{
         id: number;
@@ -343,7 +326,6 @@ export const syncHealth = async (dependencies: SyncDependencies): Promise<void> 
     api: null,
     match: databaseCoachCount > 0,
   });
-  // ── Print results ──────────────────────────────────────────────────
   log.info("");
   log.info("┌─────────────┬──────────────────┬──────────┬──────────┬────────┐");
   log.info("│ Section     │ Entity           │ Database │      API │ Status │");
@@ -363,7 +345,6 @@ export const syncHealth = async (dependencies: SyncDependencies): Promise<void> 
     logFunction(`│ ${section} │ ${entity} │ ${database} │ ${api} │ ${status} │`);
   }
   log.info("└─────────────┴──────────────────┴──────────┴──────────┴────────┘");
-  // ── Detailed issues ────────────────────────────────────────────────
   if (teamPlayerMismatches.length > 0) {
     log.info("");
     log.warn("Teams with missing players:");
@@ -389,7 +370,6 @@ export const syncHealth = async (dependencies: SyncDependencies): Promise<void> 
     log.warn("Finished fixtures missing events and lineups:");
     log.warn(`  Fixture IDs: ${fixturesMissingDetails.join(", ")}`);
   }
-  // ── Summary ────────────────────────────────────────────────────────
   log.info("");
   if (allHealthy) {
     log.info("All checks passed — database is in sync with SportMonks.");

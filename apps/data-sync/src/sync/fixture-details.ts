@@ -115,8 +115,6 @@ const syncFixtureDetails = async (
   const seasons = await db.season.findMany({ select: { id: true, sportmonksId: true } });
   const seasonIdBySportmonksId = new Map(seasons.map((s) => [s.sportmonksId, s.id]));
 
-  // Build squad lookup maps for fallback matching when player_id is null
-  // Key: "teamSportmonksId:shirtNumber" or "teamSportmonksId:normalizedName"
   const squadMemberships = await db.squadMembership.findMany({
     select: {
       playerId: true,
@@ -189,7 +187,6 @@ const syncFixtureDetails = async (
         },
       });
 
-      // Update in-memory squad maps so subsequent fixtures in this chunk can match this player
       if (opts.jerseyNumber != null) {
         const shirtKey = `${opts.teamSmId}:${opts.jerseyNumber}`;
         const existing = squadByShirt.get(shirtKey) ?? [];
@@ -256,8 +253,6 @@ const syncFixtureDetails = async (
 
         const statistics = fixtureDto.statistics ?? [];
 
-        // Extract team formations (e.g. "4-3-3") from the formations include.
-        // SportMonks returns formations as an array with participant_id (home/away team sportmonksId).
         const formations: { participant_id?: number; formation?: string; location?: string }[] =
           fixtureDto.formations ?? [];
         const homeSmId = fixtureDto.participants?.find((p: { meta?: { location?: string } }) => p.meta?.location === "home")?.id ?? null;
@@ -293,7 +288,6 @@ const syncFixtureDetails = async (
               missingPlayerSamples.push(eventPlayerSportmonksId);
           }
 
-          // For substitution events: related_player is the player going OUT
           const relatedPlayerSportmonksId = event.related_player?.id ?? event.related_player_id ?? null;
           const relatedPlayerId =
             relatedPlayerSportmonksId != null
@@ -370,7 +364,6 @@ const syncFixtureDetails = async (
                 }
               }
 
-              // Attempt 2: match by normalized name within team squad
               if (lineupPlayerId == null && playerName != null) {
                 const nameKey = `${teamSmId}:${normalizePlayerName(playerName)}`;
                 const candidates = squadByName.get(nameKey) ?? [];
@@ -385,7 +378,6 @@ const syncFixtureDetails = async (
                 continue;
               }
 
-              // Player played but couldn't be matched — try SportMonks search then create
               let resolvedPlayer: { id: number; sportmonksId: number | null } | null = null;
 
               if (playerName) {
@@ -430,11 +422,9 @@ const syncFixtureDetails = async (
                     }
                   }
                 } catch {
-                  // Search failed — fall through to create from lineup
                 }
               }
 
-              // If still unresolved — create from lineup data (no sportmonksId)
               if (lineupPlayerId == null && playerName) {
                 const nameParts = playerName.trim().split(" ");
                 lineupPlayerId = await createPlayerWithSquad({
@@ -473,8 +463,8 @@ const syncFixtureDetails = async (
                 ? lineup.position
                 : (lineup.position?.name ?? null),
             formationPosition: lineup.formation_position ?? null,
-            typeId: lineup.type_id ?? null,                         // 11=starter, 12=bench
-            formationField: lineup.formation_field ?? null,         // pitch coordinates "row:col"
+            typeId: lineup.type_id ?? null,
+            formationField: lineup.formation_field ?? null,
             jerseyNumber: lineup.jersey_number ?? null,
           });
 

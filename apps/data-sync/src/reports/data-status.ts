@@ -111,9 +111,9 @@ const printTable = (
 export const reportDataStatus = async ({ db, client }: ReportDependencies): Promise<void> => {
   const seasonArg = process.argv.find((a) => a.startsWith("--season="))?.split("=")[1];
   const groupArg = process.argv.find((a) => a.startsWith("--group="))?.split("=")[1];
-  const jornadaArg = process.argv.find((a) => a.startsWith("--jornada="))?.split("=")[1];
-  if (!seasonArg || !groupArg || !jornadaArg) {
-    console.error("Usage: report:data-status -- --season=2026 --group=Apertura --jornada=10");
+  const roundArg = process.argv.find((a) => a.startsWith("--round="))?.split("=")[1];
+  if (!seasonArg || !groupArg || !roundArg) {
+    console.error("Usage: report:data-status -- --season=2026 --group=Apertura --round=10");
     process.exit(1);
   }
   console.log();
@@ -121,7 +121,7 @@ export const reportDataStatus = async ({ db, client }: ReportDependencies): Prom
     `${BOLD}${CYAN}╔═══════════════════════════════════════════════════════════════════════════╗${RESET}`
   );
   console.log(
-    `${BOLD}${CYAN}║  📊 DATA STATUS — Season ${seasonArg}, ${groupArg}, Jornada ${jornadaArg.padEnd(25)}║${RESET}`
+    `${BOLD}${CYAN}║  📊 DATA STATUS — Season ${seasonArg}, ${groupArg}, Round ${roundArg.padEnd(27)}║${RESET}`
   );
   console.log(
     `${BOLD}${CYAN}╚═══════════════════════════════════════════════════════════════════════════╝${RESET}`
@@ -144,7 +144,7 @@ export const reportDataStatus = async ({ db, client }: ReportDependencies): Prom
     return;
   }
   const fixtures = await db.fixture.findMany({
-    where: { seasonId: season.id, stageId: stage.id, round: { name: jornadaArg }, stateId: 5 },
+    where: { seasonId: season.id, stageId: stage.id, round: { name: roundArg }, stateId: 5 },
     select: {
       id: true,
       sportmonksId: true,
@@ -161,7 +161,7 @@ export const reportDataStatus = async ({ db, client }: ReportDependencies): Prom
   });
   if (fixtures.length === 0) {
     console.log(
-      `${RED}No finished fixtures found for ${seasonArg}, ${groupArg}, jornada ${jornadaArg}${RESET}`
+      `${RED}No finished fixtures found for ${seasonArg}, ${groupArg}, round ${roundArg}${RESET}`
     );
     return;
   }
@@ -246,7 +246,7 @@ export const reportDataStatus = async ({ db, client }: ReportDependencies): Prom
           events: ExternalEvent[];
         }>(
           page,
-          `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/season/${externalSeasonId}/events/round/${jornadaArg}/prefix/${prefix}`
+          `/api/v1/unique-tournament/${EXTERNAL_TOURNAMENT_ID}/season/${externalSeasonId}/events/round/${roundArg}/prefix/${prefix}`
         );
         externalEvents = data?.events ?? [];
         console.log(`${GREEN}   ✅ SoFaScore returned ${externalEvents.length} events${RESET}`);

@@ -6,7 +6,7 @@ type ReportView = "compact" | "full";
 type ReportOptions = {
   season: string;
   group: string;
-  jornada: string;
+  round: string;
   view: ReportView;
 };
 type MatchableEntity = {
@@ -744,15 +744,15 @@ const parseArgs = (argv: string[]): ReportOptions => {
   }
   const season = argMap.get("season");
   const group = argMap.get("group");
-  const jornada = argMap.get("jornada");
+  const round = argMap.get("round");
   const rawView = normalizeText(argMap.get("view"));
   const view: ReportView = rawView === "full" ? "full" : "compact";
-  if (!season || !group || !jornada) {
+  if (!season || !group || !round) {
     throw new Error(
-      'Missing arguments. Usage: pnpm report:fixture-players --season="2026" --group="Apertura" --jornada="1" [--view="compact|full"]'
+      'Missing arguments. Usage: pnpm report:fixture-players --season="2026" --group="Apertura" --round="1" [--view="compact|full"]'
     );
   }
-  return { season, group, jornada, view };
+  return { season, group, round, view };
 };
 const normalizeStatKey = (value: string | null | undefined): string => {
   return (value ?? "")
@@ -1875,11 +1875,11 @@ export const reportFixturePlayerDetails = async (
   rawOptions?: Partial<ReportOptions>
 ): Promise<void> => {
   const options: ReportOptions =
-    rawOptions?.season && rawOptions?.group && rawOptions?.jornada
+    rawOptions?.season && rawOptions?.group && rawOptions?.round
       ? {
           season: rawOptions.season,
           group: rawOptions.group,
-          jornada: rawOptions.jornada,
+          round: rawOptions.round,
           view: rawOptions.view === "full" ? "full" : "compact",
         }
       : parseArgs(process.argv.slice(3));
@@ -1943,7 +1943,7 @@ export const reportFixturePlayerDetails = async (
     ...round,
     slug: round.slug ?? undefined,
   }));
-  const matchedRound = pickBestCandidate(rounds, options.jornada, "round");
+  const matchedRound = pickBestCandidate(rounds, options.round, "round");
   const groupCandidate = matchedGroup as GroupScopeCandidate;
   const fixtures = await db.fixture.findMany({
     where: {
@@ -2073,7 +2073,7 @@ export const reportFixturePlayerDetails = async (
     [
       `🏆 Season ${seasonRecord.name} (${seasonRecord.league.name})`,
       `🧱 Group/Stage ${matchedGroup.name ?? "No name"}  |  Real stage ${matchedStage.name}  |  🏁 Round ${matchedRound.name}`,
-      `📦 Fixtures ${preparedReports.length}  |  👁 View ${options.view.toUpperCase()}  |  🔎 --season="${options.season}" --group="${options.group}" --jornada="${options.jornada}"`,
+      `📦 Fixtures ${preparedReports.length}  |  👁 View ${options.view.toUpperCase()}  |  🔎 --season="${options.season}" --group="${options.group}" --round="${options.round}"`,
     ],
     ANSI.orange
   );

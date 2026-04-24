@@ -35,29 +35,15 @@ const toDate = (value: string | null | undefined): Date | null => {
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
-/**
- * Live sync: lightweight, runs every few minutes on match days.
- *
- * 1. Queries the DB for today's fixtures.
- * 2. If none exist, exits immediately (no API calls).
- * 3. If fixtures exist, fetches fresh data from SportMonks and updates
- *    scores, state, result info, and fixture details (events, lineups, stats).
- */
 export const syncLive = async (dependencies: SyncDependencies): Promise<void> => {
   const { client, db, log } = dependencies;
   log.info("=== LIVE SYNC START ===");
-  const startTime = Date.now();
-  // Fix 2: Skip live sync during daily sync window to prevent concurrent execution
-  const currentUtcHour = new Date().getUTCHours();
+  const startTime = Date.now();  const currentUtcHour = new Date().getUTCHours();
   if (currentUtcHour === 9) {
     log.info("⏸️ Live sync skipped: daily sync window (09:00 UTC). Will resume next cycle.");
     log.info("=== LIVE SYNC END ===");
     return;
-  }
-  // Include yesterday's fixtures to catch late-night matches (e.g. 23:30 UTC kickoff
-  // that finish after midnight UTC). Without this, live sync misses post-match stats
-  // for fixtures whose kickoff falls on the previous UTC day.
-  const yesterdayStart = new Date();
+  }  const yesterdayStart = new Date();
   yesterdayStart.setUTCDate(yesterdayStart.getUTCDate() - 1);
   yesterdayStart.setUTCHours(0, 0, 0, 0);
   const todayEnd = new Date();
@@ -79,10 +65,7 @@ export const syncLive = async (dependencies: SyncDependencies): Promise<void> =>
       awayScore: true,
       _count: { select: { playerStats: true } },
     },
-  });
-  // Skip finished fixtures (stateId=5) that already have player stats.
-  // Keep finished-without-stats so the next run fills them.
-  const FINISHED_STATE_ID = 5;
+  });  const FINISHED_STATE_ID = 5;
   const todayFixtures = recentFixtures.filter(
     (fixture) => fixture.stateId !== FINISHED_STATE_ID || fixture._count.playerStats === 0
   );
@@ -123,7 +106,6 @@ export const syncLive = async (dependencies: SyncDependencies): Promise<void> =>
         }
   );
   log.info(`📥 Fixtures fetched from API: ${fixturesFromApi.length}`);
-  // Fix 1 + Fix 3: Validate API response before proceeding
   if (fixturesFromApi.length === 0 && todayFixtures.length > 0) {
     log.warn(
       `⚠️ API returned 0 fixtures but DB has ${todayFixtures.length} scheduled. Possible API failure.`

@@ -8,8 +8,6 @@ import { writeFileSync, mkdirSync } from "fs"
 
 const prisma = new PrismaClient()
 const pct = (n: number, d: number) => (d === 0 ? "0.0" : ((n / d) * 100).toFixed(1))
-
-// ── Console table helpers ──────────────────────────────────────────────────────
 const W = 56
 const top  = () => "┌" + "─".repeat(W - 2) + "┐"
 const mid  = () => "├" + "─".repeat(W - 2) + "┤"
@@ -40,7 +38,6 @@ const sub = (cols: string[]) => {
 const close = () => console.log(bot())
 const sep   = () => console.log(mid())
 
-// ── Main ──────────────────────────────────────────────────────────────────────
 const seasons = await prisma.season.findMany({
   select: { id: true, name: true },
   orderBy: { name: "asc" },
@@ -61,7 +58,6 @@ const mdSection = (title: string, rows: [string, number, string?][]) => {
   lines.push("")
 }
 
-// ── 1. Coach coverage ─────────────────────────────────────────────────────────
 const teamSeasonCombos = await prisma.squadMembership.findMany({
   distinct: ["teamId", "seasonId"],
   select: { teamId: true, seasonId: true },
@@ -97,7 +93,6 @@ mdSection("1. Team-Season Coach Coverage", [
   ["Without coach", totalTS - withCoach, `${pct(totalTS - withCoach, totalTS)}%`],
 ])
 
-// ── 2. Squad size coverage ────────────────────────────────────────────────────
 const squadCounts = await prisma.squadMembership.groupBy({
   by: ["teamId", "seasonId"],
   _count: { id: true },
@@ -125,7 +120,6 @@ mdSection("2. Team-Season Squad Coverage", [
   ["With < 11 players",  squadCounts.length - withEnough, `${pct(squadCounts.length - withEnough, squadCounts.length)}%`],
 ])
 
-// ── 3. Shirt number coverage ──────────────────────────────────────────────────
 const totalSM   = await prisma.squadMembership.count()
 const withShirt = await prisma.squadMembership.count({ where: { shirtNumber: { not: null } } })
 
@@ -148,7 +142,6 @@ mdSection("3. Shirt Number Coverage", [
   ["Without shirt number", totalSM - withShirt, `${pct(totalSM - withShirt, totalSM)}%`],
 ])
 
-// ── 4. Player image coverage ──────────────────────────────────────────────────
 const totalImg = await prisma.squadMembership.count()
 const withImg  = await prisma.squadMembership.count({
   where: { player: { imagePath: { not: null } } },
@@ -196,7 +189,6 @@ mdSection("4. Player Image Coverage", [
   ["No image (null)",        noImg,    `${pct(noImg, totalImg)}%`],
 ])
 
-// ── 5. Interpretation ─────────────────────────────────────────────────────────
 const interpretation = [
   "## 5. Short Interpretation\n",
   "Coach and squad presence are complete across all team-season combinations in the database — the Team Details screen will never render an empty squad or missing coach for any synced team.",
@@ -216,7 +208,6 @@ console.log()
 
 lines.push(...interpretation)
 
-// ── Write markdown ─────────────────────────────────────────────────────────────
 const outDir = resolve(process.cwd(), "../../evidence")
 mkdirSync(outDir, { recursive: true })
 writeFileSync(resolve(outDir, "team-details-coverage.md"), lines.join("\n"))

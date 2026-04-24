@@ -42,12 +42,7 @@ const EXTERNAL_TO_STAT_TYPE: Record<string, number> = {
   dispossessed: 94,
 };
 const COMPLETE_STAT_INDICATORS = [
-  80, // Total passes
-  78, // Total tackles
-  116, // Accurate passes
-  42, // Total shots
-  122, // Total long balls
-];
+  80,  78,  116,  42,  122,];
 const normalize = (name: string): string =>
   name
     .toLowerCase()
@@ -486,7 +481,7 @@ export const syncFillStats = async (
           const cardEvents = await tx.event.findMany({
             where: {
               fixtureId: fixture.fixtureId,
-              typeId: { in: [19, 20, 21] }, // yellow, red, yellow-red
+              typeId: { in: [19, 20, 21] },
               playerId: { not: null },
             },
             select: { playerId: true, typeId: true },
