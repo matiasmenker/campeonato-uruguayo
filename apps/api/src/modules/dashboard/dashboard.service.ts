@@ -46,13 +46,7 @@ export const getDashboardOverview = async (): Promise<
   const currentStage = currentSeason.stages.find((stage) => stage.isCurrent) ?? null;
 
   const [fixtureStates, activeRoundAnchor] = await Promise.all([
-    prisma.fixtureState.findMany({ select: { id: true, developerName: true } }),
-    // Active round = the round of the most recently kicked-off fixture.
-    // This is reliable regardless of the isCurrent sync flag:
-    // - Mid-round (some played, some upcoming): shows the in-progress round
-    // - Between rounds: shows the last completed round
-    // - Pre-season: falls back to the earliest upcoming round
-    prisma.fixture.findFirst({
+    prisma.fixtureState.findMany({ select: { id: true, developerName: true } }),    prisma.fixture.findFirst({
       where: { seasonId: currentSeason.id, kickoffAt: { lte: new Date() } },
       orderBy: { kickoffAt: "desc" },
       select: { roundId: true },
@@ -60,8 +54,6 @@ export const getDashboardOverview = async (): Promise<
   ]);
 
   const stateNameById = new Map(fixtureStates.map((state) => [state.id, state.developerName]));
-
-  // Fall back to the earliest upcoming round when no fixture has kicked off yet
   const activeRoundId = activeRoundAnchor?.roundId ?? (
     await prisma.fixture.findFirst({
       where: { seasonId: currentSeason.id, kickoffAt: { gte: new Date() } },
@@ -119,9 +111,7 @@ export const getDashboardOverview = async (): Promise<
       },
       include: { season: true, stage: true, team: true },
       orderBy: { position: "asc" },
-    }),
-    // Last round where every fixture has a score (fully completed)
-    prisma.fixture.findFirst({
+    }),    prisma.fixture.findFirst({
       where: {
         seasonId: currentSeason.id,
         homeScore: { not: null },

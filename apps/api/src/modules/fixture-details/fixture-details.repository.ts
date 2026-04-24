@@ -188,9 +188,7 @@ export const resolveLineupTeams = async (
       where: { id: { in: teamIds } },
     }),
   ]);
-  const teamsMap = new Map(teams.map((team) => [team.id, team]));
-  // Build playerId:seasonId → Set<teamId> to handle loan players with multiple memberships.
-  const playerSeasonTeamsMap = new Map<string, Set<number>>();
+  const teamsMap = new Map(teams.map((team) => [team.id, team]));  const playerSeasonTeamsMap = new Map<string, Set<number>>();
   const playerSeasonKey = (playerId: number, seasonId: number) => `${playerId}:${seasonId}`;
   for (const squad of squads) {
     const key = playerSeasonKey(squad.playerId, squad.seasonId);
@@ -208,7 +206,6 @@ export const resolveLineupTeams = async (
     const fixtureTeamIds = [fixture.homeTeamId, fixture.awayTeamId].filter(
       (id): id is number => id !== null
     );
-    // Prefer the team that actually played in this fixture (handles loan players).
     const matchingTeamId = fixtureTeamIds.find((id) => playerTeamIds.has(id));
     const resolvedTeamId = matchingTeamId ?? playerTeamIds.values().next().value;
     if (resolvedTeamId !== undefined) {

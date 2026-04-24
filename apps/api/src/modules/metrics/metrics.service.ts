@@ -152,9 +152,6 @@ const buildLeaderCategory = async (
     leaders,
   };
 };
-
-// Returns average rating per player for all squad members of a team in a given season.
-// Unlike the leaders endpoint (top-N only), this covers every player who appeared in a match.
 export const getSquadRatings = async (query: SquadRatingsQuery): Promise<SquadPlayerRating[]> => {
   const prisma = getPrisma();
 
