@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import HeroSelect from "@/components/hero-select"
 import { signalNavigationStart, useIsNavigating } from "@/components/search-params-loading-boundary"
 import type { Season } from "@/lib/seasons"
+import type { StageGroupSelectOption, StageGroup } from "@/lib/stage-groups"
 
 const useStandingsNav = () => {
   const router = useRouter()
@@ -41,19 +42,28 @@ export const StandingsSeasonFilter = ({ seasons, selectedSeasonId }: StandingsSe
 }
 
 interface StandingsStageFilterProps {
-  stages: Array<{ id: number; name: string }>
-  selectedStageId: number | null
+  stageOptions: StageGroupSelectOption[]
+  selectedGroup: StageGroup | null
 }
 
-export const StandingsStageFilter = ({ stages, selectedStageId }: StandingsStageFilterProps) => {
+export const StandingsStageFilter = ({ stageOptions, selectedGroup }: StandingsStageFilterProps) => {
   const { updateParam } = useStandingsNav()
   const isNavigating = useIsNavigating()
 
+  const firstEnabled = stageOptions.find((option) => !option.disabled)
+  const activeValue = selectedGroup ?? firstEnabled?.group ?? stageOptions[0]?.group ?? ""
+
+  const handleChange = (groupKey: string) => {
+    const option = stageOptions.find((entry) => entry.group === groupKey)
+    if (!option || option.disabled || option.primaryStageId === null) return
+    updateParam("stageId", String(option.primaryStageId))
+  }
+
   return (
     <HeroSelect
-      value={selectedStageId !== null ? String(selectedStageId) : ""}
-      onValueChange={value => updateParam("stageId", value)}
-      options={stages}
+      value={activeValue}
+      onValueChange={handleChange}
+      options={stageOptions}
       isLoading={isNavigating}
     />
   )

@@ -903,7 +903,7 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
                   seasons={playerSeasons}
                   stageGroups={stageGroups}
                   selectedSeasonId={selectedSeasonId}
-                  selectedGroupStageId={selectedStageId}
+                  selectedGroup={resolvedGroup?.group ?? null}
                 />
               </Suspense>
             </div>

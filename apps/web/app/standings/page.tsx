@@ -18,7 +18,7 @@ import { StandingsSeasonFilter, StandingsStageFilter } from "@/components/standi
 import { getLeaders, type LeadersContract } from "@/lib/metrics"
 import { getStandings, type StandingEntry } from "@/lib/standings"
 import { getSeasons, getStages, getSeasonChampion, type Season, type Stage, type SeasonChampion } from "@/lib/seasons"
-import { groupStages, getStageGroupById } from "@/lib/stage-groups"
+import { groupStages, getStageGroupById, buildStageGroupSelectOptions } from "@/lib/stage-groups"
 
 export const revalidate = 300
 
@@ -456,10 +456,7 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
     : currentGroup
   const selectedStageId: number | null = resolvedGroup?.primaryStageId ?? null
   const selectedStage = stages.find((stage) => stage.id === selectedStageId)
-  const stageGroupOptions = availableGroups.map((group) => ({
-    id: group.primaryStageId as number,
-    name: group.label,
-  }))
+  const stageSelectOptions = buildStageGroupSelectOptions(stageGroups)
   const selectedGroupLabel = resolvedGroup ? resolvedGroup.label : null
 
   return (
@@ -484,16 +481,19 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
                 </div>
               </div>
 
-              {(seasons.length > 0 || stageGroupOptions.length > 0) && (
+              {(seasons.length > 0 || stageSelectOptions.length > 0) && (
                 <div className="flex shrink-0 items-center gap-2">
+                  {stageSelectOptions.length > 0 && (
+                    <Suspense>
+                      <StandingsStageFilter
+                        stageOptions={stageSelectOptions}
+                        selectedGroup={resolvedGroup?.group ?? null}
+                      />
+                    </Suspense>
+                  )}
                   {seasons.length > 0 && (
                     <Suspense>
                       <StandingsSeasonFilter seasons={seasons} selectedSeasonId={selectedSeasonId} />
-                    </Suspense>
-                  )}
-                  {stageGroupOptions.length > 0 && (
-                    <Suspense>
-                      <StandingsStageFilter stages={stageGroupOptions} selectedStageId={selectedStageId} />
                     </Suspense>
                   )}
                 </div>

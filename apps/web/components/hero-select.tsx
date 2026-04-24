@@ -10,8 +10,9 @@ import {
 import { IconChevronDown } from "@tabler/icons-react"
 
 interface HeroSelectOption {
-  id: number
+  id: number | string
   name: string
+  disabled?: boolean
 }
 
 interface HeroSelectProps {
@@ -55,7 +56,8 @@ const HeroSelect = ({
         <SelectItem
           key={option.id}
           value={String(option.id)}
-          className="cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100 focus:bg-slate-100 data-[state=checked]:text-slate-950"
+          disabled={option.disabled}
+          className="cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-100 focus:bg-slate-100 data-[disabled]:cursor-not-allowed data-[disabled]:text-slate-300 data-[disabled]:hover:bg-transparent data-[state=checked]:text-slate-950"
         >
           {option.name}
         </SelectItem>

@@ -250,21 +250,20 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
       if (fixture.stage.isCurrent) existing.isCurrent = true
       buckets.set(group, existing)
     }
-    return STAGE_GROUP_ORDER
-      .filter((group) => buckets.has(group))
-      .map((group) => ({
-        group,
-        label: STAGE_GROUP_LABELS[group],
-        stageIds: Array.from(buckets.get(group)!.stageIds),
-        isCurrent: buckets.get(group)!.isCurrent,
-      }))
+    return STAGE_GROUP_ORDER.map((group) => ({
+      group,
+      label: STAGE_GROUP_LABELS[group],
+      stageIds: Array.from(buckets.get(group)?.stageIds ?? []),
+      isCurrent: buckets.get(group)?.isCurrent ?? false,
+    }))
   }, [currentFixtures])
 
+  const availableGroups = stageGroupOptions.filter((option) => option.stageIds.length > 0)
+  const selectedGroupFromStage = stageGroupOptions.find((option) => option.stageIds.includes(selectedStageId ?? -1))
   const effectiveGroup =
-    stageGroupOptions.find((option) => option.stageIds.includes(selectedStageId ?? -1)) ??
-    stageGroupOptions.find((option) => option.isCurrent) ??
-    stageGroupOptions[0] ??
-    null
+    selectedGroupFromStage && selectedGroupFromStage.stageIds.length > 0
+      ? selectedGroupFromStage
+      : availableGroups.find((option) => option.isCurrent) ?? availableGroups[0] ?? null
   const effectiveStageId = effectiveGroup?.stageIds[0] ?? null
   const effectiveGroupStageIdSet = useMemo(
     () => new Set(effectiveGroup?.stageIds ?? []),
@@ -291,11 +290,14 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
 
   const activeGroup = roundGroups.find(g => g.round.id === effectiveRoundId) ?? null
 
-  const handleGroupChange = (groupStageId: number) => {
-    setSelectedStageId(groupStageId)
+  const handleGroupChange = (groupKey: string) => {
+    const option = stageGroupOptions.find((entry) => entry.group === groupKey)
+    if (!option || option.stageIds.length === 0) return
+    const nextStageId = option.stageIds[0]
+    setSelectedStageId(nextStageId)
     setSelectedRoundId(null)
     if (currentSeasonId !== null) {
-      storageSet(stageKey(currentSeasonId), groupStageId)
+      storageSet(stageKey(currentSeasonId), nextStageId)
       storageDel(roundKey(currentSeasonId))
     }
   }
@@ -312,9 +314,11 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
 
   const selectedSeason = seasons.find(s => s.id === currentSeasonId) ?? null
   const stageSelectOptions = stageGroupOptions.map((option) => ({
-    id: option.stageIds[0],
+    id: option.group,
     name: option.label,
+    disabled: option.stageIds.length === 0,
   }))
+  const stageSelectValue = effectiveGroup?.group ?? availableGroups[0]?.group ?? stageGroupOptions[0]?.group ?? ""
 
   return (
     <div className="flex flex-col gap-6">
@@ -340,20 +344,20 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
 
             {(showSeasonSelector || showStageSelector) && (
               <div className="flex shrink-0 items-center gap-2">
+                {showStageSelector && (
+                  <HeroSelect
+                    value={stageSelectValue}
+                    onValueChange={handleGroupChange}
+                    options={stageSelectOptions}
+                    isLoading={isFetching}
+                    openUp
+                  />
+                )}
                 {showSeasonSelector && (
                   <HeroSelect
                     value={String(currentSeasonId ?? "")}
                     onValueChange={value => handleSeasonChange(Number(value))}
                     options={seasons}
-                    isLoading={isFetching}
-                    openUp
-                  />
-                )}
-                {showStageSelector && (
-                  <HeroSelect
-                    value={String(effectiveStageId ?? "")}
-                    onValueChange={value => handleGroupChange(Number(value))}
-                    options={stageSelectOptions}
                     isLoading={isFetching}
                     openUp
                   />

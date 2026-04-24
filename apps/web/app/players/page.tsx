@@ -368,7 +368,7 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
                   seasons={sortedSeasons}
                   stageGroups={stageGroups}
                   selectedSeasonId={selectedSeason.id}
-                  selectedGroupStageId={selectedStageId}
+                  selectedGroup={resolvedGroup?.group ?? null}
                 />
               </Suspense>
             </div>

@@ -4,24 +4,28 @@ import { useRouter, useSearchParams } from "next/navigation"
 import HeroSelect from "@/components/hero-select"
 import { signalNavigationStart, useIsNavigating } from "@/components/search-params-loading-boundary"
 import type { Season } from "@/lib/seasons"
-import type { GroupedStages } from "@/lib/stage-groups"
+import { buildStageGroupSelectOptions, type GroupedStages, type StageGroup } from "@/lib/stage-groups"
 
 interface PlayerSeasonStageSelectorProps {
   seasons: Season[]
   stageGroups: GroupedStages[]
   selectedSeasonId: number
-  selectedGroupStageId: number | null
+  selectedGroup: StageGroup | null
 }
 
 const PlayerSeasonStageSelector = ({
   seasons,
   stageGroups,
   selectedSeasonId,
-  selectedGroupStageId,
+  selectedGroup,
 }: PlayerSeasonStageSelectorProps) => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isNavigating = useIsNavigating()
+
+  const stageOptions = buildStageGroupSelectOptions(stageGroups)
+  const firstEnabled = stageOptions.find((option) => !option.disabled)
+  const activeValue = selectedGroup ?? firstEnabled?.group ?? stageOptions[0]?.group ?? ""
 
   const handleSeasonChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -31,26 +35,21 @@ const PlayerSeasonStageSelector = ({
     router.push(`?${params.toString()}`)
   }
 
-  const handleStageChange = (value: string) => {
+  const handleGroupChange = (groupKey: string) => {
+    const option = stageOptions.find((entry) => entry.group === groupKey)
+    if (!option || option.disabled || option.primaryStageId === null) return
     const params = new URLSearchParams(searchParams.toString())
-    params.set("stageId", value)
+    params.set("stageId", String(option.primaryStageId))
     signalNavigationStart()
     router.push(`?${params.toString()}`)
   }
 
-  const availableGroups = stageGroups.filter((group) => group.primaryStageId !== null)
-  const stageOptions = availableGroups.map((group) => ({
-    id: group.primaryStageId as number,
-    name: group.label,
-  }))
-  const fallbackStageId = availableGroups[0]?.primaryStageId ?? null
-
   return (
     <div className="flex items-center gap-2">
-      {stageOptions.length > 1 && (
+      {stageOptions.length > 0 && (
         <HeroSelect
-          value={selectedGroupStageId !== null ? String(selectedGroupStageId) : fallbackStageId !== null ? String(fallbackStageId) : ""}
-          onValueChange={handleStageChange}
+          value={activeValue}
+          onValueChange={handleGroupChange}
           options={stageOptions}
           isLoading={isNavigating}
           openUp
