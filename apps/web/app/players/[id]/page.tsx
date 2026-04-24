@@ -313,15 +313,12 @@ const RecentFormSkeleton = () => (
   </div>
 )
 
-const RecentFormEmptyState = () => (
-  <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white/60 px-6 py-10 text-center">
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
-      <IconBallFootball size={20} className="text-slate-300" />
+const RecentFormEmptySlot = () => (
+  <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 bg-white/40 p-3 shadow-sm flex-1 min-w-0 min-h-[132px]">
+    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+      <IconBallFootball size={14} className="text-slate-300" />
     </div>
-    <p className="text-sm font-semibold text-slate-600">No recent matches</p>
-    <p className="max-w-xs text-xs text-slate-400">
-      There are no rated appearances recorded for this season yet.
-    </p>
+    <span className="text-[10px] font-semibold text-slate-400">No match</span>
   </div>
 )
 
@@ -352,21 +349,19 @@ const RecentForm = ({
         .slice(0, RECENT_FORM_SLOTS)
     : []
 
+  const missingSlots = Math.max(0, RECENT_FORM_SLOTS - last5.length)
+
   return (
     <div className="flex flex-col gap-3">
       <h2 className="px-1 text-sm font-bold text-slate-700">Last matches</h2>
-      {last5.length === 0 ? (
-        <RecentFormEmptyState />
-      ) : (
-        <div className="flex gap-2">
-          {last5.map(({ stat, fixture }) => (
-            <RecentFormCard key={stat.id} stat={stat} fixture={fixture} teamId={teamId!} />
-          ))}
-          {Array.from({ length: Math.max(0, RECENT_FORM_SLOTS - last5.length) }).map((_, index) => (
-            <div key={`filler-${index}`} className="flex-1 min-w-0" />
-          ))}
-        </div>
-      )}
+      <div className="flex gap-2">
+        {last5.map(({ stat, fixture }) => (
+          <RecentFormCard key={stat.id} stat={stat} fixture={fixture} teamId={teamId!} />
+        ))}
+        {Array.from({ length: missingSlots }).map((_, index) => (
+          <RecentFormEmptySlot key={`empty-${index}`} />
+        ))}
+      </div>
     </div>
   )
 }
@@ -591,15 +586,28 @@ const PlayerSeasonContent = async ({
       memberships.map(async (membership) => {
         const seasonId = membership.season.id
         const isMembershipGoalkeeper = membership.positionId === 24 || isGoalkeeper
-        const [ratings, minutes, assists, seasonEvents, saves] = await Promise.all([
-          getPlayerStatsByType(player.id, STAT_TYPE_RATING, seasonId).catch(() => []),
-          getPlayerStatsByType(player.id, STAT_TYPE_MINUTES, seasonId).catch(() => []),
-          getPlayerStatsByType(player.id, STAT_TYPE_ASSISTS, seasonId).catch(() => []),
-          getPlayerSeasonEvents(player.id, seasonId).catch(() => []),
-          isMembershipGoalkeeper
-            ? getPlayerStatsByType(player.id, STAT_TYPE_SAVES, seasonId).catch(() => [])
-            : Promise.resolve([] as PlayerStatEntry[]),
-        ])
+        const seasonStages = filterMainStages(await getStages(seasonId).catch(() => []))
+        if (seasonStages.length === 0) {
+          return { seasonId, aggregates: computePlayerSeasonAggregates([], [], [], [], []) }
+        }
+        const perStageResults = await Promise.all(
+          seasonStages.map((stage) =>
+            Promise.all([
+              getPlayerStatsByType(player.id, STAT_TYPE_RATING, seasonId, stage.id).catch(() => []),
+              getPlayerStatsByType(player.id, STAT_TYPE_MINUTES, seasonId, stage.id).catch(() => []),
+              getPlayerStatsByType(player.id, STAT_TYPE_ASSISTS, seasonId, stage.id).catch(() => []),
+              getPlayerSeasonEvents(player.id, seasonId, stage.id).catch(() => []),
+              isMembershipGoalkeeper
+                ? getPlayerStatsByType(player.id, STAT_TYPE_SAVES, seasonId, stage.id).catch(() => [])
+                : Promise.resolve([] as PlayerStatEntry[]),
+            ])
+          )
+        )
+        const ratings = perStageResults.flatMap((stageResult) => stageResult[0])
+        const minutes = perStageResults.flatMap((stageResult) => stageResult[1])
+        const assists = perStageResults.flatMap((stageResult) => stageResult[2])
+        const seasonEvents = perStageResults.flatMap((stageResult) => stageResult[3])
+        const saves = perStageResults.flatMap((stageResult) => stageResult[4])
         return { seasonId, aggregates: computePlayerSeasonAggregates(ratings, minutes, assists, seasonEvents, saves) }
       })
     )
@@ -614,9 +622,6 @@ const PlayerSeasonContent = async ({
   const membershipBySeasonId = new Map(memberships.map((membership) => [membership.season.id, membership]))
   const careerShowSaves =
     isGoalkeeper || Array.from(seasonAggregatesMap.values()).some((entry) => entry.saves > 0)
-
-  const dobFormatted = formatDateOfBirth(player.dateOfBirth)
-  const age = formatAge(player.dateOfBirth)
 
   return (
     <div className="flex flex-col gap-6">
@@ -684,7 +689,7 @@ const PlayerSeasonContent = async ({
       <div className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between px-1">
           <h2 className="text-sm font-bold text-slate-700">Career history</h2>
-          <span className="text-[11px] text-slate-400">All competitions · {sortedAllSeasons.length} seasons</span>
+          <span className="text-[11px] text-slate-400">Apertura + Clausura · {sortedAllSeasons.length} seasons</span>
         </div>
         {sortedAllSeasons.length === 0 ? (
           <div className="flex h-24 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
@@ -711,50 +716,6 @@ const PlayerSeasonContent = async ({
         )}
       </div>
 
-      <div className="flex flex-col gap-3">
-        <h2 className="px-1 text-sm font-bold text-slate-700">Profile</h2>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm divide-y divide-slate-100 sm:grid-cols-3 lg:grid-cols-5 lg:divide-y-0 lg:divide-x">
-          <div className="flex flex-col gap-0.5 px-4 py-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Date of birth</span>
-            <span className="text-sm font-semibold text-slate-800">
-              {dobFormatted
-                ? <>{dobFormatted}{age && <span className="ml-1.5 font-normal text-slate-400">({age} yrs)</span>}</>
-                : "—"}
-            </span>
-          </div>
-          <div className="flex flex-col gap-0.5 px-4 py-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Height</span>
-            <span className="text-sm font-semibold text-slate-800">{player.height ? `${player.height} cm` : "—"}</span>
-          </div>
-          <div className="flex flex-col gap-0.5 px-4 py-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Weight</span>
-            <span className="text-sm font-semibold text-slate-800">{player.weight ? `${player.weight} kg` : "—"}</span>
-          </div>
-          <div className="flex flex-col gap-0.5 px-4 py-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Nationality</span>
-            {player.country ? (
-              <div className="flex items-center gap-2">
-                {player.country.imageUrl && (
-                  <img
-                    src={player.country.imageUrl}
-                    alt={player.country.name}
-                    className="h-[14px] w-[22px] rounded-[2px] object-cover ring-1 ring-black/10"
-                  />
-                )}
-                <span className="text-sm font-semibold text-slate-800">{player.country.name}</span>
-              </div>
-            ) : (
-              <span className="text-sm font-semibold text-slate-800">—</span>
-            )}
-          </div>
-          <div className="flex flex-col gap-0.5 px-4 py-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Shirt number</span>
-            <span className="text-sm font-bold text-slate-900">
-              {selectedMembership?.shirtNumber != null ? `#${selectedMembership.shirtNumber}` : "—"}
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
@@ -839,6 +800,14 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
   const committedParams: Record<string, string> = { seasonId: String(selectedSeasonId) }
   if (hasRequestedStage && selectedStageId !== null) committedParams.stageId = String(selectedStageId)
 
+  const heroAge = formatAge(player.dateOfBirth)
+  const heroDob = formatDateOfBirth(player.dateOfBirth)
+  const heroMetaParts: string[] = []
+  if (heroDob) heroMetaParts.push(heroAge ? `${heroDob} (${heroAge} yrs)` : heroDob)
+  if (player.height) heroMetaParts.push(`${player.height} cm`)
+  if (player.weight) heroMetaParts.push(`${player.weight} kg`)
+  if (selectedMembership?.shirtNumber != null) heroMetaParts.push(`#${selectedMembership.shirtNumber}`)
+
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
@@ -903,6 +872,11 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
                       </div>
                     )}
                   </div>
+                  {heroMetaParts.length > 0 && (
+                    <p className="text-[11px] text-white/55">
+                      {heroMetaParts.join(" · ")}
+                    </p>
+                  )}
                 </div>
               </div>
 
