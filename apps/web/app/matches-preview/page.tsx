@@ -20,7 +20,7 @@ const MatchesPreviewPage = async () => {
   const seasons = await getSeasons().catch(() => [])
   const currentSeason = seasons.find(s => s.isCurrent) ?? seasons[0] ?? null
   if (!currentSeason) {
-    return <p className="p-8 text-slate-500">No hay temporadas disponibles.</p>
+    return <p className="p-8 text-slate-500">No seasons available.</p>
   }
   const allFixtures = await fetchAllFixtures(currentSeason.id).catch(() => [] as FixtureListItem[])
   return <ProposalsClient allFixtures={allFixtures} seasonName={currentSeason.name} />

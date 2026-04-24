@@ -1,9 +1,7 @@
 import type { YoutubeVideo } from "@/components/youtube-video-card"
 
-// Only include Primera División content (Apertura / Clausura)
 const INCLUDE_KEYWORDS = ["apertura", "clausura"]
 
-// Exclude other AUF competitions even if they sneak through
 const EXCLUDE_KEYWORDS = ["segunda profesional", "sub-", "selección", "femenin"]
 
 const shouldInclude = (title: string) => {
@@ -43,12 +41,11 @@ export const fetchLatestAufVideos = async (maxResults = 6): Promise<YoutubeVideo
   url.searchParams.set("channelId", channelId)
   url.searchParams.set("type", "video")
   url.searchParams.set("order", "date")
-  // Fetch extra to allow filtering without dropping below maxResults
   url.searchParams.set("maxResults", String(maxResults + 10))
   url.searchParams.set("key", apiKey)
 
   const response = await fetch(url.toString(), {
-    next: { revalidate: 3600 }, // revalidate every hour
+    next: { revalidate: 3600 },
   })
 
   if (!response.ok) {

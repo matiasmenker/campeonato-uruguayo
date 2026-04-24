@@ -66,7 +66,6 @@ export const getStages = async (seasonId?: number): Promise<Stage[]> => {
   return response.data
 }
 
-/** Keep only Apertura and Clausura stages — ignore play-offs, finals, etc. */
 export const filterMainStages = (stages: Stage[]): Stage[] =>
   stages.filter((stage) => /apertura|clausura/i.test(stage.name))
 

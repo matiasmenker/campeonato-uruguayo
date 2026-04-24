@@ -5,11 +5,6 @@ import Link from "next/link"
 import { IconShield, IconChevronDown, IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 import type { FixtureListItem, Round } from "@/lib/matches"
-
-// ---------------------------------------------------------------------------
-// Shared helpers
-// ---------------------------------------------------------------------------
-
 const LIVE_STATES = new Set([
   "INPLAY_1ST_HALF", "INPLAY_2ND_HALF", "HT", "INPLAY_ET",
   "INPLAY_ET_SECOND_HALF", "INPLAY_PENALTIES", "EXTRA_TIME_BREAK", "BREAK",
@@ -26,32 +21,32 @@ const getMatchStatus = (fixture: FixtureListItem) => {
 
 const formatKickoffTime = (value: string | null) => {
   if (!value) return "--:--"
-  return new Intl.DateTimeFormat("es-UY", {
+  return new Intl.DateTimeFormat("en-GB", {
     hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Montevideo",
   }).format(new Date(value))
 }
 
 const formatDateShort = (value: string | null) => {
   if (!value) return ""
-  const formatted = new Intl.DateTimeFormat("es-UY", {
+  const formatted = new Intl.DateTimeFormat("en-GB", {
     weekday: "short", day: "2-digit", month: "short", timeZone: "America/Montevideo",
   }).format(new Date(value))
   return formatted.charAt(0).toUpperCase() + formatted.slice(1)
 }
 
 const formatMatchDay = (value: string | null) => {
-  if (!value) return "Sin fecha"
-  const formatted = new Intl.DateTimeFormat("es-UY", {
+  if (!value) return "No date"
+  const formatted = new Intl.DateTimeFormat("en-GB", {
     weekday: "long", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Montevideo",
   }).format(new Date(value))
   return formatted.charAt(0).toUpperCase() + formatted.slice(1)
 }
 
 const getLiveLabel = (code: string | null) => {
-  if (code === "HT") return "Entretiempo"
-  if (code === "INPLAY_ET" || code === "INPLAY_ET_SECOND_HALF") return "Prórroga"
-  if (code === "INPLAY_PENALTIES") return "Penales"
-  return "En vivo"
+  if (code === "HT") return "Half time"
+  if (code === "INPLAY_ET" || code === "INPLAY_ET_SECOND_HALF") return "Extra time"
+  if (code === "INPLAY_PENALTIES") return "Penalties"
+  return "Live"
 }
 
 const getStatusBadge = (fixture: FixtureListItem) => {
@@ -71,7 +66,7 @@ const getStatusBadge = (fixture: FixtureListItem) => {
     return {
       isLive: false,
       dotClassName: "bg-emerald-400",
-      label: "Finalizado",
+      label: "Finished",
       textClassName: "text-emerald-100",
       wrapperClassName: "border-emerald-400/20 bg-emerald-500/14",
     }
@@ -108,11 +103,6 @@ const buildRoundGroups = (fixtures: FixtureListItem[]): RoundGroup[] => {
     return a.round.name.localeCompare(b.round.name)
   })
 }
-
-// ---------------------------------------------------------------------------
-// Shared dark match card (same carousel aesthetic)
-// ---------------------------------------------------------------------------
-
 const DarkMatchCard = ({ fixture, compact = false }: { fixture: FixtureListItem; compact?: boolean }) => {
   const status = getMatchStatus(fixture)
   const badge = getStatusBadge(fixture)
@@ -155,7 +145,7 @@ const DarkMatchCard = ({ fixture, compact = false }: { fixture: FixtureListItem;
                 }
               </div>
               <p className="min-w-0 truncate text-[12px] font-semibold text-white">
-                {fixture.homeTeam?.name ?? "Equipo"}
+                {fixture.homeTeam?.name ?? "Team"}
               </p>
             </div>
 
@@ -181,7 +171,7 @@ const DarkMatchCard = ({ fixture, compact = false }: { fixture: FixtureListItem;
                 }
               </div>
               <p className="min-w-0 truncate text-right text-[12px] font-semibold text-white">
-                {fixture.awayTeam?.name ?? "Equipo"}
+                {fixture.awayTeam?.name ?? "Team"}
               </p>
             </div>
           </div>
@@ -208,10 +198,6 @@ const DarkMatchCard = ({ fixture, compact = false }: { fixture: FixtureListItem;
   )
 }
 
-// ---------------------------------------------------------------------------
-// Proposal A — Tab navigation: one round at a time, dark card grid
-// ---------------------------------------------------------------------------
-
 const ProposalA = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
   const currentIndex = roundGroups.findIndex(g => g.round.isCurrent)
   const [activeIndex, setActiveIndex] = useState(currentIndex >= 0 ? currentIndex : roundGroups.length - 1)
@@ -220,7 +206,7 @@ const ProposalA = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Round tabs */}
+      
       <div className="relative">
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {roundGroups.map((group, index) => {
@@ -246,7 +232,7 @@ const ProposalA = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
                 </span>
                 {live > 0 ? (
                   <span className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-red-500">
-                    <span className="h-1 w-1 rounded-full bg-red-500 animate-pulse" />en vivo
+                    <span className="h-1 w-1 rounded-full bg-red-500 animate-pulse" />live
                   </span>
                 ) : allDone ? (
                   <span className="mt-0.5 text-[10px] font-medium text-emerald-600">✓</span>
@@ -255,7 +241,7 @@ const ProposalA = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
                     "mt-0.5 text-[10px]",
                     index === activeIndex ? "text-white/60" : "text-slate-400"
                   )}>
-                    {group.fixtures.length} partidos
+                    {group.fixtures.length} matches
                   </span>
                 )}
               </button>
@@ -264,7 +250,7 @@ const ProposalA = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
         </div>
       </div>
 
-      {/* Navigation arrows + round title */}
+      
       {active && (
         <>
           <div className="flex items-center justify-between">
@@ -276,7 +262,7 @@ const ProposalA = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
               <IconChevronLeft size={15} />
             </button>
             <div className="text-center">
-              <p className="text-sm font-black text-slate-900">Fecha {active.round.name}</p>
+              <p className="text-sm font-black text-slate-900">Round {active.round.name}</p>
               <p className="text-xs text-slate-400">
                 {formatDateShort(active.fixtures.find(f => f.kickoffAt)?.kickoffAt ?? null)}
               </p>
@@ -301,10 +287,6 @@ const ProposalA = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Proposal B — Compact results rows (no accordion, all visible)
-// ---------------------------------------------------------------------------
-
 const CompactMatchRow = ({ fixture }: { fixture: FixtureListItem }) => {
   const status = getMatchStatus(fixture)
   const showScore = status === "finished" || status === "live"
@@ -323,7 +305,7 @@ const CompactMatchRow = ({ fixture }: { fixture: FixtureListItem }) => {
           }
         </div>
         <p className="min-w-0 truncate text-sm font-semibold text-slate-800">
-          {fixture.homeTeam?.name ?? "Equipo"}
+          {fixture.homeTeam?.name ?? "Team"}
         </p>
       </div>
 
@@ -338,13 +320,13 @@ const CompactMatchRow = ({ fixture }: { fixture: FixtureListItem }) => {
         {isLive && (
           <div className="mt-0.5 flex items-center justify-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-[10px] font-semibold text-red-500">En vivo</span>
+            <span className="text-[10px] font-semibold text-red-500">Live</span>
           </div>
         )}
         {status === "finished" && (
           <div className="mt-0.5 flex items-center justify-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <span className="text-[10px] font-medium text-emerald-600">Finalizado</span>
+            <span className="text-[10px] font-medium text-emerald-600">Finished</span>
           </div>
         )}
       </div>
@@ -357,7 +339,7 @@ const CompactMatchRow = ({ fixture }: { fixture: FixtureListItem }) => {
           }
         </div>
         <p className="min-w-0 truncate text-right text-sm font-semibold text-slate-800">
-          {fixture.awayTeam?.name ?? "Equipo"}
+          {fixture.awayTeam?.name ?? "Team"}
         </p>
       </div>
     </Link>
@@ -381,15 +363,15 @@ const ProposalB = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
       <div>
         <div className="mb-2 flex items-center justify-between gap-3 px-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-black text-slate-900">Fecha {group.round.name}</span>
+            <span className="text-sm font-black text-slate-900">Round {group.round.name}</span>
             {firstKickoff && (
               <span className="text-xs text-slate-400">{formatDateShort(firstKickoff)}</span>
             )}
           </div>
           <div className="flex items-center gap-2 text-xs">
-            {live > 0 && <span className="flex items-center gap-1 font-semibold text-red-500"><span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />{live} en vivo</span>}
-            {finished > 0 && <span className="text-slate-400">{finished} finalizado{finished > 1 ? "s" : ""}</span>}
-            {upcoming > 0 && <span className="text-slate-400">{upcoming} por jugar</span>}
+            {live > 0 && <span className="flex items-center gap-1 font-semibold text-red-500"><span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />{live} live</span>}
+            {finished > 0 && <span className="text-slate-400">{finished} finished</span>}
+            {upcoming > 0 && <span className="text-slate-400">{upcoming} upcoming</span>}
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
@@ -408,7 +390,7 @@ const ProposalB = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
         <>
           <div className="flex items-center gap-3">
             <div className="flex-1 border-t border-dashed border-slate-200" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Fechas anteriores</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Past rounds</span>
             <div className="flex-1 border-t border-dashed border-slate-200" />
           </div>
           {pastGroups.map(group => <RoundSection key={group.round.id} group={group} />)}
@@ -417,10 +399,6 @@ const ProposalB = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
     </div>
   )
 }
-
-// ---------------------------------------------------------------------------
-// Proposal C — Timeline: vertical steps with dark cards
-// ---------------------------------------------------------------------------
 
 const ProposalC = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
   const [openRounds, setOpenRounds] = useState<Set<number>>(() => {
@@ -451,7 +429,7 @@ const ProposalC = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
 
     return (
       <div className="flex gap-4">
-        {/* Timeline indicator */}
+        
         <div className="flex flex-col items-center">
           <div className={cn(
             "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-[11px] font-black transition-colors",
@@ -473,7 +451,7 @@ const ProposalC = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
           )}
         </div>
 
-        {/* Content */}
+        
         <div className="min-w-0 flex-1 pb-4">
           <button
             onClick={() => toggle(group.round.id)}
@@ -484,7 +462,7 @@ const ProposalC = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
                 "text-sm font-black",
                 isPast ? "text-slate-500" : "text-slate-900"
               )}>
-                Fecha {group.round.name}
+                Round {group.round.name}
               </span>
               {firstKickoff && (
                 <span className="text-xs text-slate-400">{formatDateShort(firstKickoff)}</span>
@@ -493,12 +471,12 @@ const ProposalC = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
             <div className="flex items-center gap-2">
               {live > 0 && (
                 <span className="flex items-center gap-1 text-xs font-semibold text-red-500">
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />en vivo
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />live
                 </span>
               )}
               {!isOpen && allDone && (
                 <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Finalizado
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Finished
                 </span>
               )}
               <IconChevronDown
@@ -528,7 +506,7 @@ const ProposalC = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
       {pastGroups.length > 0 && (
         <>
           <p className="mb-4 px-12 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Fechas anteriores
+            Past rounds
           </p>
           {pastGroups.map(group => (
             <TimelineRound key={group.round.id} group={group} isPast />
@@ -538,10 +516,6 @@ const ProposalC = ({ roundGroups }: { roundGroups: RoundGroup[] }) => {
     </div>
   )
 }
-
-// ---------------------------------------------------------------------------
-// Page wrapper
-// ---------------------------------------------------------------------------
 
 const ProposalHeader = ({ letter, title, description }: { letter: string; title: string; description: string }) => (
   <div className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -582,17 +556,17 @@ const ProposalsClient = ({ allFixtures, seasonName }: ProposalsClientProps) => {
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-8 sm:px-8">
 
         <div>
-          <h1 className="text-2xl font-black text-slate-900">Propuestas de diseño · Partidos</h1>
+          <h1 className="text-2xl font-black text-slate-900">Design proposals · Matches</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Temporada {seasonName} · {roundGroups.length} fechas · Elige el formato que más te convence
+            Season {seasonName} · {roundGroups.length} rounds · Pick the format you like best
           </p>
         </div>
 
         <div className="flex flex-col gap-3">
           <ProposalHeader
             letter="A"
-            title="Navegación por pestañas"
-            description="Una fecha a la vez. Pastillas de fecha arriba con indicador de estado, flechas para navegar. Limpio y rápido."
+            title="Tab navigation"
+            description="One round at a time. Round pills on top with a status indicator, arrows to navigate. Clean and fast."
           />
           <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <ProposalA roundGroups={roundGroups} />
@@ -602,8 +576,8 @@ const ProposalsClient = ({ allFixtures, seasonName }: ProposalsClientProps) => {
         <div className="flex flex-col gap-3">
           <ProposalHeader
             letter="B"
-            title="Lista compacta tipo resultados"
-            description="Todas las fechas visibles. Filas compactas estilo marcador deportivo: escudo · nombre · resultado · nombre · escudo."
+            title="Compact results list"
+            description="All rounds visible. Compact rows in sports-scoreboard style: crest · name · result · name · crest."
           />
           <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <ProposalB roundGroups={roundGroups} />
@@ -613,8 +587,8 @@ const ProposalsClient = ({ allFixtures, seasonName }: ProposalsClientProps) => {
         <div className="flex flex-col gap-3">
           <ProposalHeader
             letter="C"
-            title="Timeline vertical"
-            description="Cada fecha es un paso en una línea de tiempo. Indicador circular con número de fecha, tarjetas oscuras al expandir."
+            title="Vertical timeline"
+            description="Each round is a step on a timeline. Circular indicator with the round number, dark cards when expanded."
           />
           <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <ProposalC roundGroups={roundGroups} />

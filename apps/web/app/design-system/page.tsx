@@ -176,9 +176,9 @@ const DesignSystemPage = () => {
         </p>
       </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* COLORS                                                              */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Colors">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">
           {[
@@ -216,9 +216,9 @@ const DesignSystemPage = () => {
         </Subsection>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* TYPOGRAPHY                                                          */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Typography">
         <div className="space-y-4">
           <div className="space-y-2">
@@ -257,9 +257,9 @@ const DesignSystemPage = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* BUTTONS                                                             */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Button">
         <Subsection title="Variants">
           <div className="flex flex-wrap gap-3">
@@ -325,9 +325,9 @@ const DesignSystemPage = () => {
         </Subsection>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* BADGE                                                               */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Badge">
         <div className="flex flex-wrap gap-3">
           <Badge>Default</Badge>
@@ -355,15 +355,15 @@ const DesignSystemPage = () => {
         </Subsection>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* CARD                                                                */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Card">
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Nacional vs Peñarol</CardTitle>
-              <CardDescription>Apertura — Jornada 12</CardDescription>
+              <CardDescription>Apertura — Round 12</CardDescription>
               <CardAction>
                 <Badge>Finished</Badge>
               </CardAction>
@@ -403,9 +403,9 @@ const DesignSystemPage = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* TABLE                                                               */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Table">
         <div className="rounded-lg border">
           <Table>
@@ -485,9 +485,9 @@ const DesignSystemPage = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* TABS                                                                */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Tabs">
         <Subsection title="Default">
           <Tabs defaultValue="apertura">
@@ -530,9 +530,9 @@ const DesignSystemPage = () => {
         </Subsection>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* INPUTS & FORMS                                                      */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Inputs & Forms">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-4">
@@ -557,9 +557,9 @@ const DesignSystemPage = () => {
             <Subsection title="Native Select">
               <NativeSelect>
                 <NativeSelectOption value="">Select round</NativeSelectOption>
-                <NativeSelectOption value="1">Jornada 1</NativeSelectOption>
-                <NativeSelectOption value="2">Jornada 2</NativeSelectOption>
-                <NativeSelectOption value="3">Jornada 3</NativeSelectOption>
+                <NativeSelectOption value="1">Round 1</NativeSelectOption>
+                <NativeSelectOption value="2">Round 2</NativeSelectOption>
+                <NativeSelectOption value="3">Round 3</NativeSelectOption>
               </NativeSelect>
             </Subsection>
           </div>
@@ -613,9 +613,9 @@ const DesignSystemPage = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* AVATAR                                                              */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Avatar">
         <div className="flex items-center gap-4">
           <Avatar size="sm">
@@ -634,9 +634,9 @@ const DesignSystemPage = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* ALERT                                                               */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Alert">
         <div className="space-y-3">
           <Alert>
@@ -655,9 +655,9 @@ const DesignSystemPage = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* DIALOG & SHEET                                                      */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Dialog & Sheet">
         <div className="flex flex-wrap gap-3">
           <Dialog>
@@ -721,9 +721,9 @@ const DesignSystemPage = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* DROPDOWN, TOOLTIP, HOVER CARD                                       */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Dropdown, Tooltip & Hover Card">
         <div className="flex flex-wrap gap-3">
           <DropdownMenu>
@@ -775,9 +775,9 @@ const DesignSystemPage = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* ACCORDION                                                           */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Accordion">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1">
@@ -801,9 +801,9 @@ const DesignSystemPage = () => {
         </Accordion>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* BREADCRUMB & PAGINATION                                             */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Breadcrumb & Pagination">
         <Subsection title="Breadcrumb">
           <Breadcrumb>
@@ -850,9 +850,9 @@ const DesignSystemPage = () => {
         </Subsection>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* TOGGLE & TOGGLE GROUP                                               */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Toggle & Toggle Group">
         <Subsection title="Toggle">
           <div className="flex gap-3">
@@ -873,9 +873,9 @@ const DesignSystemPage = () => {
         </Subsection>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* PROGRESS, SPINNER, SKELETON                                         */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Progress, Spinner & Skeleton">
         <Subsection title="Progress">
           <Progress value={progress} />
@@ -899,9 +899,9 @@ const DesignSystemPage = () => {
         </Subsection>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* EMPTY STATE                                                         */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Empty State">
         <Empty>
           <EmptyHeader>
@@ -916,9 +916,9 @@ const DesignSystemPage = () => {
         </Empty>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* SCROLL AREA                                                         */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Scroll Area">
         <ScrollArea className="h-48 w-full rounded-md border p-4">
           <div className="space-y-2">
@@ -927,7 +927,7 @@ const DesignSystemPage = () => {
                 key={index}
                 className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
               >
-                <span>Jornada {index + 1}</span>
+                <span>Round {index + 1}</span>
                 <Badge variant="secondary">{(index % 5) + 3} matches</Badge>
               </div>
             ))}
@@ -935,9 +935,9 @@ const DesignSystemPage = () => {
         </ScrollArea>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* KBD                                                                 */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Keyboard">
         <div className="flex items-center gap-2">
           <Kbd>D</Kbd>
@@ -947,9 +947,9 @@ const DesignSystemPage = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* SONNER TOAST                                                        */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Toast (Sonner)">
         <div className="flex flex-wrap gap-3">
           <Button
@@ -973,9 +973,9 @@ const DesignSystemPage = () => {
         </div>
       </Section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* SEPARATOR                                                           */}
-      {/* ------------------------------------------------------------------ */}
+      
+      
+      
       <Section title="Separator">
         <div className="space-y-3">
           <p className="text-sm">Horizontal separator:</p>
