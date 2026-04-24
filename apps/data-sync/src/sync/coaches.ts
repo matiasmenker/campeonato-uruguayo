@@ -46,6 +46,7 @@ const syncCoaches = async (
   const seasons = await db.season.findMany({
     where: {
       leagueId: uruguayLeague.id,
+      isCurrent: true,
       ...(options?.seasonSportmonksIds
         ? { sportmonksId: { in: options.seasonSportmonksIds } }
         : {}),

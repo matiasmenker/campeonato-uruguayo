@@ -142,17 +142,17 @@ export const getTeamCoaches = async (teamId: number, seasonId: number): Promise<
     `/api/v1/coaches?teamId=${teamId}&seasonId=${seasonId}&pageSize=20`,
     { next: { revalidate: 300 } },
   )
-  return response.data.map((coach) => {
-    const matchingAssignment = coach.assignments?.find(
-      (assignment) => assignment.team?.id === teamId && assignment.season?.id === seasonId
+  const isSeasonCurrent = response.data.some((coach) =>
+    coach.assignments?.some(
+      (assignment) => assignment.team?.id === teamId && assignment.season?.id === seasonId && assignment.season?.isCurrent
     )
-    return {
-      id: coach.id,
-      name: coach.name,
-      imagePath: coach.imagePath,
-      isCurrent: matchingAssignment?.season?.isCurrent ?? false,
-    }
-  })
+  )
+  return response.data.map((coach, index) => ({
+    id: coach.id,
+    name: coach.name,
+    imagePath: coach.imagePath,
+    isCurrent: isSeasonCurrent && index === 0,
+  }))
 }
 
 export const getTeamVenue = async (teamId: number, seasonId: number): Promise<TeamVenue | null> => {

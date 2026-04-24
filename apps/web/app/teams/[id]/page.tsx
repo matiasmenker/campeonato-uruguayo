@@ -7,7 +7,7 @@ import HeroTexture from "@/components/hero-texture"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamSeasonSelector from "@/components/team-season-selector"
-import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoaches, getTeamVenue, type SquadMember, type TeamCoach, type TeamFixture } from "@/lib/teams"
+import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoaches, getTeamVenue, type SquadMember, type TeamFixture } from "@/lib/teams"
 import { resolvePlayerImageUrl } from "@/lib/player"
 import { getSeasons, getStages, getSeasonChampion, type Season } from "@/lib/seasons"
 import { getStageGroup } from "@/lib/stage-groups"
@@ -238,14 +238,12 @@ const TeamContent = async ({
   teamId: number
   selectedSeason: Season
 }) => {
-  const [squadResult, fixturesResult, coachesResult] = await Promise.allSettled([
+  const [squadResult, fixturesResult] = await Promise.allSettled([
     getTeamSquad(teamId, selectedSeason.id),
     getTeamFixtures(teamId, selectedSeason.id, 30),
-    getTeamCoaches(teamId, selectedSeason.id),
   ])
 
   const squad = squadResult.status === "fulfilled" ? squadResult.value : []
-  const coaches = coachesResult.status === "fulfilled" ? coachesResult.value : []
   const rawFixtures = fixturesResult.status === "fulfilled" ? fixturesResult.value : []
   const allFixtures = rawFixtures.filter((fixture) => fixture.stage && getStageGroup(fixture.stage.name) !== null)
 
@@ -285,48 +283,11 @@ const TeamContent = async ({
             <span className="text-right text-xs font-semibold text-slate-500">Age</span>
           </div>
         )}
-        {coaches.length > 0 && (
-          <div>
-            <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-1.5">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                {coaches.length > 1 ? "Coaches" : "Coach"}
-              </p>
-            </div>
-            {coaches.map((coach, index) => {
-              const isLast = index === coaches.length - 1
-              return (
-                <div
-                  key={coach.id}
-                  className={`grid grid-cols-[28px_36px_1fr_auto] items-center gap-3 px-4 py-2 ${!isLast ? "border-b border-slate-100" : ""}`}
-                >
-                  <span className="text-xs font-medium text-slate-300">—</span>
-                  <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
-                    <img
-                      src={resolvePlayerImageUrl(coach.imagePath)}
-                      alt={coach.name}
-                      className="h-full w-full object-cover object-top"
-                    />
-                  </div>
-                  <span className="truncate text-sm font-medium text-slate-900">{coach.name}</span>
-                  {coach.isCurrent ? (
-                    <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
-                      Current
-                    </span>
-                  ) : (
-                    <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                      {selectedSeason.name}
-                    </span>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
-        {squad.length === 0 && coaches.length === 0 ? (
+        {squad.length === 0 ? (
           <div className="flex h-36 items-center justify-center text-sm text-slate-400">
             No squad data available for {selectedSeason.name}
           </div>
-        ) : squad.length === 0 ? null : (
+        ) : (
           POSITION_ORDER.map((positionId) => {
             const members = squadByPosition[positionId]
             if (!members || members.length === 0) return null
@@ -458,8 +419,12 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     )
   }
 
-  const venueResult = await Promise.allSettled([getTeamVenue(teamId, selectedSeason.id)])
-  const venue = venueResult[0].status === "fulfilled" ? venueResult[0].value : null
+  const [venueResult, coachesResult] = await Promise.allSettled([
+    getTeamVenue(teamId, selectedSeason.id),
+    getTeamCoaches(teamId, selectedSeason.id),
+  ])
+  const venue = venueResult.status === "fulfilled" ? venueResult.value : null
+  const currentCoach = coachesResult.status === "fulfilled" ? (coachesResult.value[0] ?? null) : null
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
@@ -494,6 +459,9 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                 )}
                 <div className="min-w-0 flex flex-col gap-1 pb-1">
                   <h1 className="text-3xl font-black text-white leading-none drop-shadow">{team.name}</h1>
+                  {currentCoach && (
+                    <span className="text-xs text-white/70">{currentCoach.name}</span>
+                  )}
                   <TeamHeroDetails venue={venue} />
                 </div>
               </div>
