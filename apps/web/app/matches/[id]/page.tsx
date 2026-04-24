@@ -83,10 +83,7 @@ const parseFormationRows = (formation: string | null | undefined): number[] => {
   return formation.split("-").map(Number).filter(n => !isNaN(n) && n > 0)
 }
 
-const groupLegacyByFormation = (starters: LineupPlayer[], formation: string | null | undefined): LineupPlayer[][] => {
-  // Deduplicate by formationPosition — keeps first occurrence (DB order: fp ASC, id ASC).
-  // Prevents duplicate GKs at position 1 when backend data has ambiguous team assignment.
-  const seenPositions = new Set<number>()
+const groupLegacyByFormation = (starters: LineupPlayer[], formation: string | null | undefined): LineupPlayer[][] => {  const seenPositions = new Set<number>()
   const deduplicated = starters.filter(player => {
     if (player.formationPosition == null) return true
     if (seenPositions.has(player.formationPosition)) return false
@@ -259,11 +256,12 @@ const GloveSaveIcon = ({ size = 12 }: { size?: number }) => (
 interface EventBadgesProps {
   events: FixtureEvent[]
   assists: number
+  saves?: number
   offsetBottom?: number
   isStarter?: boolean
 }
 
-const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: EventBadgesProps) => {
+const EventBadges = ({ events, assists, saves = 0, offsetBottom = 0, isStarter = true }: EventBadgesProps) => {
   const regularGoals = events.filter(e => e.typeId === EVENT_GOAL || e.typeId === EVENT_GOAL_PENALTY)
   const ownGoals     = events.filter(e => e.typeId === EVENT_GOAL_OWN)
   const yellows      = events.filter(e => e.typeId === EVENT_YELLOW).length
@@ -271,7 +269,7 @@ const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: Ev
   const reds         = events.filter(e => e.typeId === EVENT_RED).length
   const subEvents    = isStarter ? [] : events.filter(e => e.typeId === EVENT_SUBSTITUTION)
 
-  if (!regularGoals.length && !ownGoals.length && !assists && !yellows && !yellowReds && !reds && !subEvents.length) return null
+  if (!regularGoals.length && !ownGoals.length && !assists && !saves && !yellows && !yellowReds && !reds && !subEvents.length) return null
 
   return (
     <div
@@ -293,6 +291,18 @@ const EventBadges = ({ events, assists, offsetBottom = 0, isStarter = true }: Ev
           <AssistIcon size={13} />
         </span>
       ))}
+      {saves > 0 && (
+        <span
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 2,
+            background: "#6366f1", borderRadius: 3, padding: "1px 4px",
+            color: "#fff", lineHeight: 1, flexShrink: 0,
+          }}
+        >
+          <GloveSaveIcon size={10} />
+          <span style={{ fontSize: 9, fontWeight: 900, lineHeight: 1 }}>{saves}</span>
+        </span>
+      )}
       {Array.from({ length: yellows }).map((_, i) => <CardRect key={`y${i}`} color="#facc15" />)}
       {Array.from({ length: yellowReds }).map((_, i) => <DoubleCard key={`yr${i}`} />)}
       {Array.from({ length: reds }).map((_, i) => <CardRect key={`r${i}`} color="#ff0000" />)}
@@ -313,12 +323,13 @@ interface PlayerTokenProps {
   events: FixtureEvent[]
   rating: number | null
   assists: number
+  saves: number
   x: number
   y: number
   substitutedOut: boolean
 }
 
-const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: PlayerTokenProps) => {
+const PlayerToken = ({ player, events, rating, assists, saves, x, y, substitutedOut }: PlayerTokenProps) => {
   const fullName = player.player.displayName ?? player.player.name
   const parts = fullName.trim().split(/\s+/)
   const shortName = parts.length > 2 ? parts[parts.length - 1] : parts.slice(-2).join(" ")
@@ -332,7 +343,7 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: 
       style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: TOKEN_WIDTH, gap: 3 }}
     >
       <div className="relative" style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}>
-        <EventBadges events={events} assists={assists} offsetBottom={1} isStarter={true} />
+        <EventBadges events={events} assists={assists} saves={saves} offsetBottom={1} isStarter={true} />
         <div
           className="overflow-hidden rounded-full"
           style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, background: "#fff", border: "2px solid rgba(255,255,255,0.95)", boxShadow: "0 3px 10px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.35)" }}
@@ -347,7 +358,7 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: 
             {player.jerseyNumber}
           </span>
         )}
-        {/* Rating circle replaces position badge on avatar top-right */}
+        
         <span
           className="absolute flex items-center justify-center rounded-full font-black text-white leading-none"
           style={{
@@ -367,7 +378,7 @@ const PlayerToken = ({ player, events, rating, assists, x, y, substitutedOut }: 
         )}
       </div>
 
-      {/* Name bar — position badge on left, then name */}
+      
       <div
         className="flex items-center gap-1 rounded-lg px-2 py-1"
         style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)", maxWidth: TOKEN_WIDTH }}
@@ -404,10 +415,11 @@ interface PitchProps {
   eventsByPlayer: Map<number, FixtureEvent[]>
   ratingByPlayer: Map<number, number>
   assistsByPlayer: Map<number, number>
+  savesByPlayer: Map<number, number>
   substitutedOutIds: Set<number>
 }
 
-const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByPlayer, ratingByPlayer, assistsByPlayer, substitutedOutIds }: PitchProps) => {
+const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByPlayer, ratingByPlayer, assistsByPlayer, savesByPlayer, substitutedOutIds }: PitchProps) => {
 
   const renderTeam = (lineup: LineupPlayer[], isHome: boolean, formation: string | null) => {
     const allStarters = lineup.filter(p => p.typeId === 11)
@@ -420,7 +432,6 @@ const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByP
         existing.push(player)
         rowMap.set(row, existing)
       }
-      // Starters without formationField (often the GK when SportMonks omits it) → place before all other rows
       const fallbackStarters = allStarters.filter(p => p.formationField == null)
       if (fallbackStarters.length > 0) {
         const minRow = rowMap.size > 0 ? Math.min(...rowMap.keys()) : 1
@@ -446,6 +457,7 @@ const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByP
             events={eventsByPlayer.get(player.player.id) ?? []}
             rating={ratingByPlayer.get(player.player.id) ?? null}
             assists={assistsByPlayer.get(player.player.id) ?? 0}
+            saves={savesByPlayer.get(player.player.id) ?? 0}
             x={xPositions[rowIndex] ?? 50}
             y={yPos[playerIndex] ?? 50}
             substitutedOut={substitutedOutIds.has(player.player.id)}
@@ -466,6 +478,7 @@ const Pitch = ({ homeLineup, awayLineup, homeFormation, awayFormation, eventsByP
           events={eventsByPlayer.get(player.player.id) ?? []}
           rating={ratingByPlayer.get(player.player.id) ?? null}
           assists={assistsByPlayer.get(player.player.id) ?? 0}
+          saves={savesByPlayer.get(player.player.id) ?? 0}
           x={xPositions[rowIndex] ?? 50}
           y={yPos[playerIndex] ?? 50}
           substitutedOut={substitutedOutIds.has(player.player.id)}
@@ -518,7 +531,7 @@ const BenchPlayer = ({ player, events, rating, assists, saves }: {
         )}
       </div>
 
-      {/* Rating on the left (in place of position badge) */}
+      
       <span
         className="flex items-center justify-center rounded-md font-black text-white leading-none shrink-0"
         style={{ fontSize: 10, background: rating !== null ? getRatingFill(rating) : "#cbd5e1", minWidth: 28, height: 18, paddingLeft: 5, paddingRight: 5 }}
@@ -565,7 +578,7 @@ const BenchPlayer = ({ player, events, rating, assists, saves }: {
         )}
       </div>
 
-      {/* Position badge on the right */}
+      
       <PositionBadge positionId={player.player.positionId} size={15} />
     </div>
   )
@@ -784,8 +797,18 @@ const MatchPage = async ({ params }: MatchPageProps) => {
 
   if (fixtureResult.status === "rejected") notFound()
 
-  const fixture  = fixtureResult.value
-  const events   = eventsResult.status   === "fulfilled" ? eventsResult.value   : []
+  const fixture      = fixtureResult.value
+  const rawEvents    = eventsResult.status === "fulfilled" ? eventsResult.value : []
+  const seenDismissals = new Set<string>()
+  const events = rawEvents.filter((event) => {
+    if (event.typeId !== EVENT_RED && event.typeId !== EVENT_YELLOW_RED) return true
+    const playerId = event.player?.id
+    if (playerId == null) return true
+    const dismissalKey = `${playerId}:dismissal`
+    if (seenDismissals.has(dismissalKey)) return false
+    seenDismissals.add(dismissalKey)
+    return true
+  })
   const lineups  = lineupsResult.status  === "fulfilled" ? lineupsResult.value  : []
   const ratings  = ratingsResult.status  === "fulfilled" ? ratingsResult.value  : []
   const assists  = assistsResult.status  === "fulfilled" ? assistsResult.value  : []
@@ -867,7 +890,6 @@ const MatchPage = async ({ params }: MatchPageProps) => {
     const minuteB = itemB.kind === "sub" ? (itemB.subEvent.minute ?? 0) : (itemB.event.minute ?? 0)
     return minuteA - minuteB
   })
-
 
   const getItemSide = (item: TimelineItem): "home" | "away" | null => {
     const playerId = item.kind === "sub" ? item.subEvent.playerIn?.id : item.event.player?.id
@@ -980,7 +1002,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
         )}
 
         {hasLineups ? (
-          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} homeFormation={fixture.homeFormation ?? null} awayFormation={fixture.awayFormation ?? null} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} substitutedOutIds={substitutedOutIds} />
+          <Pitch homeLineup={homeLineup} awayLineup={awayLineup} homeFormation={fixture.homeFormation ?? null} awayFormation={fixture.awayFormation ?? null} eventsByPlayer={eventsByPlayer} ratingByPlayer={ratingByPlayer} assistsByPlayer={assistsByPlayer} savesByPlayer={savesByPlayer} substitutedOutIds={substitutedOutIds} />
         ) : (
           <div className="flex h-36 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
             Lineup not available
