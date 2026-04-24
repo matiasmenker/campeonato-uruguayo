@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { IconShieldFilled } from "@tabler/icons-react"
 import { getTeams, type Team } from "@/lib/teams"
-import { getSeasons, type Season } from "@/lib/seasons"
+import { getSeasons, getStages, filterMainStages, type Season } from "@/lib/seasons"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamsSeasonSelector from "@/components/teams-season-selector"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
@@ -89,6 +89,11 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
   const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? null)
   const selectedSeason = seasons.find((season) => season.id === selectedSeasonId) ?? currentSeason
 
+  const stages = selectedSeason
+    ? filterMainStages(await getStages(selectedSeason.id).catch(() => []))
+    : []
+  const currentStage = stages.find((stage) => stage.isCurrent) ?? stages[stages.length - 1] ?? null
+
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
@@ -106,8 +111,8 @@ const TeamsPage = async ({ searchParams }: TeamsPageProps) => {
                 <div className="flex flex-col gap-0.5">
                   <h1 className="text-3xl font-black text-white leading-none drop-shadow">Teams</h1>
                   <p className="text-sm text-white/65">
-                    Uruguayan First Division
-                    {selectedSeason && <span className="font-semibold text-white/85"> · {selectedSeason.name}</span>}
+                    {currentStage?.name ?? "First Division"}
+                    {selectedSeason && ` ${selectedSeason.name}`}
                   </p>
                 </div>
               </div>

@@ -29,7 +29,6 @@ interface RoundGroup {
   fixtures: FixtureListItem[]
 }
 
-const SEASON_STORAGE_KEY = "matches:season"
 const stageKey = (seasonId: number) => `matches:stage:${seasonId}`
 const roundKey = (seasonId: number) => `matches:round:${seasonId}`
 
@@ -205,36 +204,16 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null)
 
   useEffect(() => {
-    const savedSeasonId = storageGet(SEASON_STORAGE_KEY)
-    const targetSeasonId =
-      savedSeasonId !== null && seasons.some(s => s.id === savedSeasonId)
-        ? savedSeasonId
-        : initialSeasonId
-
-    if (targetSeasonId !== null) {
-      const savedStage = storageGet(stageKey(targetSeasonId))
-      const savedRound = storageGet(roundKey(targetSeasonId))
-      if (savedStage !== null) setSelectedStageId(savedStage)
-      if (savedRound !== null) setSelectedRoundId(savedRound)
-
-      if (targetSeasonId !== initialSeasonId) {
-        setCurrentSeasonId(targetSeasonId)
-        setIsFetching(true)
-        fetch(`/api/fixtures?seasonId=${targetSeasonId}`)
-          .then(r => r.json())
-          .then((data: FixtureListItem[]) => setCurrentFixtures(data))
-          .catch(() => {})
-          .finally(() => setIsFetching(false))
-      }
-
-      storageSet(SEASON_STORAGE_KEY, targetSeasonId)
-    }
+    if (initialSeasonId === null) return
+    const savedStage = storageGet(stageKey(initialSeasonId))
+    const savedRound = storageGet(roundKey(initialSeasonId))
+    if (savedStage !== null) setSelectedStageId(savedStage)
+    if (savedRound !== null) setSelectedRoundId(savedRound)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSeasonChange = useCallback(async (seasonId: number) => {
     if (seasonId === currentSeasonId) return
     setCurrentSeasonId(seasonId)
-    storageSet(SEASON_STORAGE_KEY, seasonId)
 
     const savedStage = storageGet(stageKey(seasonId))
     const savedRound = storageGet(roundKey(seasonId))
@@ -305,6 +284,7 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
   const showStageSelector  = stages.length >= 1
 
   const selectedSeason = seasons.find(s => s.id === currentSeasonId) ?? null
+  const effectiveStage = stages.find(s => s.id === effectiveStageId) ?? null
 
   return (
     <div className="flex flex-col gap-6">
@@ -322,10 +302,8 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
               <div className="flex flex-col gap-0.5">
                 <h1 className="text-3xl font-black text-white leading-none drop-shadow">Matches</h1>
                 <p className="text-sm text-white/65">
-                  First Division
-                  {selectedSeason && (
-                    <span className="font-semibold text-white/85"> · {selectedSeason.name}</span>
-                  )}
+                  {effectiveStage?.name ?? "First Division"}
+                  {selectedSeason && ` ${selectedSeason.name}`}
                 </p>
               </div>
             </div>
