@@ -74,6 +74,71 @@ export const getLeaders = async (
   return response.data
 }
 
+const LEADER_CATEGORIES: Array<keyof LeadersContract> = [
+  "topRated",
+  "topScorers",
+  "topAssists",
+  "topMinutes",
+  "topYellowCards",
+  "topSaves",
+]
+
+const mergeLeaderContracts = (payloads: LeadersContract[], limit: number): LeadersContract => {
+  const merged = {} as LeadersContract
+  for (const category of LEADER_CATEGORIES) {
+    const byPlayer = new Map<number, { entry: LeaderEntry; samples: number }>()
+    for (const payload of payloads) {
+      const list = payload[category]?.leaders ?? []
+      for (const entry of list) {
+        const prev = byPlayer.get(entry.player.id)
+        if (!prev) {
+          byPlayer.set(entry.player.id, { entry: { ...entry }, samples: 1 })
+        } else if (category === "topRated") {
+          const combined = (prev.entry.value * prev.samples + entry.value) / (prev.samples + 1)
+          byPlayer.set(entry.player.id, {
+            entry: { ...entry, value: Math.round(combined * 100) / 100 },
+            samples: prev.samples + 1,
+          })
+        } else {
+          byPlayer.set(entry.player.id, {
+            entry: { ...entry, value: prev.entry.value + entry.value },
+            samples: prev.samples + 1,
+          })
+        }
+      }
+    }
+    const sorted = Array.from(byPlayer.values())
+      .map((item) => item.entry)
+      .sort((first, second) => second.value - first.value)
+      .slice(0, limit)
+    const firstPayloadCategory = payloads.find((payload) => payload[category])?.[category]
+    merged[category] = {
+      category,
+      statType: firstPayloadCategory?.statType ?? null,
+      leaders: sorted,
+    }
+  }
+  return merged
+}
+
+export const getLeadersForStages = async (opts: {
+  seasonId: number
+  stageIds: number[]
+  limit?: number
+}): Promise<LeadersContract> => {
+  const limit = opts.limit ?? 10
+  if (opts.stageIds.length === 0) {
+    return getLeaders({ seasonId: opts.seasonId, limit })
+  }
+  if (opts.stageIds.length === 1) {
+    return getLeaders({ seasonId: opts.seasonId, stageId: opts.stageIds[0], limit })
+  }
+  const perStage = await Promise.all(
+    opts.stageIds.map((stageId) => getLeaders({ seasonId: opts.seasonId, stageId, limit: Math.max(limit, 20) }))
+  )
+  return mergeLeaderContracts(perStage, limit)
+}
+
 interface SquadPlayerRating {
   playerId: number
   averageRating: number

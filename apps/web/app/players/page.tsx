@@ -6,7 +6,7 @@ import SearchParamsLoadingBoundary from "@/components/search-params-loading-boun
 import PlayerSeasonStageSelector from "@/components/player-season-stage-selector"
 import { getSeasons, getStages } from "@/lib/seasons"
 import { groupStages, getStageGroupById } from "@/lib/stage-groups"
-import { getLeaders, type LeaderEntry } from "@/lib/metrics"
+import { getLeadersForStages, type LeaderEntry } from "@/lib/metrics"
 import { getRatingColors, getRatingFill } from "@/lib/rating"
 import { resolvePlayerImageUrl } from "@/lib/player"
 import { POSITION_CODES } from "@/lib/players"
@@ -256,13 +256,15 @@ const ContentSkeleton = () => (
 const PlayersContent = async ({
   selectedSeasonId,
   selectedStageId,
+  selectedGroupStageIds,
 }: {
   selectedSeasonId: number
   selectedStageId: number | null
+  selectedGroupStageIds: number[]
 }) => {
-  const leaders = await getLeaders({
+  const leaders = await getLeadersForStages({
     seasonId: selectedSeasonId,
-    stageId: selectedStageId ?? undefined,
+    stageIds: selectedGroupStageIds,
     limit: 8,
   }).catch(() => null)
 
@@ -355,6 +357,7 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
     : currentGroup
   const selectedStageId: number | null = resolvedGroup?.primaryStageId ?? defaultGroupStageId
   const selectedGroupLabel = resolvedGroup ? resolvedGroup.label : null
+  const selectedGroupStageIds = resolvedGroup ? resolvedGroup.stages.map((stage) => stage.id) : []
 
   const committedParams: Record<string, string> = { seasonId: String(selectedSeason.id) }
   if (hasRequestedGroup && selectedStageId !== null) committedParams.stageId = String(selectedStageId)
@@ -399,6 +402,7 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
             <PlayersContent
               selectedSeasonId={selectedSeason.id}
               selectedStageId={selectedStageId}
+              selectedGroupStageIds={selectedGroupStageIds}
             />
           </SearchParamsLoadingBoundary>
         </Suspense>
