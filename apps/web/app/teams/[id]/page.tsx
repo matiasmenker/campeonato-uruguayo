@@ -159,22 +159,13 @@ const ChampionBadge = async ({
   )
 }
 
-const TeamHeroDetails = async ({
-  teamId,
-  seasonId,
-}: {
-  teamId: number
-  seasonId: number
-}) => {
-  const [coachResult, venueResult] = await Promise.allSettled([
-    getTeamCoach(teamId, seasonId),
-    getTeamVenue(teamId, seasonId),
-  ])
-  const coach = coachResult.status === "fulfilled" ? coachResult.value : null
-  const venue = venueResult.status === "fulfilled" ? venueResult.value : null
+interface TeamHeroMeta {
+  coach: { name: string } | null
+  venue: { name: string } | null
+}
 
+const TeamHeroDetails = ({ coach, venue }: TeamHeroMeta) => {
   if (!coach && !venue) return null
-
   return (
     <div className="flex flex-col gap-0.5">
       {coach && (
@@ -436,6 +427,13 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     )
   }
 
+  const [coachResult, venueResult] = await Promise.allSettled([
+    getTeamCoach(teamId, selectedSeason.id),
+    getTeamVenue(teamId, selectedSeason.id),
+  ])
+  const coach = coachResult.status === "fulfilled" ? coachResult.value : null
+  const venue = venueResult.status === "fulfilled" ? venueResult.value : null
+
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
@@ -469,9 +467,7 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                 )}
                 <div className="min-w-0 flex flex-col gap-1 pb-1">
                   <h1 className="text-3xl font-black text-white leading-none drop-shadow">{team.name}</h1>
-                  <Suspense fallback={null}>
-                    <TeamHeroDetails teamId={teamId} seasonId={selectedSeason.id} />
-                  </Suspense>
+                  <TeamHeroDetails coach={coach} venue={venue} />
                 </div>
               </div>
               {seasons.length > 1 && (
