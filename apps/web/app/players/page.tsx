@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { IconShieldFilled, IconUsers } from "@tabler/icons-react"
+import { IconRun, IconShieldFilled } from "@tabler/icons-react"
 import HeroTexture from "@/components/hero-texture"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import PlayerSeasonStageSelector from "@/components/player-season-stage-selector"
@@ -258,12 +258,12 @@ const PlayersContent = async ({
   }
 
   const categories: Array<{ key: keyof typeof leaders; entries: LeaderEntry[] }> = [
-    { key: "topRated", entries: leaders.topRated.leaders },
-    { key: "topScorers", entries: leaders.topScorers.leaders },
-    { key: "topAssists", entries: leaders.topAssists.leaders },
-    { key: "topMinutes", entries: leaders.topMinutes.leaders },
-    { key: "topYellowCards", entries: leaders.topYellowCards.leaders },
-    { key: "topSaves", entries: leaders.topSaves.leaders },
+    { key: "topRated", entries: leaders.topRated?.leaders ?? [] },
+    { key: "topScorers", entries: leaders.topScorers?.leaders ?? [] },
+    { key: "topAssists", entries: leaders.topAssists?.leaders ?? [] },
+    { key: "topMinutes", entries: leaders.topMinutes?.leaders ?? [] },
+    { key: "topYellowCards", entries: leaders.topYellowCards?.leaders ?? [] },
+    { key: "topSaves", entries: leaders.topSaves?.leaders ?? [] },
   ]
 
   return (
@@ -308,7 +308,6 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
     Number(secondSeason.name) - Number(firstSeason.name)
   )
 
-  // Default to the current active season, fall back to first available.
   const defaultSeason =
     sortedSeasons.find((season) => season.isCurrent) ??
     sortedSeasons[0]
@@ -327,7 +326,6 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
 
   const allStages = await getStages(selectedSeason.id).catch(() => [])
   const stages = filterMainStages(allStages)
-  // Default to current stage, fallback to last main stage in the season.
   const defaultStage = stages.find((stage) => stage.isCurrent) ?? stages[stages.length - 1] ?? null
   const requestedStageId = stageIdParam ? Number(stageIdParam) : null
   const hasRequestedStage = requestedStageId !== null && stages.some((stage) => stage.id === requestedStageId)
@@ -350,7 +348,7 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between gap-4 p-6">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
-                  <IconUsers size={28} className="text-white/80" />
+                  <IconRun size={28} className="text-white/80" />
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <h1 className="text-3xl font-black text-white drop-shadow leading-none">Players</h1>
