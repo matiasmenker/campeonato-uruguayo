@@ -10,7 +10,6 @@ import TeamSeasonSelector from "@/components/team-season-selector"
 import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, getTeamVenue, type SquadMember, type TeamFixture } from "@/lib/teams"
 import { resolvePlayerImageUrl } from "@/lib/player"
 import { getSeasons, getStages, getSeasonChampion, type Season } from "@/lib/seasons"
-import { getStandings, type StandingEntry } from "@/lib/standings"
 
 export const revalidate = 300
 
@@ -178,128 +177,6 @@ const TeamHeroDetails = ({ coach, venue }: TeamHeroMeta) => {
     </div>
   )
 }
-
-const SEASON_HISTORY_STAGE_ORDER = ["apertura", "clausura", "intermediate round"]
-const SEASON_HISTORY_COLUMN_TEMPLATE = "grid-cols-[48px_minmax(0,1fr)_42px_42px_36px_36px_36px_36px_56px_52px]"
-
-const TeamSeasonHistory = async ({ teamId, seasons }: { teamId: number; seasons: Season[] }) => {
-  const sortedSeasons = [...seasons].sort(
-    (firstSeason, secondSeason) => Number(secondSeason.name) - Number(firstSeason.name)
-  )
-
-  const standingsBySeason = await Promise.all(
-    sortedSeasons.map(async (season) => {
-      const entries = await getStandings({ seasonId: season.id, teamId }).catch(() => [] as StandingEntry[])
-      const filtered = entries.filter((entry) => SEASON_HISTORY_STAGE_ORDER.includes(entry.stage.name.toLowerCase()))
-      filtered.sort((first, second) => {
-        const firstIndex = SEASON_HISTORY_STAGE_ORDER.indexOf(first.stage.name.toLowerCase())
-        const secondIndex = SEASON_HISTORY_STAGE_ORDER.indexOf(second.stage.name.toLowerCase())
-        return firstIndex - secondIndex
-      })
-      return { season, entries: filtered }
-    })
-  )
-
-  const hasAnyData = standingsBySeason.some((row) => row.entries.length > 0)
-
-  if (!hasAnyData) {
-    return (
-      <div className="flex flex-col gap-3">
-        <h2 className="px-1 text-sm font-bold text-slate-700">Season history</h2>
-        <div className="flex h-24 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
-          No standings data available
-        </div>
-      </div>
-    )
-  }
-
-  const formatGoalDifference = (difference: number) =>
-    difference > 0 ? `+${difference}` : String(difference)
-
-  return (
-    <div className="flex flex-col gap-3">
-      <h2 className="px-1 text-sm font-bold text-slate-700">Season history</h2>
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-        <div className={`grid ${SEASON_HISTORY_COLUMN_TEMPLATE} items-center gap-2 border-b border-slate-100 bg-slate-50/60 px-4 py-2`}>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Season</span>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Stage</span>
-          <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">Pos</span>
-          <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">Pts</span>
-          <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">P</span>
-          <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">W</span>
-          <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">D</span>
-          <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">L</span>
-          <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">GF-GA</span>
-          <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-400">GD</span>
-        </div>
-        <div className="divide-y divide-slate-100">
-          {standingsBySeason.map(({ season, entries }) => {
-            if (entries.length === 0) {
-              return (
-                <div
-                  key={season.id}
-                  className={`grid ${SEASON_HISTORY_COLUMN_TEMPLATE} items-center gap-2 px-4 py-2.5`}
-                >
-                  <span className="text-xs font-bold text-slate-500">{season.name}</span>
-                  <span className="text-xs text-slate-400">No standings data</span>
-                  <span className="text-center text-xs text-slate-300">—</span>
-                  <span className="text-center text-xs text-slate-300">—</span>
-                  <span className="text-center text-xs text-slate-300">—</span>
-                  <span className="text-center text-xs text-slate-300">—</span>
-                  <span className="text-center text-xs text-slate-300">—</span>
-                  <span className="text-center text-xs text-slate-300">—</span>
-                  <span className="text-center text-xs text-slate-300">—</span>
-                  <span className="text-right text-xs text-slate-300">—</span>
-                </div>
-              )
-            }
-            return entries.map((entry, index) => (
-              <div
-                key={entry.id}
-                className={`grid ${SEASON_HISTORY_COLUMN_TEMPLATE} items-center gap-2 px-4 py-2.5`}
-              >
-                <span className="text-xs font-bold text-slate-500">
-                  {index === 0 ? season.name : ""}
-                </span>
-                <span className="truncate text-sm font-semibold text-slate-800">{entry.stage.name}</span>
-                <span className="text-center text-xs font-bold tabular-nums text-slate-900">{entry.position}</span>
-                <span className="text-center text-xs font-bold tabular-nums text-slate-900">{entry.points}</span>
-                <span className="text-center text-xs font-semibold tabular-nums text-slate-600">{entry.played}</span>
-                <span className="text-center text-xs font-semibold tabular-nums text-emerald-600">{entry.won}</span>
-                <span className="text-center text-xs font-semibold tabular-nums text-slate-500">{entry.draw}</span>
-                <span className="text-center text-xs font-semibold tabular-nums text-red-500">{entry.lost}</span>
-                <span className="text-center text-xs font-semibold tabular-nums text-slate-600">
-                  {entry.goalsFor}-{entry.goalsAgainst}
-                </span>
-                <span className={`text-right text-xs font-bold tabular-nums ${entry.goalDifference > 0 ? "text-emerald-600" : entry.goalDifference < 0 ? "text-red-500" : "text-slate-500"}`}>
-                  {formatGoalDifference(entry.goalDifference)}
-                </span>
-              </div>
-            ))
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const SeasonHistorySkeleton = () => (
-  <div className="flex flex-col gap-3">
-    <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
-    <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-      <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-2">
-        <div className="h-3 w-20 animate-pulse rounded bg-slate-200" />
-      </div>
-      {Array.from({ length: 4 }).map((_, index) => (
-        <div key={index} className={`flex items-center justify-between gap-4 px-4 py-3 ${index < 3 ? "border-b border-slate-100" : ""}`}>
-          <div className="h-3 w-10 animate-pulse rounded bg-slate-100" />
-          <div className="h-3 w-20 animate-pulse rounded bg-slate-100" />
-          <div className="h-3 w-40 animate-pulse rounded bg-slate-100" />
-        </div>
-      ))}
-    </div>
-  </div>
-)
 
 const ContentSkeleton = () => (
   <div className="grid gap-x-6 gap-y-3 lg:grid-cols-[1fr_340px]">
@@ -609,10 +486,6 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
           >
             <TeamContent teamId={teamId} selectedSeason={selectedSeason} />
           </SearchParamsLoadingBoundary>
-        </Suspense>
-
-        <Suspense fallback={<SeasonHistorySkeleton />}>
-          <TeamSeasonHistory teamId={teamId} seasons={seasons} />
         </Suspense>
 
       </div>

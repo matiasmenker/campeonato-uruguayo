@@ -371,30 +371,46 @@ const RecentForm = ({
   )
 }
 
-const CAREER_COLUMN_TEMPLATE = "grid-cols-[44px_minmax(0,1fr)_34px_34px_34px_52px_52px]"
+const careerColumnTemplate = (showSaves: boolean) =>
+  showSaves
+    ? "grid-cols-[64px_minmax(160px,1fr)_72px_72px_64px_72px_88px_64px_56px_64px_80px]"
+    : "grid-cols-[64px_minmax(160px,1fr)_72px_72px_64px_72px_88px_64px_56px_80px]"
 
-const CareerHistoryHeader = () => (
-  <div className={`grid ${CAREER_COLUMN_TEMPLATE} items-center gap-2 border-b border-slate-100 bg-slate-50/60 px-4 py-2`}>
-    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Season</span>
-    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Team</span>
-    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">M</span>
-    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">G</span>
-    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">A</span>
-    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">Min</span>
-    <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-400">Rating</span>
+const CareerHistoryHeader = ({ showSaves }: { showSaves: boolean }) => (
+  <div className={`grid ${careerColumnTemplate(showSaves)} items-center gap-2 border-b border-slate-100 bg-slate-50/60 px-4 py-2.5`}>
+    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Season</span>
+    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Team</span>
+    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Matches</span>
+    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Minutes</span>
+    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Goals</span>
+    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Assists</span>
+    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Goal contr.</span>
+    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Yellows</span>
+    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Reds</span>
+    {showSaves && (
+      <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-500">Saves</span>
+    )}
+    <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-500">Avg rating</span>
   </div>
 )
+
+const formatMinutes = (minutes: number | null) => {
+  if (minutes == null) return null
+  return new Intl.NumberFormat("en-GB").format(minutes)
+}
 
 const CareerHistoryRow = ({
   season,
   membership,
   isSelected,
   aggregates,
+  showSaves,
 }: {
   season: { id: number; name: string }
   membership: PlayerMembership | null
   isSelected: boolean
   aggregates: PlayerSeasonAggregates | null
+  showSaves: boolean
 }) => {
   const hasPlayed = aggregates !== null && aggregates.appearances > 0
   const appearances = hasPlayed ? aggregates.appearances : null
@@ -402,10 +418,20 @@ const CareerHistoryRow = ({
   const assists = hasPlayed ? aggregates.assists : null
   const minutes = hasPlayed ? aggregates.totalMinutes : null
   const avgRating = hasPlayed ? aggregates.avgRating : null
+  const yellows = hasPlayed ? aggregates.yellowCards : null
+  const reds = hasPlayed ? aggregates.redCards : null
+  const saves = hasPlayed ? aggregates.saves : null
+  const goalContributions = hasPlayed && goals != null && assists != null ? goals + assists : null
+
+  const numericCell = (value: number | null) => (
+    <span className="text-center text-xs font-semibold tabular-nums text-slate-800">
+      {value != null ? value : <span className="text-slate-300">—</span>}
+    </span>
+  )
 
   return (
-    <div className={`grid ${CAREER_COLUMN_TEMPLATE} items-center gap-2 px-4 py-2.5 ${isSelected ? "bg-slate-50" : ""}`}>
-      <span className="text-xs font-bold text-slate-500">{season.name}</span>
+    <div className={`grid ${careerColumnTemplate(showSaves)} items-center gap-2 px-4 py-3 ${isSelected ? "bg-slate-50" : ""}`}>
+      <span className="text-xs font-bold text-slate-600">{season.name}</span>
       {membership ? (
         <div className="flex items-center gap-2 min-w-0">
           {membership.team.imagePath ? (
@@ -428,23 +454,31 @@ const CareerHistoryRow = ({
       ) : (
         <span className="text-sm text-slate-400">No data</span>
       )}
-      <span className="text-center text-xs font-semibold tabular-nums text-slate-700">
-        {appearances ?? <span className="text-slate-300">—</span>}
+      {numericCell(appearances)}
+      <span className="text-center text-xs font-semibold tabular-nums text-slate-800">
+        {minutes != null ? formatMinutes(minutes) : <span className="text-slate-300">—</span>}
       </span>
-      <span className="text-center text-xs font-semibold tabular-nums text-slate-700">
-        {goals ?? <span className="text-slate-300">—</span>}
+      {numericCell(goals)}
+      {numericCell(assists)}
+      {numericCell(goalContributions)}
+      <span className="flex items-center justify-center gap-1">
+        {yellows != null && yellows > 0 && <YellowCard size={10} />}
+        <span className="text-xs font-semibold tabular-nums text-slate-800">
+          {yellows != null ? yellows : <span className="text-slate-300">—</span>}
+        </span>
       </span>
-      <span className="text-center text-xs font-semibold tabular-nums text-slate-700">
-        {assists ?? <span className="text-slate-300">—</span>}
+      <span className="flex items-center justify-center gap-1">
+        {reds != null && reds > 0 && <RedCard size={10} />}
+        <span className="text-xs font-semibold tabular-nums text-slate-800">
+          {reds != null ? reds : <span className="text-slate-300">—</span>}
+        </span>
       </span>
-      <span className="text-center text-xs font-semibold tabular-nums text-slate-700">
-        {minutes != null ? minutes : <span className="text-slate-300">—</span>}
-      </span>
+      {showSaves && numericCell(saves)}
       <div className="flex justify-end">
         {avgRating !== null ? (
           <span
-            className="inline-flex items-center justify-center rounded-md px-1.5 font-black tabular-nums text-xs text-white"
-            style={{ background: getRatingFill(avgRating), minWidth: 40, height: 20 }}
+            className="inline-flex items-center justify-center rounded-md px-2 font-black tabular-nums text-xs text-white"
+            style={{ background: getRatingFill(avgRating), minWidth: 48, height: 22 }}
           >
             {avgRating.toFixed(2)}
           </span>
@@ -578,6 +612,8 @@ const PlayerSeasonContent = async ({
     (firstSeason, secondSeason) => Number(secondSeason.name) - Number(firstSeason.name),
   )
   const membershipBySeasonId = new Map(memberships.map((membership) => [membership.season.id, membership]))
+  const careerShowSaves =
+    isGoalkeeper || Array.from(seasonAggregatesMap.values()).some((entry) => entry.saves > 0)
 
   const dobFormatted = formatDateOfBirth(player.dateOfBirth)
   const age = formatAge(player.dateOfBirth)
@@ -645,17 +681,19 @@ const PlayerSeasonContent = async ({
       <RecentForm ratingStats={ratingStats} fixtures={fixtures} teamId={teamId} />
 
       
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-
-        <div className="flex flex-col gap-3">
-          <h2 className="px-1 text-sm font-bold text-slate-700">Career history</h2>
-          {sortedAllSeasons.length === 0 ? (
-            <div className="flex h-24 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
-              No season data available
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-              <CareerHistoryHeader />
+      <div className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between px-1">
+          <h2 className="text-sm font-bold text-slate-700">Career history</h2>
+          <span className="text-[11px] text-slate-400">All competitions · {sortedAllSeasons.length} seasons</span>
+        </div>
+        {sortedAllSeasons.length === 0 ? (
+          <div className="flex h-24 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
+            No season data available
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+            <div className="min-w-[960px]">
+              <CareerHistoryHeader showSaves={careerShowSaves} />
               <div className="divide-y divide-slate-100">
                 {sortedAllSeasons.map((season) => (
                   <CareerHistoryRow
@@ -664,58 +702,58 @@ const PlayerSeasonContent = async ({
                     membership={membershipBySeasonId.get(season.id) ?? null}
                     isSelected={season.id === selectedSeasonId}
                     aggregates={seasonAggregatesMap.get(season.id) ?? null}
+                    showSaves={careerShowSaves}
                   />
                 ))}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
-        <div className="flex flex-col gap-3">
-          <h2 className="px-1 text-sm font-bold text-slate-700">Profile</h2>
-          <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm divide-y divide-slate-100">
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs font-semibold text-slate-500">Date of birth</span>
-              <span className="text-sm text-slate-800">
-                {dobFormatted
-                  ? <>{dobFormatted}{age && <span className="ml-1.5 text-slate-400">({age} yrs)</span>}</>
-                  : "—"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs font-semibold text-slate-500">Height</span>
-              <span className="text-sm text-slate-800">{player.height ? `${player.height} cm` : "—"}</span>
-            </div>
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs font-semibold text-slate-500">Weight</span>
-              <span className="text-sm text-slate-800">{player.weight ? `${player.weight} kg` : "—"}</span>
-            </div>
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs font-semibold text-slate-500">Nationality</span>
-              {player.country ? (
-                <div className="flex items-center gap-2">
-                  {player.country.imageUrl && (
-                    <img
-                      src={player.country.imageUrl}
-                      alt={player.country.name}
-                      className="h-[14px] w-[22px] rounded-[2px] object-cover ring-1 ring-black/10"
-                    />
-                  )}
-                  <span className="text-sm text-slate-800">{player.country.name}</span>
-                </div>
-              ) : (
-                <span className="text-sm text-slate-800">—</span>
-              )}
-            </div>
-            <div className="flex items-center justify-between px-4 py-3">
-              <span className="text-xs font-semibold text-slate-500">Shirt number</span>
-              <span className="text-sm font-bold text-slate-900">
-                {selectedMembership?.shirtNumber != null ? `#${selectedMembership.shirtNumber}` : "—"}
-              </span>
-            </div>
+      <div className="flex flex-col gap-3">
+        <h2 className="px-1 text-sm font-bold text-slate-700">Profile</h2>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm divide-y divide-slate-100 sm:grid-cols-3 lg:grid-cols-5 lg:divide-y-0 lg:divide-x">
+          <div className="flex flex-col gap-0.5 px-4 py-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Date of birth</span>
+            <span className="text-sm font-semibold text-slate-800">
+              {dobFormatted
+                ? <>{dobFormatted}{age && <span className="ml-1.5 font-normal text-slate-400">({age} yrs)</span>}</>
+                : "—"}
+            </span>
+          </div>
+          <div className="flex flex-col gap-0.5 px-4 py-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Height</span>
+            <span className="text-sm font-semibold text-slate-800">{player.height ? `${player.height} cm` : "—"}</span>
+          </div>
+          <div className="flex flex-col gap-0.5 px-4 py-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Weight</span>
+            <span className="text-sm font-semibold text-slate-800">{player.weight ? `${player.weight} kg` : "—"}</span>
+          </div>
+          <div className="flex flex-col gap-0.5 px-4 py-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Nationality</span>
+            {player.country ? (
+              <div className="flex items-center gap-2">
+                {player.country.imageUrl && (
+                  <img
+                    src={player.country.imageUrl}
+                    alt={player.country.name}
+                    className="h-[14px] w-[22px] rounded-[2px] object-cover ring-1 ring-black/10"
+                  />
+                )}
+                <span className="text-sm font-semibold text-slate-800">{player.country.name}</span>
+              </div>
+            ) : (
+              <span className="text-sm font-semibold text-slate-800">—</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-0.5 px-4 py-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Shirt number</span>
+            <span className="text-sm font-bold text-slate-900">
+              {selectedMembership?.shirtNumber != null ? `#${selectedMembership.shirtNumber}` : "—"}
+            </span>
           </div>
         </div>
-
       </div>
     </div>
   )
