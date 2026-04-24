@@ -1,7 +1,7 @@
 import React, { Suspense } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { IconArrowLeft, IconShieldFilled } from "@tabler/icons-react"
+import { IconArrowLeft, IconBallFootball, IconShieldFilled } from "@tabler/icons-react"
 import HeroTexture from "@/components/hero-texture"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import PlayerSeasonStageSelector from "@/components/player-season-stage-selector"
@@ -30,8 +30,6 @@ import {
 
 export const revalidate = 300
 
-// ─── Position badge (shared style) ───────────────────────────────────────────
-
 const POSITION_CONFIG: Record<number, { label: string; bg: string }> = {
   24: { label: "AR", bg: "#f59e0b" },
   25: { label: "DF", bg: "#3b82f6" },
@@ -57,8 +55,6 @@ const PositionCircle = ({ positionId, size = 20 }: { positionId: number | null; 
     </span>
   )
 }
-
-// ─── Stat card icons ──────────────────────────────────────────────────────────
 
 const ShirtIcon = ({ size = 20 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -111,14 +107,14 @@ const RedCard = ({ size = 16 }: { size?: number }) => (
 )
 
 const SavesIcon = ({ size = 20 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <circle cx="12" cy="12" r="12" fill="#6366f1" />
-    {/* glove shape */}
-    <path d="M8 7.5C8 6.67 8.67 6 9.5 6S11 6.67 11 7.5V11h1V8.5C12 7.67 12.67 7 13.5 7S15 7.67 15 8.5V11h.5c.83 0 1.5.67 1.5 1.5v2A4.5 4.5 0 0 1 12.5 19h-1A4.5 4.5 0 0 1 7 14.5V11H7.5C7.78 11 8 10.78 8 10.5V7.5Z" fill="#fff"/>
+    <g transform="translate(3.5 3.5) scale(0.7)" fill="#fff">
+      <path d="M20 20H10a2 2 0 0 0 0 4h10a2 2 0 0 0 0-4Z"/>
+      <path d="M22.88 4.53a2 2 0 0 0-1.65-2.1L9.35.29A2.19 2.19 0 0 0 9 .26a2 2 0 0 0-2 2v8.1L3.83 8.78a1.83 1.83 0 0 0-.71-.14 2 2 0 0 0-2 2v.11a2 2 0 0 0 .79 1.59L8 17.74h14Zm-2.76 11.21H8.75l-5.52-4.89-.06-.05v-.09l3 1.49L9 13.6V2.26l2.5.45V10h1V2.89l2 .36V10h1V3.43l2 .36V10h1V4l2.38.42Z"/>
+    </g>
   </svg>
 )
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const formatAge = (dateOfBirth: string | null): string | null => {
   if (!dateOfBirth) return null
@@ -136,8 +132,6 @@ const formatDate = (kickoffAt: string | null): string => {
     day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Montevideo",
   }).format(new Date(kickoffAt))
 }
-
-// ─── Stat cards ───────────────────────────────────────────────────────────────
 
 const StatCard = ({
   label,
@@ -186,8 +180,6 @@ const RatingStatCard = ({ avgRating, hasData }: { avgRating: number | null; hasD
   )
 }
 
-// ─── Recent form (match cards) ────────────────────────────────────────────────
-
 const getMatchResult = (
   fixture: PlayerFixture,
   teamId: number,
@@ -214,66 +206,122 @@ const RecentFormCard = ({
   if (rating === null) return null
 
   const isHome = fixture.homeTeam?.id === teamId
+  const ownTeam = isHome ? fixture.homeTeam : fixture.awayTeam
   const opponent = isHome ? fixture.awayTeam : fixture.homeTeam
   const result = getMatchResult(fixture, teamId)
   const ratingFill = getRatingFill(rating)
+  const isFinished = fixture.homeScore !== null && fixture.awayScore !== null
+  const ownScore = isHome ? fixture.homeScore : fixture.awayScore
+  const opponentScore = isHome ? fixture.awayScore : fixture.homeScore
 
   return (
     <Link
       href={`/matches/${fixture.id}`}
-      className="group flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-3 shadow-sm transition-all hover:border-slate-300 hover:shadow-md flex-1 min-w-0"
+      className="group flex flex-col gap-2 rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm transition-all hover:border-slate-300 hover:shadow-md flex-1 min-w-0"
     >
-      {/* Opponent logo */}
-      <img
-        src={resolvePlayerImageUrl(opponent?.imagePath ?? null)}
-        alt={opponent?.name ?? "—"}
-        className="h-10 w-10 object-contain shrink-0"
-      />
-
-      {/* Score + round + date */}
-      <div className="flex flex-col flex-1 min-w-0 gap-0.5">
-        {fixture.homeScore !== null && fixture.awayScore !== null ? (
-          <span className="text-sm font-black tabular-nums text-slate-900 leading-tight">
-            {fixture.homeScore} – {fixture.awayScore}
-          </span>
-        ) : (
-          <span className="text-xs font-medium text-slate-400">vs {opponent?.shortCode ?? "—"}</span>
-        )}
+      <div className="flex items-center justify-between gap-2">
         {fixture.round && (
           <span className="text-[10px] font-semibold text-slate-500 leading-none">
             Round {fixture.round.name}
           </span>
         )}
-        {result && (
-          <span
-            className="mt-0.5 inline-block w-fit rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none"
-            style={{ color: result.color, background: result.bg }}
-          >
-            {result.label}
-          </span>
-        )}
+        <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400 leading-none">
+          {isHome ? "Home" : "Away"}
+        </span>
       </div>
 
-      {/* Rating circle */}
-      <div
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-        style={{ background: ratingFill }}
-      >
-        <span className="text-xs font-black tabular-nums text-white leading-none">{rating.toFixed(1)}</span>
+      <div className="flex items-center gap-2">
+        <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+          <img
+            src={resolvePlayerImageUrl(ownTeam?.imagePath ?? null)}
+            alt={ownTeam?.name ?? "—"}
+            className="h-8 w-8 object-contain"
+          />
+          <span className="text-[10px] font-semibold text-slate-700 leading-tight text-center truncate w-full">
+            {ownTeam?.shortCode ?? ownTeam?.name ?? "—"}
+          </span>
+        </div>
+
+        <div className="flex flex-col items-center gap-1 shrink-0">
+          {isFinished ? (
+            <span className="text-base font-black tabular-nums text-slate-900 leading-none">
+              {ownScore}–{opponentScore}
+            </span>
+          ) : (
+            <span className="text-[10px] font-medium text-slate-400 leading-none">vs</span>
+          )}
+          {result && (
+            <span
+              className="inline-block rounded-full px-1.5 py-0.5 text-[9px] font-black leading-none"
+              style={{ color: result.color, background: result.bg }}
+            >
+              {result.label}
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+          <img
+            src={resolvePlayerImageUrl(opponent?.imagePath ?? null)}
+            alt={opponent?.name ?? "—"}
+            className="h-8 w-8 object-contain"
+          />
+          <span className="text-[10px] font-semibold text-slate-700 leading-tight text-center truncate w-full">
+            {opponent?.shortCode ?? opponent?.name ?? "—"}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center">
+        <div
+          className="flex items-center gap-1 rounded-full px-2 py-1"
+          style={{ background: ratingFill }}
+        >
+          <svg width={11} height={11} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3l2.472 6.218L21 9.764l-4.944 4.33L17.472 21 12 17.27 6.528 21l1.416-6.906L3 9.764l6.528-.546Z" fill="#fff" />
+          </svg>
+          <span className="text-sm font-black tabular-nums text-white leading-none">{rating.toFixed(1)}</span>
+        </div>
       </div>
     </Link>
   )
 }
 
-const RecentFormEmptySlot = () => (
-  <div className="flex items-center gap-3 rounded-xl border border-dashed border-slate-200 bg-white/40 px-3 py-3 flex-1 min-w-0">
-    <div className="h-10 w-10 shrink-0 rounded bg-slate-100" />
-    <div className="flex flex-col flex-1 gap-1.5">
-      <div className="h-3.5 w-10 rounded bg-slate-100" />
-      <div className="h-2.5 w-14 rounded bg-slate-100" />
-      <div className="h-2 w-6 rounded bg-slate-100" />
+const RecentFormSkeleton = () => (
+  <div className="flex flex-col gap-2 rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm flex-1 min-w-0">
+    <div className="flex items-center justify-between">
+      <div className="h-2.5 w-12 animate-pulse rounded bg-slate-100" />
+      <div className="h-2 w-8 animate-pulse rounded bg-slate-100" />
     </div>
-    <div className="h-9 w-9 shrink-0 rounded-full bg-slate-100" />
+    <div className="flex items-center gap-2">
+      <div className="flex flex-col items-center gap-1 flex-1">
+        <div className="h-8 w-8 animate-pulse rounded-full bg-slate-100" />
+        <div className="h-2.5 w-10 animate-pulse rounded bg-slate-100" />
+      </div>
+      <div className="flex flex-col items-center gap-1">
+        <div className="h-4 w-10 animate-pulse rounded bg-slate-100" />
+        <div className="h-2.5 w-5 animate-pulse rounded bg-slate-100" />
+      </div>
+      <div className="flex flex-col items-center gap-1 flex-1">
+        <div className="h-8 w-8 animate-pulse rounded-full bg-slate-100" />
+        <div className="h-2.5 w-10 animate-pulse rounded bg-slate-100" />
+      </div>
+    </div>
+    <div className="flex items-center justify-center">
+      <div className="h-6 w-16 animate-pulse rounded-full bg-slate-100" />
+    </div>
+  </div>
+)
+
+const RecentFormEmptyState = () => (
+  <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white/60 px-6 py-10 text-center">
+    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+      <IconBallFootball size={20} className="text-slate-300" />
+    </div>
+    <p className="text-sm font-semibold text-slate-600">No recent matches</p>
+    <p className="max-w-xs text-xs text-slate-400">
+      There are no rated appearances recorded for this season yet.
+    </p>
   </div>
 )
 
@@ -293,34 +341,35 @@ const RecentForm = ({
   const last5 = teamId
     ? [...ratingStats]
         .filter((stat) => typeof stat.value.normalizedValue === "number")
-        .sort((statA, statB) => statB.fixtureId - statA.fixtureId)
+        .map((stat) => ({ stat, fixture: fixtureMap.get(stat.fixtureId) ?? null }))
+        .filter((slot): slot is { stat: PlayerStatEntry; fixture: PlayerFixture } => slot.fixture !== null)
+        .sort((slotA, slotB) => {
+          const kickoffA = slotA.fixture.kickoffAt ? new Date(slotA.fixture.kickoffAt).getTime() : 0
+          const kickoffB = slotB.fixture.kickoffAt ? new Date(slotB.fixture.kickoffAt).getTime() : 0
+          if (kickoffA !== kickoffB) return kickoffB - kickoffA
+          return slotB.stat.fixtureId - slotA.stat.fixtureId
+        })
         .slice(0, RECENT_FORM_SLOTS)
     : []
-
-  const slots = Array.from({ length: RECENT_FORM_SLOTS }, (_, index) => last5[index] ?? null)
-  const hasAnyData = last5.length > 0
 
   return (
     <div className="flex flex-col gap-3">
       <h2 className="px-1 text-sm font-bold text-slate-700">Last matches</h2>
-      <div className="flex gap-2">
-        {slots.map((stat, index) => {
-          if (!stat || !teamId) return <RecentFormEmptySlot key={index} />
-          const fixtureData = fixtureMap.get(stat.fixtureId)
-          if (!fixtureData) return <RecentFormEmptySlot key={index} />
-          return (
-            <RecentFormCard key={stat.id} stat={stat} fixture={fixtureData} teamId={teamId} />
-          )
-        })}
-      </div>
-      {!hasAnyData && (
-        <p className="text-center text-[10px] text-slate-400">No match data available for this season</p>
+      {last5.length === 0 ? (
+        <RecentFormEmptyState />
+      ) : (
+        <div className="flex gap-2">
+          {last5.map(({ stat, fixture }) => (
+            <RecentFormCard key={stat.id} stat={stat} fixture={fixture} teamId={teamId!} />
+          ))}
+          {Array.from({ length: Math.max(0, RECENT_FORM_SLOTS - last5.length) }).map((_, index) => (
+            <div key={`filler-${index}`} className="flex-1 min-w-0" />
+          ))}
+        </div>
       )}
     </div>
   )
 }
-
-// ─── Season history row ───────────────────────────────────────────────────────
 
 const SeasonHistoryRow = ({
   season,
@@ -374,8 +423,6 @@ const SeasonHistoryRow = ({
   </div>
 )
 
-// ─── Content skeleton ─────────────────────────────────────────────────────────
-
 const ContentSkeleton = () => (
   <div className="flex flex-col gap-6">
     <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
@@ -390,15 +437,13 @@ const ContentSkeleton = () => (
         </div>
       ))}
     </div>
-    <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
-    <div className="flex gap-3 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4">
-      {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="flex shrink-0 flex-col items-center gap-2" style={{ width: 80 }}>
-          <div className="h-8 w-8 animate-pulse rounded-full bg-slate-100" />
-          <div className="h-3 w-14 animate-pulse rounded bg-slate-100" />
-          <div className="h-8 w-full animate-pulse rounded-lg bg-slate-100" />
-        </div>
-      ))}
+    <div className="flex flex-col gap-3">
+      <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+      <div className="flex gap-2">
+        {Array.from({ length: RECENT_FORM_SLOTS }).map((_, index) => (
+          <RecentFormSkeleton key={index} />
+        ))}
+      </div>
     </div>
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
       <div className="flex flex-col gap-3">
@@ -431,8 +476,6 @@ const ContentSkeleton = () => (
   </div>
 )
 
-// ─── Season + stage content ───────────────────────────────────────────────────
-
 const PlayerSeasonContent = async ({
   player,
   memberships,
@@ -450,7 +493,6 @@ const PlayerSeasonContent = async ({
     memberships.find((membership) => membership.season.id === selectedSeasonId) ?? null
 
   const teamId = selectedMembership?.team.id ?? null
-  // Fall back through all available position sources — positionId can be null in some DB records
   const resolvedPositionId =
     selectedMembership?.positionId ??
     player.positionId ??
@@ -466,7 +508,6 @@ const PlayerSeasonContent = async ({
     teamId
       ? getPlayerTeamFixtures(teamId, selectedSeasonId, selectedStageId ?? undefined).catch(() => [])
       : Promise.resolve([]),
-    // Always fetch saves — returns empty for non-GKs, data-quality fallback when positionId is missing
     getPlayerStatsByType(player.id, STAT_TYPE_SAVES, selectedSeasonId, selectedStageId ?? undefined).catch(() => []),
   ])
 
@@ -475,10 +516,8 @@ const PlayerSeasonContent = async ({
   )
 
   const hasAppearances = aggregates.appearances > 0
-  // Show saves card when player is a GK or has actual saves data (catches missing positionId edge cases)
   const showSavesCard = isGoalkeeper || aggregates.saves > 0
 
-  // Fetch season-level (all stages) avg ratings for each membership to show in history
   const membershipRatingResults = await Promise.allSettled(
     memberships.map((membership) =>
       getPlayerStatsByType(player.id, STAT_TYPE_RATING, membership.season.id)
@@ -500,7 +539,6 @@ const PlayerSeasonContent = async ({
     }
   })
 
-  // All seasons sorted descending — always show every season even if no membership
   const sortedAllSeasons = [...allSeasons].sort(
     (firstSeason, secondSeason) => Number(secondSeason.name) - Number(firstSeason.name),
   )
@@ -512,7 +550,7 @@ const PlayerSeasonContent = async ({
   return (
     <div className="flex flex-col gap-6">
 
-      {/* ── Stat cards — rating first ── */}
+      
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
         <RatingStatCard avgRating={aggregates.avgRating} hasData={hasAppearances} />
         <StatCard
@@ -568,10 +606,10 @@ const PlayerSeasonContent = async ({
         </div>
       )}
 
-      {/* ── Recent form — always 5 fixed slots ── */}
+      
       <RecentForm ratingStats={ratingStats} fixtures={fixtures} teamId={teamId} />
 
-      {/* ── Two-column: Season history + Profile ── */}
+      
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
 
         <div className="flex flex-col gap-3">
@@ -645,8 +683,6 @@ const PlayerSeasonContent = async ({
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 interface PlayerPageProps {
   params: Promise<{ id: string }>
   searchParams: Promise<{ seasonId?: string; stageId?: string }>
@@ -696,13 +732,11 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
     defaultMembership ??
     null
 
-  // Fetch and filter stages to Apertura/Clausura only
   const allStages: Stage[] = selectedSeasonId
     ? await getStages(selectedSeasonId).catch(() => [])
     : []
   const stages = filterMainStages(allStages)
 
-  // Default to the current/active stage; never leave it unset when stages exist.
   const defaultStage = stages.find((stage) => stage.isCurrent) ?? stages[stages.length - 1] ?? null
   const requestedStageId = stageIdParam ? Number(stageIdParam) : null
   const hasRequestedStage =
@@ -727,15 +761,13 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
   }
 
   const committedParams: Record<string, string> = { seasonId: String(selectedSeasonId) }
-  // Only include stageId in committedParams when it was explicitly navigated to via URL.
-  // This prevents the loading boundary from getting stuck when stage is defaulted server-side.
   if (hasRequestedStage && selectedStageId !== null) committedParams.stageId = String(selectedStageId)
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 sm:px-8 lg:px-10">
 
-        {/* ── Hero ── */}
+        
         <div className="overflow-hidden rounded-2xl shadow-lg">
           <div className="relative min-h-56 bg-slate-900">
             <HeroTexture />
@@ -810,7 +842,7 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
           </div>
         </div>
 
-        {/* ── Season + stage content ── */}
+        
         <Suspense fallback={<ContentSkeleton />}>
           <SearchParamsLoadingBoundary
             committedParams={committedParams}
