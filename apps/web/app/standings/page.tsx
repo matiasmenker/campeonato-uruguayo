@@ -18,16 +18,13 @@ import { StandingsSeasonFilter, StandingsStageFilter } from "@/components/standi
 import { getLeaders, type LeadersContract } from "@/lib/metrics"
 import { getStandings, type StandingEntry } from "@/lib/standings"
 import { getSeasons, getStages, getSeasonChampion, type Season, type Stage, type SeasonChampion } from "@/lib/seasons"
+import { groupStages, getStageGroupById } from "@/lib/stage-groups"
 
 export const revalidate = 300
 
 const RELEGATION_ZONE_SIZE = 3
-const MAIN_STAGE_NAMES = ["apertura", "clausura", "intermediate round"]
 const CHAMPIONSHIP_FINALS_NAME = "championship - finals"
 const INTERMEDIATE_ROUND_FINAL_NAME = "intermediate round - final"
-
-const isMainStage = (stageName: string) =>
-  MAIN_STAGE_NAMES.some((name) => stageName.toLowerCase() === name)
 
 const PositionIndicator = ({ position, total }: { position: number; total: number }) => {
   const isRelegation = position > total - RELEGATION_ZONE_SIZE
@@ -448,10 +445,22 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
   const selectedSeasonId = seasonIdParam ? Number(seasonIdParam) : (currentSeason?.id ?? 1)
   const selectedSeason = seasons.find((season) => season.id === selectedSeasonId)
 
-  const visibleStages = stages.filter((stage) => isMainStage(stage.name))
-  const currentStage = visibleStages.find((stage) => stage.isCurrent) ?? visibleStages[0]
-  const selectedStageId = stageIdParam ? Number(stageIdParam) : (currentStage?.id ?? null)
+  const stageGroups = groupStages(stages)
+  const availableGroups = stageGroups.filter((group) => group.primaryStageId !== null)
+  const currentGroup = availableGroups.find((group) => group.isCurrent) ?? availableGroups[0] ?? null
+  const requestedStageId = stageIdParam ? Number(stageIdParam) : null
+  const requestedGroup = requestedStageId !== null ? getStageGroupById(stages, requestedStageId) : null
+  const hasRequestedGroup = requestedGroup !== null && availableGroups.some((group) => group.group === requestedGroup)
+  const resolvedGroup = hasRequestedGroup
+    ? availableGroups.find((group) => group.group === requestedGroup) ?? null
+    : currentGroup
+  const selectedStageId: number | null = resolvedGroup?.primaryStageId ?? null
   const selectedStage = stages.find((stage) => stage.id === selectedStageId)
+  const stageGroupOptions = availableGroups.map((group) => ({
+    id: group.primaryStageId as number,
+    name: group.label,
+  }))
+  const selectedGroupLabel = resolvedGroup ? resolvedGroup.label : null
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
@@ -470,21 +479,21 @@ const StandingsPage = async ({ searchParams }: StandingsPageProps) => {
                 <div className="flex flex-col gap-0.5">
                   <h1 className="text-3xl font-black text-white leading-none drop-shadow">Standings</h1>
                   <p className="text-sm text-white/65">
-                    {selectedStage?.name ?? "First Division"}{selectedSeason && ` ${selectedSeason.name}`}
+                    {selectedGroupLabel ?? "First Division"}{selectedSeason && ` ${selectedSeason.name}`}
                   </p>
                 </div>
               </div>
 
-              {(seasons.length > 0 || visibleStages.length > 0) && (
+              {(seasons.length > 0 || stageGroupOptions.length > 0) && (
                 <div className="flex shrink-0 items-center gap-2">
                   {seasons.length > 0 && (
                     <Suspense>
                       <StandingsSeasonFilter seasons={seasons} selectedSeasonId={selectedSeasonId} />
                     </Suspense>
                   )}
-                  {visibleStages.length > 0 && (
+                  {stageGroupOptions.length > 0 && (
                     <Suspense>
-                      <StandingsStageFilter stages={visibleStages} selectedStageId={selectedStageId} />
+                      <StandingsStageFilter stages={stageGroupOptions} selectedStageId={selectedStageId} />
                     </Suspense>
                   )}
                 </div>

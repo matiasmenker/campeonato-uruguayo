@@ -10,11 +10,19 @@ import MatchCard from "@/components/match-card"
 import { getMatchStatus } from "@/components/match-card"
 import type { FixtureListItem } from "@/lib/matches"
 import type { Season } from "@/lib/seasons"
+import { getStageGroup, STAGE_GROUP_LABELS, STAGE_GROUP_ORDER, type StageGroup } from "@/lib/stage-groups"
 
 
 interface StageSummary {
   id: number
   name: string
+  isCurrent: boolean
+}
+
+interface StageGroupOption {
+  group: StageGroup
+  label: string
+  stageIds: number[]
   isCurrent: boolean
 }
 
@@ -231,25 +239,44 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
     }
   }, [currentSeasonId])
 
-  const stages = useMemo<StageSummary[]>(() => {
-    const stageMap   = new Map<number, StageSummary>()
-    const roundCount = new Map<number, number>()
+  const stageGroupOptions = useMemo<StageGroupOption[]>(() => {
+    const buckets = new Map<StageGroup, { stageIds: Set<number>; isCurrent: boolean }>()
     for (const fixture of currentFixtures) {
       if (!fixture.stage) continue
-      if (!stageMap.has(fixture.stage.id)) stageMap.set(fixture.stage.id, fixture.stage)
-      if (fixture.round) roundCount.set(fixture.stage.id, (roundCount.get(fixture.stage.id) ?? 0) + 1)
+      const group = getStageGroup(fixture.stage.name)
+      if (!group) continue
+      const existing = buckets.get(group) ?? { stageIds: new Set<number>(), isCurrent: false }
+      existing.stageIds.add(fixture.stage.id)
+      if (fixture.stage.isCurrent) existing.isCurrent = true
+      buckets.set(group, existing)
     }
-    return Array.from(stageMap.values())
-      .filter(stage => (roundCount.get(stage.id) ?? 0) >= 5)
-      .sort((a, b) => a.id - b.id)
+    return STAGE_GROUP_ORDER
+      .filter((group) => buckets.has(group))
+      .map((group) => ({
+        group,
+        label: STAGE_GROUP_LABELS[group],
+        stageIds: Array.from(buckets.get(group)!.stageIds),
+        isCurrent: buckets.get(group)!.isCurrent,
+      }))
   }, [currentFixtures])
 
-  const defaultStageId   = stages.find(s => s.isCurrent)?.id ?? stages[0]?.id ?? null
-  const effectiveStageId = stages.some(s => s.id === selectedStageId) ? selectedStageId : defaultStageId
+  const effectiveGroup =
+    stageGroupOptions.find((option) => option.stageIds.includes(selectedStageId ?? -1)) ??
+    stageGroupOptions.find((option) => option.isCurrent) ??
+    stageGroupOptions[0] ??
+    null
+  const effectiveStageId = effectiveGroup?.stageIds[0] ?? null
+  const effectiveGroupStageIdSet = useMemo(
+    () => new Set(effectiveGroup?.stageIds ?? []),
+    [effectiveGroup]
+  )
 
   const stageFixtures = useMemo(
-    () => effectiveStageId ? currentFixtures.filter(f => f.stage?.id === effectiveStageId) : currentFixtures,
-    [currentFixtures, effectiveStageId]
+    () =>
+      effectiveGroup
+        ? currentFixtures.filter((fixture) => fixture.stage && effectiveGroupStageIdSet.has(fixture.stage.id))
+        : currentFixtures,
+    [currentFixtures, effectiveGroup, effectiveGroupStageIdSet]
   )
 
   const roundGroups = useMemo(() => buildRoundGroups(stageFixtures), [stageFixtures])
@@ -264,11 +291,11 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
 
   const activeGroup = roundGroups.find(g => g.round.id === effectiveRoundId) ?? null
 
-  const handleStageChange = (stageId: number) => {
-    setSelectedStageId(stageId)
+  const handleGroupChange = (groupStageId: number) => {
+    setSelectedStageId(groupStageId)
     setSelectedRoundId(null)
     if (currentSeasonId !== null) {
-      storageSet(stageKey(currentSeasonId), stageId)
+      storageSet(stageKey(currentSeasonId), groupStageId)
       storageDel(roundKey(currentSeasonId))
     }
   }
@@ -281,10 +308,13 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
   }
 
   const showSeasonSelector = seasons.length > 1
-  const showStageSelector  = stages.length >= 1
+  const showStageSelector  = stageGroupOptions.length >= 1
 
   const selectedSeason = seasons.find(s => s.id === currentSeasonId) ?? null
-  const effectiveStage = stages.find(s => s.id === effectiveStageId) ?? null
+  const stageSelectOptions = stageGroupOptions.map((option) => ({
+    id: option.stageIds[0],
+    name: option.label,
+  }))
 
   return (
     <div className="flex flex-col gap-6">
@@ -302,7 +332,7 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
               <div className="flex flex-col gap-0.5">
                 <h1 className="text-3xl font-black text-white leading-none drop-shadow">Matches</h1>
                 <p className="text-sm text-white/65">
-                  {effectiveStage?.name ?? "First Division"}
+                  {effectiveGroup?.label ?? "First Division"}
                   {selectedSeason && ` ${selectedSeason.name}`}
                 </p>
               </div>
@@ -322,8 +352,8 @@ const MatchesBrowser = ({ seasons, initialSeasonId, initialFixtures }: MatchesBr
                 {showStageSelector && (
                   <HeroSelect
                     value={String(effectiveStageId ?? "")}
-                    onValueChange={value => handleStageChange(Number(value))}
-                    options={stages}
+                    onValueChange={value => handleGroupChange(Number(value))}
+                    options={stageSelectOptions}
                     isLoading={isFetching}
                     openUp
                   />

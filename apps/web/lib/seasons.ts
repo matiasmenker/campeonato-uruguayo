@@ -67,7 +67,7 @@ export const getStages = async (seasonId?: number): Promise<Stage[]> => {
 }
 
 export const filterMainStages = (stages: Stage[]): Stage[] =>
-  stages.filter((stage) => /apertura|clausura/i.test(stage.name))
+  stages.filter((stage) => /^(apertura|clausura|intermediate round(\s*-\s*final)?)$/i.test(stage.name.trim()))
 
 export const getSeasonChampion = async (championshipFinalsStageId: number): Promise<SeasonChampion | null> => {
   const response = await apiFetch<ListResponse<ChampionshipFixture>>(

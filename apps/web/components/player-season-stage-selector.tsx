@@ -3,20 +3,21 @@
 import { useRouter, useSearchParams } from "next/navigation"
 import HeroSelect from "@/components/hero-select"
 import { signalNavigationStart, useIsNavigating } from "@/components/search-params-loading-boundary"
-import type { Season, Stage } from "@/lib/seasons"
+import type { Season } from "@/lib/seasons"
+import type { GroupedStages } from "@/lib/stage-groups"
 
 interface PlayerSeasonStageSelectorProps {
   seasons: Season[]
-  stages: Stage[]
+  stageGroups: GroupedStages[]
   selectedSeasonId: number
-  selectedStageId: number | null
+  selectedGroupStageId: number | null
 }
 
 const PlayerSeasonStageSelector = ({
   seasons,
-  stages,
+  stageGroups,
   selectedSeasonId,
-  selectedStageId,
+  selectedGroupStageId,
 }: PlayerSeasonStageSelectorProps) => {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -37,13 +38,20 @@ const PlayerSeasonStageSelector = ({
     router.push(`?${params.toString()}`)
   }
 
+  const availableGroups = stageGroups.filter((group) => group.primaryStageId !== null)
+  const stageOptions = availableGroups.map((group) => ({
+    id: group.primaryStageId as number,
+    name: group.label,
+  }))
+  const fallbackStageId = availableGroups[0]?.primaryStageId ?? null
+
   return (
     <div className="flex items-center gap-2">
-      {stages.length > 1 && (
+      {stageOptions.length > 1 && (
         <HeroSelect
-          value={selectedStageId !== null ? String(selectedStageId) : String(stages[0]?.id ?? "")}
+          value={selectedGroupStageId !== null ? String(selectedGroupStageId) : fallbackStageId !== null ? String(fallbackStageId) : ""}
           onValueChange={handleStageChange}
-          options={stages}
+          options={stageOptions}
           isLoading={isNavigating}
           openUp
         />

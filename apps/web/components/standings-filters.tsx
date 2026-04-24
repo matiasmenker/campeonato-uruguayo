@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation"
 import HeroSelect from "@/components/hero-select"
 import { signalNavigationStart, useIsNavigating } from "@/components/search-params-loading-boundary"
-import type { Season, Stage } from "@/lib/seasons"
+import type { Season } from "@/lib/seasons"
 
 const useStandingsNav = () => {
   const router = useRouter()
@@ -41,7 +41,7 @@ export const StandingsSeasonFilter = ({ seasons, selectedSeasonId }: StandingsSe
 }
 
 interface StandingsStageFilterProps {
-  stages: Stage[]
+  stages: Array<{ id: number; name: string }>
   selectedStageId: number | null
 }
 

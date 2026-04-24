@@ -10,6 +10,7 @@ import TeamSeasonSelector from "@/components/team-season-selector"
 import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, getTeamVenue, type SquadMember, type TeamFixture } from "@/lib/teams"
 import { resolvePlayerImageUrl } from "@/lib/player"
 import { getSeasons, getStages, getSeasonChampion, type Season } from "@/lib/seasons"
+import { getStageGroup } from "@/lib/stage-groups"
 
 export const revalidate = 300
 
@@ -249,11 +250,12 @@ const TeamContent = async ({
 }) => {
   const [squadResult, fixturesResult] = await Promise.allSettled([
     getTeamSquad(teamId, selectedSeason.id),
-    getTeamFixtures(teamId, selectedSeason.id, 15),
+    getTeamFixtures(teamId, selectedSeason.id, 30),
   ])
 
   const squad = squadResult.status === "fulfilled" ? squadResult.value : []
-  const allFixtures = fixturesResult.status === "fulfilled" ? fixturesResult.value : []
+  const rawFixtures = fixturesResult.status === "fulfilled" ? fixturesResult.value : []
+  const allFixtures = rawFixtures.filter((fixture) => fixture.stage && getStageGroup(fixture.stage.name) !== null)
 
   const recentFixtures = allFixtures
     .filter((fixture) => fixture.homeScore !== null && fixture.awayScore !== null)

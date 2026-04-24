@@ -4,7 +4,8 @@ import { IconRun, IconShieldFilled } from "@tabler/icons-react"
 import HeroTexture from "@/components/hero-texture"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import PlayerSeasonStageSelector from "@/components/player-season-stage-selector"
-import { getSeasons, getStages, filterMainStages } from "@/lib/seasons"
+import { getSeasons, getStages } from "@/lib/seasons"
+import { groupStages, getStageGroupById } from "@/lib/stage-groups"
 import { getLeaders, type LeaderEntry } from "@/lib/metrics"
 import { getRatingColors, getRatingFill } from "@/lib/rating"
 import { resolvePlayerImageUrl } from "@/lib/player"
@@ -325,17 +326,22 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
   }
 
   const allStages = await getStages(selectedSeason.id).catch(() => [])
-  const stages = filterMainStages(allStages)
-  const defaultStage = stages.find((stage) => stage.isCurrent) ?? stages[stages.length - 1] ?? null
+  const stageGroups = groupStages(allStages)
+  const availableGroups = stageGroups.filter((group) => group.primaryStageId !== null)
+  const currentGroup = availableGroups.find((group) => group.isCurrent) ?? availableGroups[availableGroups.length - 1] ?? null
+  const defaultGroupStageId = currentGroup?.primaryStageId ?? null
+
   const requestedStageId = stageIdParam ? Number(stageIdParam) : null
-  const hasRequestedStage = requestedStageId !== null && stages.some((stage) => stage.id === requestedStageId)
-  const selectedStageId: number | null = stages.length > 0
-    ? (hasRequestedStage ? requestedStageId! : (defaultStage?.id ?? null))
-    : null
-  const selectedStage = stages.find((stage) => stage.id === selectedStageId) ?? defaultStage
+  const requestedGroup = requestedStageId !== null ? getStageGroupById(allStages, requestedStageId) : null
+  const hasRequestedGroup = requestedGroup !== null && availableGroups.some((group) => group.group === requestedGroup)
+  const resolvedGroup = hasRequestedGroup
+    ? availableGroups.find((group) => group.group === requestedGroup) ?? null
+    : currentGroup
+  const selectedStageId: number | null = resolvedGroup?.primaryStageId ?? defaultGroupStageId
+  const selectedGroupLabel = resolvedGroup ? resolvedGroup.label : null
 
   const committedParams: Record<string, string> = { seasonId: String(selectedSeason.id) }
-  if (hasRequestedStage && selectedStageId !== null) committedParams.stageId = String(selectedStageId)
+  if (hasRequestedGroup && selectedStageId !== null) committedParams.stageId = String(selectedStageId)
 
   return (
     <main className="min-h-svh bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
@@ -353,16 +359,16 @@ const PlayersPage = async ({ searchParams }: PlayersPageProps) => {
                 <div className="flex flex-col gap-0.5">
                   <h1 className="text-3xl font-black text-white drop-shadow leading-none">Players</h1>
                   <p className="text-sm text-white/60">
-                    {selectedStage?.name ?? selectedSeason.name} {selectedStage ? selectedSeason.name : ""}
+                    {selectedGroupLabel ?? "First Division"} {selectedSeason.name}
                   </p>
                 </div>
               </div>
               <Suspense>
                 <PlayerSeasonStageSelector
                   seasons={sortedSeasons}
-                  stages={stages}
+                  stageGroups={stageGroups}
                   selectedSeasonId={selectedSeason.id}
-                  selectedStageId={selectedStageId}
+                  selectedGroupStageId={selectedStageId}
                 />
               </Suspense>
             </div>

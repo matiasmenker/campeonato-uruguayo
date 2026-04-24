@@ -25,6 +25,7 @@ import {
   getDashboardOverview,
   type DashboardOverview,
 } from "@/lib/dashboard"
+import { getStageGroup, STAGE_GROUP_LABELS } from "@/lib/stage-groups"
 import {
   getLeaders,
   type LeaderEntry,
@@ -155,6 +156,8 @@ const HomePage = async () => {
 
   const topRatedPlayers = leaders?.topRated.leaders ?? []
   const topScorers = seasonLeaders?.topScorers.leaders ?? []
+  const currentStageGroup = overview?.currentStage?.name ? getStageGroup(overview.currentStage.name) : null
+  const currentStageLabel = currentStageGroup ? STAGE_GROUP_LABELS[currentStageGroup] : overview?.currentStage?.name ?? "Apertura"
 
   return (
     <main className="bg-[linear-gradient(180deg,#f8fafc_0%,#f8fafc_48%,#eef2f7_100%)]">
@@ -176,7 +179,7 @@ const HomePage = async () => {
           <SectionTitle
             icon={IconBallFootball}
             title="Matches"
-            badge={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""} · Round ${overview?.currentRound?.name ?? "—"}`}
+            badge={`${currentStageLabel} ${overview?.season?.name ?? ""} · Round ${overview?.currentRound?.name ?? "—"}`}
           />
           <MatchesCarousel
             matches={overview?.recentResults ?? []}
@@ -231,7 +234,7 @@ const HomePage = async () => {
               <SectionTitle
                 icon={IconTrophy}
                 title="Standings"
-                description={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""}`}
+                description={`${currentStageLabel} ${overview?.season?.name ?? ""}`}
               />
               <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm [&_td]:py-2.5 [&_th]:py-2">
                 <Table>
@@ -297,7 +300,7 @@ const HomePage = async () => {
               <SectionTitle
                 icon={IconBallFootball}
                 title="Top Scorers"
-                description={`${overview?.currentStage?.name ?? "Apertura"} ${overview?.season?.name ?? ""}`}
+                description={`${currentStageLabel} ${overview?.season?.name ?? ""}`}
               />
               {topScorers.length > 0 ? (
                 <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">

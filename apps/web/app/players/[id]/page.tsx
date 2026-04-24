@@ -6,6 +6,7 @@ import HeroTexture from "@/components/hero-texture"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import PlayerSeasonStageSelector from "@/components/player-season-stage-selector"
 import { getSeasons, getStages, filterMainStages, type Season, type Stage } from "@/lib/seasons"
+import { groupStages, getStageGroupById } from "@/lib/stage-groups"
 import { resolvePlayerImageUrl } from "@/lib/player"
 import { getRatingColors, getRatingFill } from "@/lib/rating"
 import {
@@ -543,13 +544,13 @@ const PlayerSeasonContent = async ({
   memberships,
   allSeasons,
   selectedSeasonId,
-  selectedStageId,
+  selectedGroupStageIds,
 }: {
   player: PlayerDetail
   memberships: PlayerMembership[]
   allSeasons: import("@/lib/seasons").Season[]
   selectedSeasonId: number
-  selectedStageId: number | null
+  selectedGroupStageIds: number[]
 }) => {
   const selectedMembership =
     memberships.find((membership) => membership.season.id === selectedSeasonId) ?? null
@@ -562,16 +563,27 @@ const PlayerSeasonContent = async ({
     null
   const isGoalkeeper = resolvedPositionId === 24
 
-  const [ratingStats, minuteStats, assistStats, events, fixtures, saveStats] = await Promise.all([
-    getPlayerStatsByType(player.id, STAT_TYPE_RATING, selectedSeasonId, selectedStageId ?? undefined).catch(() => []),
-    getPlayerStatsByType(player.id, STAT_TYPE_MINUTES, selectedSeasonId, selectedStageId ?? undefined).catch(() => []),
-    getPlayerStatsByType(player.id, STAT_TYPE_ASSISTS, selectedSeasonId, selectedStageId ?? undefined).catch(() => []),
-    getPlayerSeasonEvents(player.id, selectedSeasonId, selectedStageId ?? undefined).catch(() => []),
-    teamId
-      ? getPlayerTeamFixtures(teamId, selectedSeasonId, selectedStageId ?? undefined).catch(() => [])
-      : Promise.resolve([]),
-    getPlayerStatsByType(player.id, STAT_TYPE_SAVES, selectedSeasonId, selectedStageId ?? undefined).catch(() => []),
-  ])
+  const stageIdsToFetch = selectedGroupStageIds.length > 0 ? selectedGroupStageIds : [undefined]
+  const perStagePayloads = await Promise.all(
+    stageIdsToFetch.map((stageId) =>
+      Promise.all([
+        getPlayerStatsByType(player.id, STAT_TYPE_RATING, selectedSeasonId, stageId ?? undefined).catch(() => []),
+        getPlayerStatsByType(player.id, STAT_TYPE_MINUTES, selectedSeasonId, stageId ?? undefined).catch(() => []),
+        getPlayerStatsByType(player.id, STAT_TYPE_ASSISTS, selectedSeasonId, stageId ?? undefined).catch(() => []),
+        getPlayerSeasonEvents(player.id, selectedSeasonId, stageId ?? undefined).catch(() => []),
+        teamId
+          ? getPlayerTeamFixtures(teamId, selectedSeasonId, stageId ?? undefined).catch(() => [])
+          : Promise.resolve([]),
+        getPlayerStatsByType(player.id, STAT_TYPE_SAVES, selectedSeasonId, stageId ?? undefined).catch(() => []),
+      ])
+    )
+  )
+  const ratingStats = perStagePayloads.flatMap((payload) => payload[0])
+  const minuteStats = perStagePayloads.flatMap((payload) => payload[1])
+  const assistStats = perStagePayloads.flatMap((payload) => payload[2])
+  const events = perStagePayloads.flatMap((payload) => payload[3])
+  const fixtures = perStagePayloads.flatMap((payload) => payload[4])
+  const saveStats = perStagePayloads.flatMap((payload) => payload[5])
 
   const aggregates: PlayerSeasonAggregates = computePlayerSeasonAggregates(
     ratingStats, minuteStats, assistStats, events, saveStats,
@@ -772,15 +784,21 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
   const allStages: Stage[] = selectedSeasonId
     ? await getStages(selectedSeasonId).catch(() => [])
     : []
-  const stages = filterMainStages(allStages)
+  const stageGroups = groupStages(allStages)
+  const availableGroups = stageGroups.filter((group) => group.primaryStageId !== null)
+  const currentGroup =
+    availableGroups.find((group) => group.isCurrent) ??
+    availableGroups[availableGroups.length - 1] ??
+    null
 
-  const defaultStage = stages.find((stage) => stage.isCurrent) ?? stages[stages.length - 1] ?? null
   const requestedStageId = stageIdParam ? Number(stageIdParam) : null
-  const hasRequestedStage =
-    requestedStageId !== null && stages.some((stage) => stage.id === requestedStageId)
-  const selectedStageId: number | null = stages.length > 0
-    ? (hasRequestedStage ? requestedStageId! : (defaultStage?.id ?? null))
-    : null
+  const requestedGroup = requestedStageId !== null ? getStageGroupById(allStages, requestedStageId) : null
+  const hasRequestedGroup = requestedGroup !== null && availableGroups.some((group) => group.group === requestedGroup)
+  const resolvedGroup = hasRequestedGroup
+    ? availableGroups.find((group) => group.group === requestedGroup) ?? null
+    : currentGroup
+  const selectedStageId: number | null = resolvedGroup?.primaryStageId ?? null
+  const selectedGroupStageIds = resolvedGroup ? resolvedGroup.stages.map((stage) => stage.id) : []
 
   const displayName = player.displayName ?? player.commonName ?? player.name
   const positionId = selectedMembership?.positionId ?? player.positionId ?? null
@@ -798,7 +816,7 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
   }
 
   const committedParams: Record<string, string> = { seasonId: String(selectedSeasonId) }
-  if (hasRequestedStage && selectedStageId !== null) committedParams.stageId = String(selectedStageId)
+  if (hasRequestedGroup && selectedStageId !== null) committedParams.stageId = String(selectedStageId)
 
   const heroAge = formatAge(player.dateOfBirth)
   const heroDob = formatDateOfBirth(player.dateOfBirth)
@@ -883,16 +901,15 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
               <Suspense>
                 <PlayerSeasonStageSelector
                   seasons={playerSeasons}
-                  stages={stages}
+                  stageGroups={stageGroups}
                   selectedSeasonId={selectedSeasonId}
-                  selectedStageId={selectedStageId}
+                  selectedGroupStageId={selectedStageId}
                 />
               </Suspense>
             </div>
           </div>
         </div>
 
-        
         <Suspense fallback={<ContentSkeleton />}>
           <SearchParamsLoadingBoundary
             committedParams={committedParams}
@@ -903,7 +920,7 @@ const PlayerPage = async ({ params, searchParams }: PlayerPageProps) => {
               memberships={memberships}
               allSeasons={allSeasons}
               selectedSeasonId={selectedSeasonId}
-              selectedStageId={selectedStageId}
+              selectedGroupStageIds={selectedGroupStageIds}
             />
           </SearchParamsLoadingBoundary>
         </Suspense>
