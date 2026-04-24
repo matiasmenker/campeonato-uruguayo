@@ -371,57 +371,90 @@ const RecentForm = ({
   )
 }
 
-const SeasonHistoryRow = ({
+const CAREER_COLUMN_TEMPLATE = "grid-cols-[44px_minmax(0,1fr)_34px_34px_34px_52px_52px]"
+
+const CareerHistoryHeader = () => (
+  <div className={`grid ${CAREER_COLUMN_TEMPLATE} items-center gap-2 border-b border-slate-100 bg-slate-50/60 px-4 py-2`}>
+    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Season</span>
+    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Team</span>
+    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">M</span>
+    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">G</span>
+    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">A</span>
+    <span className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">Min</span>
+    <span className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-400">Rating</span>
+  </div>
+)
+
+const CareerHistoryRow = ({
   season,
   membership,
   isSelected,
-  avgRating,
+  aggregates,
 }: {
   season: { id: number; name: string }
   membership: PlayerMembership | null
   isSelected: boolean
-  avgRating: number | null
-}) => (
-  <div className={`flex items-center gap-3 px-4 py-3 ${isSelected ? "bg-slate-50" : ""}`}>
-    <span className="w-10 shrink-0 text-xs font-bold text-slate-400">{season.name}</span>
-    {membership ? (
-      <div className="flex items-center gap-2 min-w-0 flex-1">
-        {membership.team.imagePath ? (
-          <img src={membership.team.imagePath} alt={membership.team.name} className="h-5 w-5 shrink-0 object-contain" />
-        ) : (
-          <IconShieldFilled size={14} className="shrink-0 text-slate-300" />
-        )}
-        <Link
-          href={`/teams/${membership.team.id}`}
-          className="truncate text-sm font-semibold text-slate-800 hover:text-slate-600 transition-colors"
-        >
-          {membership.team.name}
-        </Link>
-        {membership.isLoan && (
-          <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
-            Loan
-          </span>
-        )}
-      </div>
-    ) : (
-      <div className="flex flex-1 items-center">
-        <span className="text-sm text-slate-400">No data</span>
-      </div>
-    )}
-    <div className="shrink-0">
-      {membership && avgRating !== null ? (
-        <span
-          className="inline-flex items-center justify-center rounded-md px-1.5 font-black tabular-nums text-xs text-white"
-          style={{ background: getRatingFill(avgRating), minWidth: 34, height: 20 }}
-        >
-          {avgRating.toFixed(2)}
-        </span>
+  aggregates: PlayerSeasonAggregates | null
+}) => {
+  const hasPlayed = aggregates !== null && aggregates.appearances > 0
+  const appearances = hasPlayed ? aggregates.appearances : null
+  const goals = hasPlayed ? aggregates.goals : null
+  const assists = hasPlayed ? aggregates.assists : null
+  const minutes = hasPlayed ? aggregates.totalMinutes : null
+  const avgRating = hasPlayed ? aggregates.avgRating : null
+
+  return (
+    <div className={`grid ${CAREER_COLUMN_TEMPLATE} items-center gap-2 px-4 py-2.5 ${isSelected ? "bg-slate-50" : ""}`}>
+      <span className="text-xs font-bold text-slate-500">{season.name}</span>
+      {membership ? (
+        <div className="flex items-center gap-2 min-w-0">
+          {membership.team.imagePath ? (
+            <img src={membership.team.imagePath} alt={membership.team.name} className="h-5 w-5 shrink-0 object-contain" />
+          ) : (
+            <IconShieldFilled size={14} className="shrink-0 text-slate-300" />
+          )}
+          <Link
+            href={`/teams/${membership.team.id}`}
+            className="truncate text-sm font-semibold text-slate-800 hover:text-slate-600 transition-colors"
+          >
+            {membership.team.name}
+          </Link>
+          {membership.isLoan && (
+            <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+              Loan
+            </span>
+          )}
+        </div>
       ) : (
-        <span className="text-xs text-slate-300">—</span>
+        <span className="text-sm text-slate-400">No data</span>
       )}
+      <span className="text-center text-xs font-semibold tabular-nums text-slate-700">
+        {appearances ?? <span className="text-slate-300">—</span>}
+      </span>
+      <span className="text-center text-xs font-semibold tabular-nums text-slate-700">
+        {goals ?? <span className="text-slate-300">—</span>}
+      </span>
+      <span className="text-center text-xs font-semibold tabular-nums text-slate-700">
+        {assists ?? <span className="text-slate-300">—</span>}
+      </span>
+      <span className="text-center text-xs font-semibold tabular-nums text-slate-700">
+        {minutes != null ? minutes : <span className="text-slate-300">—</span>}
+      </span>
+      <div className="flex justify-end">
+        {avgRating !== null ? (
+          <span
+            className="inline-flex items-center justify-center rounded-md px-1.5 font-black tabular-nums text-xs text-white"
+            style={{ background: getRatingFill(avgRating), minWidth: 40, height: 20 }}
+          >
+            {avgRating.toFixed(2)}
+          </span>
+        ) : (
+          <span className="text-xs text-slate-300">—</span>
+        )}
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 const ContentSkeleton = () => (
   <div className="flex flex-col gap-6">
@@ -518,26 +551,28 @@ const PlayerSeasonContent = async ({
   const hasAppearances = aggregates.appearances > 0
   const showSavesCard = isGoalkeeper || aggregates.saves > 0
 
-  const membershipRatingResults = await Promise.allSettled(
-    memberships.map((membership) =>
-      getPlayerStatsByType(player.id, STAT_TYPE_RATING, membership.season.id)
+  const seasonAggregatesMap = new Map<number, PlayerSeasonAggregates>()
+  if (memberships.length > 0) {
+    const perSeasonResults = await Promise.all(
+      memberships.map(async (membership) => {
+        const seasonId = membership.season.id
+        const isMembershipGoalkeeper = membership.positionId === 24 || isGoalkeeper
+        const [ratings, minutes, assists, seasonEvents, saves] = await Promise.all([
+          getPlayerStatsByType(player.id, STAT_TYPE_RATING, seasonId).catch(() => []),
+          getPlayerStatsByType(player.id, STAT_TYPE_MINUTES, seasonId).catch(() => []),
+          getPlayerStatsByType(player.id, STAT_TYPE_ASSISTS, seasonId).catch(() => []),
+          getPlayerSeasonEvents(player.id, seasonId).catch(() => []),
+          isMembershipGoalkeeper
+            ? getPlayerStatsByType(player.id, STAT_TYPE_SAVES, seasonId).catch(() => [])
+            : Promise.resolve([] as PlayerStatEntry[]),
+        ])
+        return { seasonId, aggregates: computePlayerSeasonAggregates(ratings, minutes, assists, seasonEvents, saves) }
+      })
     )
-  )
-  const seasonAvgRatingMap = new Map<number, number | null>()
-  memberships.forEach((membership, index) => {
-    const result = membershipRatingResults[index]
-    if (result.status === "fulfilled") {
-      const ratingValues = result.value
-        .map((stat) => stat.value.normalizedValue)
-        .filter((value): value is number => typeof value === "number")
-      const avg = ratingValues.length > 0
-        ? Math.round((ratingValues.reduce((sum, value) => sum + value, 0) / ratingValues.length) * 100) / 100
-        : null
-      seasonAvgRatingMap.set(membership.season.id, avg)
-    } else {
-      seasonAvgRatingMap.set(membership.season.id, null)
+    for (const entry of perSeasonResults) {
+      seasonAggregatesMap.set(entry.seasonId, entry.aggregates)
     }
-  })
+  }
 
   const sortedAllSeasons = [...allSeasons].sort(
     (firstSeason, secondSeason) => Number(secondSeason.name) - Number(firstSeason.name),
@@ -613,22 +648,25 @@ const PlayerSeasonContent = async ({
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
 
         <div className="flex flex-col gap-3">
-          <h2 className="px-1 text-sm font-bold text-slate-700">Season history</h2>
+          <h2 className="px-1 text-sm font-bold text-slate-700">Career history</h2>
           {sortedAllSeasons.length === 0 ? (
             <div className="flex h-24 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-400">
               No season data available
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm divide-y divide-slate-100">
-              {sortedAllSeasons.map((season) => (
-                <SeasonHistoryRow
-                  key={season.id}
-                  season={season}
-                  membership={membershipBySeasonId.get(season.id) ?? null}
-                  isSelected={season.id === selectedSeasonId}
-                  avgRating={seasonAvgRatingMap.get(season.id) ?? null}
-                />
-              ))}
+            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+              <CareerHistoryHeader />
+              <div className="divide-y divide-slate-100">
+                {sortedAllSeasons.map((season) => (
+                  <CareerHistoryRow
+                    key={season.id}
+                    season={season}
+                    membership={membershipBySeasonId.get(season.id) ?? null}
+                    isSelected={season.id === selectedSeasonId}
+                    aggregates={seasonAggregatesMap.get(season.id) ?? null}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>

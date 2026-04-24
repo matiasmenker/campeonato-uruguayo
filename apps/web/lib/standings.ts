@@ -48,10 +48,11 @@ interface StandingsResponse {
   }
 }
 
-export const getStandings = async (params?: { seasonId?: number; stageId?: number }): Promise<StandingEntry[]> => {
+export const getStandings = async (params?: { seasonId?: number; stageId?: number; teamId?: number }): Promise<StandingEntry[]> => {
   const searchParams = new URLSearchParams()
   if (params?.seasonId) searchParams.set("seasonId", String(params.seasonId))
   if (params?.stageId) searchParams.set("stageId", String(params.stageId))
+  if (params?.teamId) searchParams.set("teamId", String(params.teamId))
   const query = searchParams.toString()
   const response = await apiFetch<StandingsResponse>(`/api/v1/standings${query ? `?${query}` : ""}`, {
     next: { revalidate: 300 },
