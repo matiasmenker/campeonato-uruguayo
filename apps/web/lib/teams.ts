@@ -92,6 +92,17 @@ export interface TeamCoach {
   id: number
   name: string
   imagePath: string | null
+  isCurrent: boolean
+}
+
+interface CoachApiPayload {
+  id: number
+  name: string
+  imagePath: string | null
+  assignments?: Array<{
+    team?: { id: number } | null
+    season?: { id: number; isCurrent: boolean } | null
+  }>
 }
 
 export const getTeam = async (id: number): Promise<Team> => {
@@ -126,12 +137,22 @@ export const getTeamSquad = async (teamId: number, seasonId: number): Promise<Sq
   return response.data
 }
 
-export const getTeamCoach = async (teamId: number, seasonId: number): Promise<TeamCoach | null> => {
-  const response = await apiFetch<ListResponse<TeamCoach>>(
-    `/api/v1/coaches?teamId=${teamId}&seasonId=${seasonId}&limit=1`,
+export const getTeamCoaches = async (teamId: number, seasonId: number): Promise<TeamCoach[]> => {
+  const response = await apiFetch<ListResponse<CoachApiPayload>>(
+    `/api/v1/coaches?teamId=${teamId}&seasonId=${seasonId}&pageSize=20`,
     { next: { revalidate: 300 } },
   )
-  return response.data[0] ?? null
+  return response.data.map((coach) => {
+    const matchingAssignment = coach.assignments?.find(
+      (assignment) => assignment.team?.id === teamId && assignment.season?.id === seasonId
+    )
+    return {
+      id: coach.id,
+      name: coach.name,
+      imagePath: coach.imagePath,
+      isCurrent: matchingAssignment?.season?.isCurrent ?? false,
+    }
+  })
 }
 
 export const getTeamVenue = async (teamId: number, seasonId: number): Promise<TeamVenue | null> => {

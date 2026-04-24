@@ -7,7 +7,7 @@ import HeroTexture from "@/components/hero-texture"
 import SearchParamsLoadingBoundary from "@/components/search-params-loading-boundary"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import TeamSeasonSelector from "@/components/team-season-selector"
-import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoach, getTeamVenue, type SquadMember, type TeamFixture } from "@/lib/teams"
+import { getTeam, getTeamFixtures, getTeamSquad, getTeamCoaches, getTeamVenue, type SquadMember, type TeamCoach, type TeamFixture } from "@/lib/teams"
 import { resolvePlayerImageUrl } from "@/lib/player"
 import { getSeasons, getStages, getSeasonChampion, type Season } from "@/lib/seasons"
 import { getStageGroup } from "@/lib/stage-groups"
@@ -161,16 +161,61 @@ const ChampionBadge = async ({
 }
 
 interface TeamHeroMeta {
-  coach: { name: string } | null
+  coaches: TeamCoach[]
   venue: { name: string } | null
+  seasonName: string
 }
 
-const TeamHeroDetails = ({ coach, venue }: TeamHeroMeta) => {
-  if (!coach && !venue) return null
+const TeamHeroDetails = ({ coaches, venue, seasonName }: TeamHeroMeta) => {
+  if (coaches.length === 0 && !venue) return null
+
+  const primaryCoach =
+    coaches.find((coach) => coach.isCurrent) ??
+    coaches[0] ??
+    null
+  const secondaryCoaches = primaryCoach
+    ? coaches.filter((coach) => coach.id !== primaryCoach.id)
+    : []
+
   return (
-    <div className="flex flex-col gap-0.5">
-      {coach && (
-        <span className="text-sm font-medium text-white/70">{coach.name}</span>
+    <div className="flex flex-col gap-1">
+      {primaryCoach && (
+        <div className="flex items-center gap-2">
+          <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full bg-slate-700 ring-1 ring-white/30">
+            <img
+              src={resolvePlayerImageUrl(primaryCoach.imagePath)}
+              alt={primaryCoach.name}
+              className="h-full w-full object-cover object-top"
+            />
+          </div>
+          <span className="text-sm font-medium text-white/80">{primaryCoach.name}</span>
+          {primaryCoach.isCurrent && (
+            <span className="rounded-full border border-emerald-300/40 bg-emerald-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-200">
+              Current
+            </span>
+          )}
+          {!primaryCoach.isCurrent && coaches.length > 0 && (
+            <span className="rounded-full border border-white/15 bg-white/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/70">
+              {seasonName}
+            </span>
+          )}
+        </div>
+      )}
+      {secondaryCoaches.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pl-8">
+          {secondaryCoaches.map((coach) => (
+            <div key={coach.id} className="flex items-center gap-1.5">
+              <div className="h-4 w-4 shrink-0 overflow-hidden rounded-full bg-slate-700 ring-1 ring-white/20">
+                <img
+                  src={resolvePlayerImageUrl(coach.imagePath)}
+                  alt={coach.name}
+                  className="h-full w-full object-cover object-top"
+                />
+              </div>
+              <span className="text-[11px] text-white/55">{coach.name}</span>
+            </div>
+          ))}
+        </div>
       )}
       {venue && (
         <span className="text-xs text-white/50">{venue.name}</span>
@@ -429,11 +474,11 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     )
   }
 
-  const [coachResult, venueResult] = await Promise.allSettled([
-    getTeamCoach(teamId, selectedSeason.id),
+  const [coachesResult, venueResult] = await Promise.allSettled([
+    getTeamCoaches(teamId, selectedSeason.id),
     getTeamVenue(teamId, selectedSeason.id),
   ])
-  const coach = coachResult.status === "fulfilled" ? coachResult.value : null
+  const coaches = coachesResult.status === "fulfilled" ? coachesResult.value : []
   const venue = venueResult.status === "fulfilled" ? venueResult.value : null
 
   return (
@@ -469,7 +514,7 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
                 )}
                 <div className="min-w-0 flex flex-col gap-1 pb-1">
                   <h1 className="text-3xl font-black text-white leading-none drop-shadow">{team.name}</h1>
-                  <TeamHeroDetails coach={coach} venue={venue} />
+                  <TeamHeroDetails coaches={coaches} venue={venue} seasonName={selectedSeason.name} />
                 </div>
               </div>
               {seasons.length > 1 && (
