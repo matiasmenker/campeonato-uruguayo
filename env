@@ -1,4 +1,0 @@
-DATABASE_URL=postgresql://neondb_owner:npg_2S0DhbcTYGfI@ep-gentle-morning-ak631qxf-pooler.c-3.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-SPORTMONKS_API_TOKEN=l9NEoRLmlGBBmBYzvNCOj8htxL6Rbr7Reiq0Huub8cEcPLBv0fz5T1FIamCl
-SPORTMONKS_LEAGUE_ID=770
-SPORTMONKS_COUNTRY_ID=158
