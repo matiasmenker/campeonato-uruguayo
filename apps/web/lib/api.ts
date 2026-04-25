@@ -14,7 +14,7 @@ const getApiBaseUrl = () => {
 
 export const apiFetch = async <T>(
   path: string,
-  init: Omit<RequestInit, "headers"> & { headers?: HeadersInit } = {}
+  init: Omit<RequestInit, "headers"> & { headers?: HeadersInit; revalidate?: number } = {}
 ): Promise<T> => {
   const apiKey = process.env.API_KEY
   const url = new URL(
@@ -22,8 +22,10 @@ export const apiFetch = async <T>(
     normalizeBaseUrl(getApiBaseUrl())
   )
 
+  const { revalidate = 30, ...fetchInit } = init
   const response = await fetch(url, {
-    ...init,
+    ...fetchInit,
+    next: { revalidate },
     headers: {
       Accept: "application/json",
       ...(apiKey ? { "x-api-key": apiKey } : {}),
