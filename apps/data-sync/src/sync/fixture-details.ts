@@ -253,10 +253,9 @@ const syncFixtureDetails = async (
 
         const statistics = fixtureDto.statistics ?? [];
 
-        const formations: { participant_id?: number; formation?: string; location?: string }[] =
-          fixtureDto.formations ?? [];
-        const homeSmId = fixtureDto.participants?.find((p: { meta?: { location?: string } }) => p.meta?.location === "home")?.id ?? null;
-        const awaySmId = fixtureDto.participants?.find((p: { meta?: { location?: string } }) => p.meta?.location === "away")?.id ?? null;
+        const formations = fixtureDto.formations ?? [];
+        const homeSmId = fixtureDto.participants?.find((participant) => participant.meta?.location === "home")?.id ?? null;
+        const awaySmId = fixtureDto.participants?.find((participant) => participant.meta?.location === "away")?.id ?? null;
         const homeFormationEntry = formations.find(
           (f) => f.participant_id === homeSmId || f.location === "home"
         );

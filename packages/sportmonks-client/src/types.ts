@@ -288,11 +288,19 @@ export interface FixtureDto {
   events?: FixtureEventDto[] | null;
   lineups?: FixtureLineupDto[] | null;
   statistics?: FixtureStatisticDto[] | null;
+  formations?: FixtureFormationDto[] | null;
+}
+
+export interface FixtureFormationDto {
+  participant_id?: number | null;
+  formation?: string | null;
+  location?: string | null;
 }
 
 export interface FixtureEventDto {
   id?: number | null;
   player_id?: number | null;
+  related_player_id?: number | null;
   type_id?: number | null;
   order?: number | null;
   sort_order?: number | null;
@@ -307,6 +315,11 @@ export interface FixtureEventDto {
     display_name?: string | null;
     image_path?: string | null;
     position_id?: number | null;
+  } | null;
+  related_player?: {
+    id: number;
+    name?: string | null;
+    display_name?: string | null;
   } | null;
 }
 
@@ -323,6 +336,8 @@ export interface FixtureLineupDto {
   player_name?: string | null;
   position?: string | null | { name?: string | null };
   formation_position?: number | null;
+  formation_field?: string | null;
+  type_id?: number | null;
   jersey_number?: number | null;
   details?: FixtureLineupDetailDto[] | null;
   player?: {

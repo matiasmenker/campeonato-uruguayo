@@ -95,7 +95,7 @@ export const syncLive = async (dependencies: SyncDependencies): Promise<void> =>
     `/fixtures/multi/${fixtureSportmonksIds.join(",")}`,
     {
       include:
-        "participants;scores;events;events.player;lineups;lineups.player;lineups.details;statistics",
+        "participants;scores;events;events.player;lineups;lineups.player;lineups.details;formations;statistics",
     }
   );
   const fixturesFromApi = extractArray(
@@ -153,6 +153,11 @@ export const syncLive = async (dependencies: SyncDependencies): Promise<void> =>
     const resultInfo = fixtureDto.result_info?.trim() || null;
     const homeScore = resolveGoal(homeScoreRow?.score) ?? fixtureDto.home_score ?? null;
     const awayScore = resolveGoal(awayScoreRow?.score) ?? fixtureDto.away_score ?? null;
+    const formations = fixtureDto.formations ?? [];
+    const homeFormation =
+      formations.find((entry) => entry.participant_id === homeSportmonksId || entry.location === "home")?.formation ?? null;
+    const awayFormation =
+      formations.find((entry) => entry.participant_id === awaySportmonksId || entry.location === "away")?.formation ?? null;
     await db.fixture.update({
       where: { id: fixtureId },
       data: {
@@ -161,6 +166,7 @@ export const syncLive = async (dependencies: SyncDependencies): Promise<void> =>
         resultInfo,
         homeScore,
         awayScore,
+        ...(homeFormation || awayFormation ? { homeFormation, awayFormation } : {}),
       },
     });
     updatedFixtures += 1;
@@ -196,12 +202,18 @@ export const syncLive = async (dependencies: SyncDependencies): Promise<void> =>
       )
       .map((event) => {
         const eventPlayerSportmonksId = event.player?.id ?? event.player_id ?? null;
+        const relatedPlayerSportmonksId =
+          event.related_player?.id ?? event.related_player_id ?? null;
         return {
           sportmonksId: event.id,
           fixtureId,
           playerId:
             eventPlayerSportmonksId != null
               ? (playerIdBySportmonksId.get(eventPlayerSportmonksId) ?? null)
+              : null,
+          relatedPlayerId:
+            relatedPlayerSportmonksId != null
+              ? (playerIdBySportmonksId.get(relatedPlayerSportmonksId) ?? null)
               : null,
           typeId: event.type_id ?? null,
           sortOrder: event.sort_order ?? event.order ?? null,
@@ -221,10 +233,16 @@ export const syncLive = async (dependencies: SyncDependencies): Promise<void> =>
         const playerSportmonksId = (lineup.player?.id ?? lineup.player_id)!;
         return {
           fixtureId,
+          teamId:
+            lineup.team_id != null
+              ? (teamIdBySportmonksId.get(lineup.team_id) ?? null)
+              : null,
           playerId: playerIdBySportmonksId.get(playerSportmonksId)!,
           position:
             typeof lineup.position === "string" ? lineup.position : (lineup.position?.name ?? null),
           formationPosition: lineup.formation_position ?? null,
+          typeId: lineup.type_id ?? null,
+          formationField: lineup.formation_field ?? null,
           jerseyNumber: lineup.jersey_number ?? null,
         };
       });
@@ -298,20 +316,20 @@ export const syncLive = async (dependencies: SyncDependencies): Promise<void> =>
       );
     } else {
       await db.$transaction(async (transaction) => {
-        await transaction.event.deleteMany({ where: { fixtureId } });
-        await transaction.lineup.deleteMany({ where: { fixtureId } });
-        await transaction.fixturePlayerStatistic.deleteMany({ where: { fixtureId } });
-        await transaction.fixtureTeamStatistic.deleteMany({ where: { fixtureId } });
         if (eventRows.length > 0) {
+          await transaction.event.deleteMany({ where: { fixtureId } });
           await transaction.event.createMany({ data: eventRows });
         }
         if (lineupRows.length > 0) {
+          await transaction.lineup.deleteMany({ where: { fixtureId } });
           await transaction.lineup.createMany({ data: lineupRows });
         }
         if (playerStatRows.length > 0) {
+          await transaction.fixturePlayerStatistic.deleteMany({ where: { fixtureId } });
           await transaction.fixturePlayerStatistic.createMany({ data: playerStatRows as never });
         }
         if (teamStatRows.length > 0) {
+          await transaction.fixtureTeamStatistic.deleteMany({ where: { fixtureId } });
           await transaction.fixtureTeamStatistic.createMany({ data: teamStatRows as never });
         }
       });
