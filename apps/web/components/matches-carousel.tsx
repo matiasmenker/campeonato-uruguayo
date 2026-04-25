@@ -69,11 +69,11 @@ const MatchesCarousel = ({ matches, roundName, fixtureVideoMap = {} }: MatchesCa
     )
   }
 
-  const statusOrder = { finished: 0, live: 1, upcoming: 2 } as const
+  const statusOrder = { live: 0, finished: 1, upcoming: 2 } as const
 
   const sortedMatches = [...matches].sort((matchA, matchB) => {
-    const statusA = getMatchStatus(matchA.stateCode, matchA.homeScore, matchA.awayScore)
-    const statusB = getMatchStatus(matchB.stateCode, matchB.homeScore, matchB.awayScore)
+    const statusA = getMatchStatus(matchA.stateCode, matchA.homeScore, matchA.awayScore, matchA.kickoffAt ?? null)
+    const statusB = getMatchStatus(matchB.stateCode, matchB.homeScore, matchB.awayScore, matchB.kickoffAt ?? null)
     const orderA = statusOrder[statusA]
     const orderB = statusOrder[statusB]
 

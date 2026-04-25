@@ -18,15 +18,31 @@ const LIVE_STATES = new Set([
 
 const FINISHED_STATES = new Set(["FT", "AET", "FT_PEN", "AWARDED"])
 
+const LIVE_FALLBACK_WINDOW_MINUTES = 150
+
 export const getMatchStatus = (
   stateCode: string | null,
   homeScore: number | null,
-  awayScore: number | null
+  awayScore: number | null,
+  kickoffAt: string | null = null,
 ): "live" | "finished" | "upcoming" => {
   if (stateCode && LIVE_STATES.has(stateCode)) return "live"
   if (stateCode && FINISHED_STATES.has(stateCode)) return "finished"
-  if (homeScore !== null && awayScore !== null) return "finished"
-  return "upcoming"
+
+  const isPreMatchPending = !stateCode || stateCode === "NS"
+  if (!isPreMatchPending) {
+    return homeScore !== null && awayScore !== null ? "finished" : "upcoming"
+  }
+
+  if (!kickoffAt) {
+    return homeScore !== null && awayScore !== null ? "finished" : "upcoming"
+  }
+  const kickoffMs = new Date(kickoffAt).getTime()
+  if (Number.isNaN(kickoffMs)) return "upcoming"
+  const elapsedMinutes = (Date.now() - kickoffMs) / 60_000
+  if (elapsedMinutes < 0) return "upcoming"
+  if (elapsedMinutes <= LIVE_FALLBACK_WINDOW_MINUTES) return "live"
+  return homeScore !== null && awayScore !== null ? "finished" : "upcoming"
 }
 
 const getLiveLabel = (stateCode: string | null) => {
@@ -37,8 +53,13 @@ const getLiveLabel = (stateCode: string | null) => {
   return "Live"
 }
 
-export const getStatusBadge = (stateCode: string | null, homeScore: number | null, awayScore: number | null) => {
-  const status = getMatchStatus(stateCode, homeScore, awayScore)
+export const getStatusBadge = (
+  stateCode: string | null,
+  homeScore: number | null,
+  awayScore: number | null,
+  kickoffAt: string | null = null,
+) => {
+  const status = getMatchStatus(stateCode, homeScore, awayScore, kickoffAt)
   if (status === "live") {
     return {
       isLive: true,
@@ -166,11 +187,11 @@ const MatchCard = ({
   onVideoClick,
 }: MatchCardProps) => {
   const router = useRouter()
-  const status = getMatchStatus(stateCode, homeScore, awayScore)
+  const status = getMatchStatus(stateCode, homeScore, awayScore, kickoffAt)
   const isLive = status === "live"
   const isFinished = status === "finished"
   const backgroundImage = venueImagePath ? `url("${venueImagePath}")` : undefined
-  const statusBadge = getStatusBadge(stateCode, homeScore, awayScore)
+  const statusBadge = getStatusBadge(stateCode, homeScore, awayScore, kickoffAt)
 
   const hasRunningMinute =
     minute != null &&

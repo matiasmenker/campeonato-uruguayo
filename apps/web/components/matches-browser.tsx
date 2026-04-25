@@ -54,8 +54,8 @@ const storageDel = (key: string) => {
 }
 
 const getRoundStatus = (fixtures: FixtureListItem[]) => {
-  const liveCount     = fixtures.filter(f => getMatchStatus(f.state?.developerName ?? null, f.homeScore, f.awayScore) === "live").length
-  const finishedCount = fixtures.filter(f => getMatchStatus(f.state?.developerName ?? null, f.homeScore, f.awayScore) === "finished").length
+  const liveCount     = fixtures.filter(f => getMatchStatus(f.state?.developerName ?? null, f.homeScore, f.awayScore, f.kickoffAt ?? null) === "live").length
+  const finishedCount = fixtures.filter(f => getMatchStatus(f.state?.developerName ?? null, f.homeScore, f.awayScore, f.kickoffAt ?? null) === "finished").length
   if (liveCount > 0) {
     return { label: "Live",        dotClass: "bg-red-500 animate-pulse", textClass: "text-red-500" }
   }
