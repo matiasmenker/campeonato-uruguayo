@@ -17,7 +17,7 @@ import {
 import { getRatingFill } from "@/lib/rating"
 import { resolvePlayerImageUrl } from "@/lib/player"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 30
 
 const EVENT_GOAL         = 14
 const EVENT_GOAL_PENALTY = 16
