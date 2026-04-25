@@ -38,12 +38,9 @@ const FINISHED_MATCH_STATES = new Set(["FT", "AET", "FT_PEN", "AWARDED"])
 
 const getFixtureStatusBadge = (
   stateCode: string | null,
-  homeScore: number | null,
-  awayScore: number | null,
 ) => {
   const isLive = LIVE_MATCH_STATES.has(stateCode ?? "")
-  const isFinished =
-    !isLive && (FINISHED_MATCH_STATES.has(stateCode ?? "") || (homeScore !== null && awayScore !== null))
+  const isFinished = !isLive && FINISHED_MATCH_STATES.has(stateCode ?? "")
 
   if (isLive) {
     const label = stateCode === "HT" ? "Half time"
@@ -821,7 +818,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const homeTeam    = fixture.homeTeam
   const awayTeam    = fixture.awayTeam
   const isFinished  = fixture.homeScore !== null && fixture.awayScore !== null
-  const statusBadge = getFixtureStatusBadge(fixture.state?.developerName ?? null, fixture.homeScore, fixture.awayScore)
+  const statusBadge = getFixtureStatusBadge(fixture.state?.developerName ?? null)
 
   const homeLineup = lineups.filter(p => p.team?.id === homeTeam?.id)
   const awayLineup = lineups.filter(p => p.team?.id === awayTeam?.id)

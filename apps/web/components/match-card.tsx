@@ -20,13 +20,13 @@ const FINISHED_STATES = new Set(["FT", "AET", "FT_PEN", "AWARDED"])
 
 export const getMatchStatus = (
   stateCode: string | null,
-  homeScore: number | null,
-  awayScore: number | null,
+  _homeScore: number | null,
+  _awayScore: number | null,
   _kickoffAt: string | null = null,
 ): "live" | "finished" | "upcoming" => {
   if (stateCode && LIVE_STATES.has(stateCode)) return "live"
   if (stateCode && FINISHED_STATES.has(stateCode)) return "finished"
-  return homeScore !== null && awayScore !== null ? "finished" : "upcoming"
+  return "upcoming"
 }
 
 const getLiveLabel = (stateCode: string | null) => {
