@@ -1,5 +1,5 @@
 import type { PlayerDto, TeamDto, TransferDto } from "sportmonks-client";
-import type { SyncDependencies, SyncOptions } from "./shared.js";
+import { parseSportMonksDate, type SyncDependencies, type SyncOptions } from "./shared.js";
 
 interface TransferRow {
   sportmonksId: number;
@@ -11,11 +11,7 @@ interface TransferRow {
   amount: string | null;
 }
 
-const toDate = (value: string | null | undefined): Date | null => {
-  if (!value) return null;
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
+const toDate = parseSportMonksDate;
 
 const asString = (value: unknown): string | null => {
   if (typeof value === "string") {

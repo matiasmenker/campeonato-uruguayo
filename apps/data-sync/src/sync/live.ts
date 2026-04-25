@@ -1,5 +1,5 @@
 import type { FixtureDto } from "sportmonks-client";
-import type { SyncDependencies } from "./shared.js";
+import { parseSportMonksDate, type SyncDependencies } from "./shared.js";
 const extractArray = <T>(
   raw:
     | {
@@ -29,11 +29,6 @@ const sameDate = (left: Date | null, right: Date | null): boolean => {
   if (left == null && right == null) return true;
   if (left == null || right == null) return false;
   return left.getTime() === right.getTime();
-};
-const toDate = (value: string | null | undefined): Date | null => {
-  if (!value) return null;
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 export const syncLive = async (dependencies: SyncDependencies): Promise<void> => {
   const { client, db, log } = dependencies;
@@ -149,7 +144,7 @@ export const syncLive = async (dependencies: SyncDependencies): Promise<void> =>
       return participantId === awaySportmonksId;
     });
     const stateId = fixtureDto.state_id ?? null;
-    const kickoffAt = toDate(fixtureDto.starting_at ?? fixtureDto.kickoff_at ?? null);
+    const kickoffAt = parseSportMonksDate(fixtureDto.starting_at ?? fixtureDto.kickoff_at ?? null);
     const resultInfo = fixtureDto.result_info?.trim() || null;
     const homeScore = resolveGoal(homeScoreRow?.score) ?? fixtureDto.home_score ?? null;
     const awayScore = resolveGoal(awayScoreRow?.score) ?? fixtureDto.away_score ?? null;

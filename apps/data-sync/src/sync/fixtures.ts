@@ -1,11 +1,7 @@
 import type { FixtureDto } from "sportmonks-client";
-import type { SyncDependencies, SyncOptions } from "./shared.js";
+import { parseSportMonksDate, type SyncDependencies, type SyncOptions } from "./shared.js";
 
-const toDate = (value: string | null | undefined): Date | null => {
-  if (!value) return null;
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
+const toDate = parseSportMonksDate;
 
 const sameDate = (left: Date | null, right: Date | null): boolean => {
   if (left == null && right == null) return true;

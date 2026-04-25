@@ -11,3 +11,12 @@ export interface SyncDependencies {
 export interface SyncOptions {
   seasonSportmonksIds?: number[];
 }
+
+export const parseSportMonksDate = (value: string | null | undefined): Date | null => {
+  if (!value) return null;
+  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)
+    ? `${value.replace(" ", "T")}Z`
+    : value;
+  const parsed = new Date(normalized);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
