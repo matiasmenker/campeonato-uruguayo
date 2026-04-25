@@ -35,24 +35,15 @@ const LIVE_MATCH_STATES = new Set([
 ])
 
 const FINISHED_MATCH_STATES = new Set(["FT", "AET", "FT_PEN", "AWARDED"])
-const LIVE_FALLBACK_WINDOW_MINUTES = 150
 
 const getFixtureStatusBadge = (
   stateCode: string | null,
   homeScore: number | null,
   awayScore: number | null,
-  kickoffAt: string | null = null,
 ) => {
-  const stateLive = LIVE_MATCH_STATES.has(stateCode ?? "")
-  const stateFinished = FINISHED_MATCH_STATES.has(stateCode ?? "")
-  const isPreMatchPending = !stateCode || stateCode === "NS"
-  const kickoffMs = kickoffAt ? new Date(kickoffAt).getTime() : NaN
-  const elapsedMinutes = !Number.isNaN(kickoffMs) ? (Date.now() - kickoffMs) / 60_000 : null
-  const timeWithinLiveWindow =
-    isPreMatchPending && elapsedMinutes !== null && elapsedMinutes >= 0 && elapsedMinutes <= LIVE_FALLBACK_WINDOW_MINUTES
-  const isLive = stateLive || timeWithinLiveWindow
+  const isLive = LIVE_MATCH_STATES.has(stateCode ?? "")
   const isFinished =
-    !isLive && (stateFinished || (!isPreMatchPending && homeScore !== null && awayScore !== null) || (isPreMatchPending && elapsedMinutes !== null && elapsedMinutes > LIVE_FALLBACK_WINDOW_MINUTES && homeScore !== null && awayScore !== null))
+    !isLive && (FINISHED_MATCH_STATES.has(stateCode ?? "") || (homeScore !== null && awayScore !== null))
 
   if (isLive) {
     const label = stateCode === "HT" ? "Half time"
@@ -830,7 +821,7 @@ const MatchPage = async ({ params }: MatchPageProps) => {
   const homeTeam    = fixture.homeTeam
   const awayTeam    = fixture.awayTeam
   const isFinished  = fixture.homeScore !== null && fixture.awayScore !== null
-  const statusBadge = getFixtureStatusBadge(fixture.state?.developerName ?? null, fixture.homeScore, fixture.awayScore, fixture.kickoffAt ?? null)
+  const statusBadge = getFixtureStatusBadge(fixture.state?.developerName ?? null, fixture.homeScore, fixture.awayScore)
 
   const homeLineup = lineups.filter(p => p.team?.id === homeTeam?.id)
   const awayLineup = lineups.filter(p => p.team?.id === awayTeam?.id)

@@ -18,30 +18,14 @@ const LIVE_STATES = new Set([
 
 const FINISHED_STATES = new Set(["FT", "AET", "FT_PEN", "AWARDED"])
 
-const LIVE_FALLBACK_WINDOW_MINUTES = 150
-
 export const getMatchStatus = (
   stateCode: string | null,
   homeScore: number | null,
   awayScore: number | null,
-  kickoffAt: string | null = null,
+  _kickoffAt: string | null = null,
 ): "live" | "finished" | "upcoming" => {
   if (stateCode && LIVE_STATES.has(stateCode)) return "live"
   if (stateCode && FINISHED_STATES.has(stateCode)) return "finished"
-
-  const isPreMatchPending = !stateCode || stateCode === "NS"
-  if (!isPreMatchPending) {
-    return homeScore !== null && awayScore !== null ? "finished" : "upcoming"
-  }
-
-  if (!kickoffAt) {
-    return homeScore !== null && awayScore !== null ? "finished" : "upcoming"
-  }
-  const kickoffMs = new Date(kickoffAt).getTime()
-  if (Number.isNaN(kickoffMs)) return "upcoming"
-  const elapsedMinutes = (Date.now() - kickoffMs) / 60_000
-  if (elapsedMinutes < 0) return "upcoming"
-  if (elapsedMinutes <= LIVE_FALLBACK_WINDOW_MINUTES) return "live"
   return homeScore !== null && awayScore !== null ? "finished" : "upcoming"
 }
 
