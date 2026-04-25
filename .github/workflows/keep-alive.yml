@@ -14,4 +14,4 @@ jobs:
       - name: Ping API health endpoint
         run: |
           curl --fail --silent --show-error --max-time 60 \
-            https://api.campeonatouruguayo.com/health
+            https://campeonato-uruguayo.onrender.com/health
