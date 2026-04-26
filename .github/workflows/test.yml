@@ -1,0 +1,85 @@
+name: Tests
+
+on:
+  push:
+    branches: [master, tests]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  unit-and-integration:
+    name: Unit & integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.14.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @campeonato/db prisma generate
+
+      - name: Run web unit tests
+        run: pnpm --filter web test
+
+      - name: Run data-sync unit tests
+        run: pnpm --filter data-sync test
+
+      - name: Run API unit tests (integration tests skip without DATABASE_URL)
+        run: pnpm --filter api test
+
+  e2e:
+    name: End-to-end tests (production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: unit-and-integration
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.14.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      - name: Run Playwright tests against production
+        run: pnpm --filter web test:e2e
+        env:
+          PLAYWRIGHT_BASE_URL: https://campeonato-uruguayo.vercel.app
+          CI: "true"
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 14

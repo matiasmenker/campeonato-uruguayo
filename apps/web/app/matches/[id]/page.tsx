@@ -16,6 +16,7 @@ import {
 } from "@/lib/matches"
 import { getRatingFill } from "@/lib/rating"
 import { resolvePlayerImageUrl } from "@/lib/player"
+import { parseFormationField, parseFormationRows } from "@/lib/formation"
 
 export const revalidate = 30
 
@@ -71,16 +72,6 @@ const getFixtureStatusBadge = (
     textClassName: "text-white/80",
     wrapperClassName: "border-white/12 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
   }
-}
-
-const parseFormationField = (formationField: string): { row: number; col: number } => {
-  const [rowStr, colStr] = formationField.split(":")
-  return { row: parseInt(rowStr ?? "0", 10), col: parseInt(colStr ?? "0", 10) }
-}
-
-const parseFormationRows = (formation: string | null | undefined): number[] => {
-  if (!formation) return []
-  return formation.split("-").map(Number).filter(n => !isNaN(n) && n > 0)
 }
 
 const groupLegacyByFormation = (starters: LineupPlayer[], formation: string | null | undefined): LineupPlayer[][] => {  const seenPositions = new Set<number>()

@@ -41,6 +41,12 @@ pnpm-debug.log*
 # Testing
 coverage
 .nyc_output
+playwright-report
+test-results
+
+# Source bundle outputs (generated for university submission)
+*_Source_Code.txt
+*_Source_Code_Links.txt
 
 .cursor
 .idea

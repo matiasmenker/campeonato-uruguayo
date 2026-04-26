@@ -4,38 +4,19 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { IconShield, IconClock, IconPlayerPlayFilled } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
-
-const LIVE_STATES = new Set([
-  "INPLAY_1ST_HALF",
-  "INPLAY_2ND_HALF",
-  "HT",
-  "INPLAY_ET",
-  "INPLAY_ET_SECOND_HALF",
-  "INPLAY_PENALTIES",
-  "EXTRA_TIME_BREAK",
-  "BREAK",
-])
-
-const FINISHED_STATES = new Set(["FT", "AET", "FT_PEN", "AWARDED"])
+import {
+  getMatchStatus as getMatchStatusCore,
+  getLiveLabel,
+  formatMatchDay as formatMatchDayCore,
+  formatKickoffTime as formatKickoffTimeCore,
+} from "@/lib/match-status"
 
 export const getMatchStatus = (
   stateCode: string | null,
   _homeScore: number | null,
   _awayScore: number | null,
   _kickoffAt: string | null = null,
-): "live" | "finished" | "upcoming" => {
-  if (stateCode && LIVE_STATES.has(stateCode)) return "live"
-  if (stateCode && FINISHED_STATES.has(stateCode)) return "finished"
-  return "upcoming"
-}
-
-const getLiveLabel = (stateCode: string | null) => {
-  if (stateCode === "HT") return "Half time"
-  if (stateCode === "INPLAY_ET" || stateCode === "INPLAY_ET_SECOND_HALF") return "Extra time"
-  if (stateCode === "INPLAY_PENALTIES") return "Penalties"
-  if (stateCode === "EXTRA_TIME_BREAK") return "Break"
-  return "Live"
-}
+): "live" | "finished" | "upcoming" => getMatchStatusCore(stateCode)
 
 export const getStatusBadge = (
   stateCode: string | null,
@@ -71,27 +52,9 @@ export const getStatusBadge = (
   }
 }
 
-export const formatMatchDay = (value: string | null) => {
-  if (!value) return "No date"
-  const formatted = new Intl.DateTimeFormat("en-GB", {
-    weekday: "long",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    timeZone: "America/Montevideo",
-  }).format(new Date(value))
-  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
-}
+export const formatMatchDay = formatMatchDayCore
 
-export const formatKickoffTime = (value: string | null) => {
-  if (!value) return "--:--"
-  return new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "America/Montevideo",
-  }).format(new Date(value))
-}
+export const formatKickoffTime = formatKickoffTimeCore
 
 export const TeamBadge = ({
   team,
