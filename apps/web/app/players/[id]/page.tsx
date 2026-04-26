@@ -8,7 +8,8 @@ import PlayerSeasonStageSelector from "@/components/player-season-stage-selector
 import { getSeasons, getStages, filterMainStages, type Season, type Stage } from "@/lib/seasons"
 import { groupStages, getStageGroupById } from "@/lib/stage-groups"
 import { resolvePlayerImageUrl } from "@/lib/player"
-import { getRatingColors, getRatingFill } from "@/lib/rating"
+import { getRatingFill } from "@/lib/rating"
+import { StatCard, RatingStatCard } from "@/components/player-stat-card"
 import {
   getPlayer,
   getPlayerSquadMemberships,
@@ -88,13 +89,6 @@ const ClockIcon = ({ size = 20 }: { size?: number }) => (
   </svg>
 )
 
-const StarIcon = ({ size = 20, fill }: { size?: number; fill: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="12" fill={fill} />
-    <path d="M12 5l1.854 5.707H19.5l-4.927 3.58 1.854 5.706L12 16.413l-4.427 3.58 1.854-5.706L4.5 10.707h5.646z" fill="#fff" />
-  </svg>
-)
-
 const YellowCard = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={Math.round(size * 1.3)} viewBox="0 0 16 21" xmlns="http://www.w3.org/2000/svg">
     <rect x="0" y="0" width="16" height="21" rx="3" fill="#facc15" />
@@ -132,53 +126,6 @@ const formatDate = (kickoffAt: string | null): string => {
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Montevideo",
   }).format(new Date(kickoffAt))
-}
-
-const StatCard = ({
-  label,
-  value,
-  icon,
-  hasData,
-}: {
-  label: string
-  value: string | number | null
-  icon: React.ReactNode
-  hasData: boolean
-}) => (
-  <div className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm text-center">
-    <div className="flex h-9 w-9 items-center justify-center">{icon}</div>
-    <div className="flex flex-col items-center gap-0.5">
-      <span className="text-2xl font-black tabular-nums text-slate-900 leading-none">
-        {hasData && value !== null ? value : "—"}
-      </span>
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
-    </div>
-  </div>
-)
-
-const RatingStatCard = ({ avgRating, hasData }: { avgRating: number | null; hasData: boolean }) => {
-  const colors = hasData && avgRating !== null ? getRatingColors(avgRating) : null
-  return (
-    <div
-      className="flex flex-col items-center gap-2 rounded-2xl border p-4 shadow-sm text-center"
-      style={{ backgroundColor: "#eff6ff", borderColor: "#93c5fd" }}
-    >
-      <div className="flex h-9 w-9 items-center justify-center">
-        <StarIcon size={20} fill={colors?.fill ?? "#94a3b8"} />
-      </div>
-      <div className="flex flex-col items-center gap-0.5">
-        <span
-          className="text-2xl font-black tabular-nums leading-none"
-          style={{ color: colors?.text ?? "#1e40af" }}
-        >
-          {hasData && avgRating !== null ? avgRating.toFixed(2) : "—"}
-        </span>
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-400">
-          Avg rating
-        </span>
-      </div>
-    </div>
-  )
 }
 
 const resolvePlayerSide = (fixture: PlayerFixture, teamIds: Set<number>): "home" | "away" | null => {

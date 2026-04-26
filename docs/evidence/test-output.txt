@@ -1,0 +1,48 @@
+
+> campeonato-uruguayo@ test /Users/matiasmenker/Projects/campeonato-uruguayo
+> pnpm -r --parallel --filter web --filter api --filter data-sync test
+
+Scope: 3 of 6 workspace projects
+apps/api test$ vitest run
+apps/data-sync test$ vitest run
+apps/web test$ vitest run
+apps/data-sync test: [1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90m/Users/matiasmenker/Projects/campeonato-uruguayo/apps/data-sync[39m
+apps/api test: [1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90m/Users/matiasmenker/Projects/campeonato-uruguayo/apps/api[39m
+apps/web test: [1m[30m[46m RUN [49m[39m[22m [36mv4.1.5 [39m[90m/Users/matiasmenker/Projects/campeonato-uruguayo/apps/web[39m
+apps/data-sync test:  [32m✓[39m tests/parse-sportmonks-date.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+apps/data-sync test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+apps/data-sync test: [2m      Tests [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+apps/data-sync test: [2m   Start at [22m 11:40:07
+apps/data-sync test: [2m   Duration [22m 317ms[2m (transform 22ms, setup 0ms, import 32ms, tests 9ms, environment 0ms)[22m
+apps/api test:  [32m✓[39m tests/unit/security.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+apps/data-sync test: Done
+apps/api test:  [32m✓[39m tests/unit/mappers.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/unit/standings-fetch.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/unit/match-status.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/unit/teams-fetch.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/unit/players-fetch.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/unit/matches-fetch.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/unit/display.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/component/career-row.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/unit/seasons-filter.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/component/player-stat-card.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/unit/aggregates-shape.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/unit/player-image.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/unit/rating.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/unit/player-aggregates.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+apps/web test:  [32m✓[39m tests/unit/formation.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+apps/web test: [2m Test Files [22m [1m[32m14 passed[39m[22m[90m (14)[39m
+apps/web test: [2m      Tests [22m [1m[32m140 passed[39m[22m[90m (140)[39m
+apps/web test: [2m   Start at [22m 11:40:07
+apps/web test: [2m   Duration [22m 2.06s[2m (transform 493ms, setup 1.99s, import 517ms, tests 197ms, environment 10.14s)[22m
+apps/web test: Done
+apps/api test:  [32m✓[39m tests/integration/api.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 13570[2mms[22m[39m
+apps/api test:        [33m[2m✓[22m[39m returns healthy status when DB is reachable [33m 1944[2mms[22m[39m
+apps/api test:        [33m[2m✓[22m[39m accepts protected endpoint with correct API key [33m 3217[2mms[22m[39m
+apps/api test:        [33m[2m✓[22m[39m returns a paginated list with expected shape [33m 1818[2mms[22m[39m
+apps/api test:        [33m[2m✓[22m[39m returns a fixture detail with related entities [33m 5385[2mms[22m[39m
+apps/api test: [2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+apps/api test: [2m      Tests [22m [1m[32m22 passed[39m[22m[90m (22)[39m
+apps/api test: [2m   Start at [22m 11:40:07
+apps/api test: [2m   Duration [22m 13.98s[2m (transform 921ms, setup 0ms, import 336ms, tests 13.58s, environment 0ms)[22m
+apps/api test: Done
